@@ -1,0 +1,23 @@
+Server:
+  run_mode: "debug"
+  addr: ":3333"
+  read_timeout: 100
+  write_timeout: 100
+Pgsql:
+  host: "localhost"
+  port: 5432
+  dbname: "wwbtest"
+  user: "wwb"
+  password: "wwb20030526"
+  max_idle_conns: 100
+  max_open_conns: 200
+  max_life_seconds: 86400 
+Redis:
+  addr: 'localhost:6379'
+  password:
+  db: 0 
+Session:
+  secret: ''
+  domain: ''
+  
+  
