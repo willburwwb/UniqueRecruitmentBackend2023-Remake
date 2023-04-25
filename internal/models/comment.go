@@ -2,9 +2,12 @@ package models
 
 type CommentEntity struct {
 	Common
-	ApplicationID uint
-	//Application ApplicationEntity
-	//Member      MemberEntity?为什么member有comment
-	Content    string
-	Evaluation string
+	ApplicationID string `gorm:"columns:applicationId"` //manytoone
+	MemberID      string `gorm:"columns:memberId"`      //manytoone
+	Content       string `gorm:"not null"`
+	Evaluation    string `gorm:"not null"`
+}
+
+func (c CommentEntity) TableName() string {
+	return "comments"
 }

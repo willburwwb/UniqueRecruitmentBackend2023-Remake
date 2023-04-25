@@ -2,6 +2,7 @@ package server
 
 import (
 	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/internal/models"
 	"net/http"
 	"time"
 
@@ -20,6 +21,8 @@ func NewServer() *Server {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	gin.SetMode(global.ServerConfig.RunMode)
+
+	models.SetupTables()
 
 	memberRouter := r.Group("/members")
 	{

@@ -6,9 +6,9 @@ Server:
 Pgsql:
   host: "localhost"
   port: 5432
-  dbname: "wwbtest"
-  user: "wwb"
-  password: "wwb20030526"
+  dbname: "recruitment_dev"
+  user: "postgres"
+  password: ""
   max_idle_conns: 100
   max_open_conns: 200
   max_life_seconds: 86400 

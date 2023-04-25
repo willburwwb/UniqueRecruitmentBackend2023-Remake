@@ -15,9 +15,10 @@ import (
 )
 
 var (
-	DB        *gorm.DB
+	Db        *gorm.DB
 	Rdb       *redis.Client
 	SessStore sessions.Store
+	err       error
 )
 var (
 	PgsqlConfig  *configs.PsqlConfigs
@@ -27,26 +28,30 @@ var (
 )
 
 func Setup() error {
-	_, err := setupPgsql()
+	Db, err = setupPgsql()
 	if err != nil {
 		return fmt.Errorf("pgsql setup failed %s", err)
 	}
-	log.Println("psql setup succeed")
-	_, err = setupRedis()
+	log.Println("pgsql connect successed ", Db.Migrator().CurrentDatabase())
+	Rdb, err = setupRedis()
 	if err != nil {
 		return fmt.Errorf("rdb setup failed %s", err)
 	}
-	log.Println("redus setup succeed")
-	_, err = setupSession()
+	log.Println("redus setup successed")
+	SessStore, err = setupSession()
 	if err != nil {
 		return fmt.Errorf("session setup failed %s", err)
 	}
-	log.Println("session setup succeed")
+	log.Println("session setup successed")
+
 	return nil
 }
 func setupPgsql() (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
-		PgsqlConfig.Host, PgsqlConfig.User, PgsqlConfig.Password, PgsqlConfig.Dbname, PgsqlConfig.Port)
+	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai ",
+		PgsqlConfig.Host, PgsqlConfig.User, PgsqlConfig.Dbname, PgsqlConfig.Port)
+	if PgsqlConfig.Password != "" {
+		dsn = dsn + fmt.Sprintf("password=%s", PgsqlConfig.Password)
+	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err

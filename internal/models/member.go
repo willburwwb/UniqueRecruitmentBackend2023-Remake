@@ -1,21 +1,23 @@
 package models
 
-import (
-	"UniqueRecruitmentBackend/internal/constants"
-)
-
 type MemberEntity struct {
 	Common
-	JoinTime  string
-	IsCaptain bool
-	IsAdmin   bool
-	Group     constants.Group
-	Avatar    string
-	//Comments  []CommentEntity //onetomany
+	Name string `gorm:"not null"`
 
-	Name     string
-	Password string
-	Phone    string
-	Mail     string
-	Gender   constants.Gender
+	Phone        string `gorm:"not null;unique;unique"`
+	Mail         string `gorm:"unique"`
+	Gender       string `gorm:"not null"` //constants.Gender
+	WeChatID     string `gorm:"column:weChatID;not null;unique"`
+	JoinTime     string `gorm:"column:joinTime;not null"`
+	IsCaptain    bool   `gorm:"column:isCaptain;not null;default:false"`
+	IsAdmin      bool   `gorm:"column:isAdmin;not null;default:false"`
+	Group        string `gorm:"not null"` //constants.Group
+	Avatar       string
+	Comments     []CommentEntity `gorm:"foreignKey:MemberID;references:Uid;constraint:OnDelete:CASCADE;"` //onetomany
+	PasswordSalt string          `gorm:"column:passwordSalt;not null"`
+	PasswordHash string          `gorm:"column:passwordHash;not null;unique"`
+}
+
+func (c MemberEntity) TableName() string {
+	return "members"
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/server"
+	"fmt"
 )
 
 // @titile Swagger api
@@ -12,7 +13,7 @@ import (
 
 func main() {
 	if err := global.Setup(); err != nil {
-
+		panic(fmt.Errorf("global set up failed %s", err))
 	}
 	s := server.NewServer()
 	s.ListenAndServe()

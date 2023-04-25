@@ -1,19 +1,16 @@
 package models
 
-import (
-	"UniqueRecruitmentBackend/internal/constants"
-)
-
 type CandidateEntity struct {
 	Common
 	Applications []ApplicationEntity `gorm:"foreignKey:CandidateID;references:Uid;constraint:OnDelete:CASCADE;"` //onetomany
-	Name         string
-	Password     string
-	Phone        string
-	Mail         string
-	Gender       constants.Gender
+	Name         string              `gorm:"not null"`
+	Phone        string              `gorm:"not null;unique"`
+	Mail         string              `gorm:"unique"`
+	Gender       string              `gorm:"not null"` //constants.Gender
+	PasswordSalt string              `gorm:"columns:passwordSalt;not null"`
+	PasswordHash string              `gorm:"columns:passwordHash;not null;unique"`
 }
 
-// maybe used
-type Password struct {
+func (c CandidateEntity) TableName() string {
+	return "candidates"
 }

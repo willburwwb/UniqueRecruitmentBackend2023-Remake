@@ -1,11 +1,10 @@
 package models
 
-import (
-	"time"
-)
+import "time"
 
 type Common struct {
-	Uid       string `gorm:"column:Uid;primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	//缺少uuid-ossp 无法使用uuid_generate_v4	->   gen_random_uuid
+	Uid       string    `gorm:"column:id;type:uuid;default:gen_random_uuid();primarykey"`
+	CreatedAt time.Time `gorm:"column:createdAt;not null"` //为了和原数据库匹配，gorm默认会将其在数据表中默认为蛇形q
+	UpdatedAt time.Time `gorm:"column:updatedAt;not null;index"`
 }

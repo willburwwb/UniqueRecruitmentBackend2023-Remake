@@ -11,7 +11,11 @@ require (
 	gorm.io/gorm v1.25.0
 )
 
-require github.com/go-redis/redis v6.15.9+incompatible // indirect
+require (
+	github.com/go-redis/redis v6.15.9+incompatible // indirect
+	github.com/jackc/pgx v3.6.2+incompatible // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+)
 
 require (
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff // indirect

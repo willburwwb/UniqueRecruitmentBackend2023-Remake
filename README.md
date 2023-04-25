@@ -49,3 +49,20 @@ uniqueRecruitmentBackend2023-Remake
 └── main.go
 ```
 
+
+
+### How to import data from postgresql
+
+#### example:
+
+- ssh connect to remote server
+
+- `docker exec -it db_postgres bash       `
+- `pg_dump -U postgres -s recruitment`//dump the postgres database detail (tables,types,indexs...)  
+- `psql -d recruitment_dev -U postgres -f filepath`//import sql file to database
+- then get the sql file about applications
+
+
+- delete table and its dependences
+- `drop table applications cascade;`
+​	
