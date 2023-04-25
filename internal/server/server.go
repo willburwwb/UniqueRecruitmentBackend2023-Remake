@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,9 +21,12 @@ func NewServer() *Server {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+
 	gin.SetMode(global.ServerConfig.RunMode)
 
 	models.SetupTables()
+
+	r.Use(sessions.Sessions("SSO_SESSION", global.SessStore)) //使用session中间件
 
 	memberRouter := r.Group("/members")
 	{

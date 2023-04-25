@@ -32,7 +32,7 @@ func Setup() error {
 	if err != nil {
 		return fmt.Errorf("pgsql setup failed %s", err)
 	}
-	log.Println("pgsql connect successed ", Db.Migrator().CurrentDatabase())
+	log.Println("pgsql connect successed")
 	Rdb, err = setupRedis()
 	if err != nil {
 		return fmt.Errorf("rdb setup failed %s", err)

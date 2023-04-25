@@ -12,9 +12,11 @@ require (
 )
 
 require (
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/swaggo/files v1.0.1 // indirect
 )
 
 require (
