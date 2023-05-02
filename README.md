@@ -20,14 +20,40 @@ Backend of recruitment system for Unique Studio
   - First, the SSO system stores the session of the login users.
   - Second, the backend system get the session through middleware.
 
-### docker 
+### Docker
 
-- build image 
-  - `docker build -t unique_backend2023 .`
-- run container
-  - `docker run -p 8080:3333 --name unique_backend_test unique_backend2023:latest  ` 
+#### local:
+
+1. Create  container `unique_recruitment_psql_dev`  by image `postgres:latest` , add password `mysecretpassword` , create network `uniquerecruitmentbackend2023-remake_database` which connect to `recruitment_backend ` , create volume. 
+
+   ```bash
+   docker run -p 5430:5432 --name unique_recruitment_psql_dev -v "your file path :/var/lib/postgresql/data"  --network uniquerecruitmentbackend2023-remake_database -e POSTGRES_PASSWORD=mysecretpassword postgres:latest`
+   
+   docker exec -it unique_recruitment_psql_dev env # cat psql env 
+   docker exec -it unique_recruitment_psql_dev psql -U postgres # attach container
+   ```
+
+   
+
+2. Build compose
+
+   ```bash
+   docker-compose -f Docker-compose.local.yml build
+   ```
+
+3. Run service
+
+   ```bash
+   docker-compose -f Docker-compose.local.yml up
+   ```
+
+   
 
 
+
+### docker-compose
+
+- local
 
 ### Directory Structure
 
@@ -66,3 +92,4 @@ uniqueRecruitmentBackend2023-Remake
 - delete table and its dependences
 - `drop table applications cascade;`
 ​	
+

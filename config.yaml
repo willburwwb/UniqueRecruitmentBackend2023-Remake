@@ -4,11 +4,11 @@ Server:
   read_timeout: 100
   write_timeout: 100
 Pgsql:
-  host: "localhost"
+  host: "unique_recruitment_psql_dev"
   port: 5432
   dbname: "recruitment_dev"
   user: "postgres"
-  password: ""
+  password: "mysecretpassword"
   max_idle_conns: 100
   max_open_conns: 200
   max_life_seconds: 86400 
