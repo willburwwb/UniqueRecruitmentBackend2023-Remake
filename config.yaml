@@ -12,6 +12,8 @@ Pgsql:
   max_idle_conns: 100
   max_open_conns: 200
   max_life_seconds: 86400 
+SSOGrpc:
+  addr: localhost:5000
 Redis:
   addr: 'localhost:6379'
   password:

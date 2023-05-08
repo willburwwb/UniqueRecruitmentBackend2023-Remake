@@ -10,17 +10,20 @@ Backend of recruitment system for Unique Studio
 - gorm
 - go-redis
 - zap + lumberjack
-- 
   - log 
 - swag : converts 
   - Go annotations to Swagger Documentation
 - viper: 
-- session: 
-  - Use redis store the session.
-  - First, the SSO system stores the session of the login users.
-  - Second, the backend system get the session through middleware.
+  - configuration management 
 
-### Docker
+
+
+
+**!!  Get user's uid from http header field "X-UID"**
+
+------
+
+### Docker-compose
 
 #### local:
 
@@ -28,13 +31,11 @@ Backend of recruitment system for Unique Studio
 
    ```bash
    docker run -p 5430:5432 --name unique_recruitment_psql_dev -v "your file path :/var/lib/postgresql/data"  --network uniquerecruitmentbackend2023-remake_database -e POSTGRES_PASSWORD=mysecretpassword postgres:latest`
-   
-   docker exec -it unique_recruitment_psql_dev env # cat psql env 
+   docker exec -it unique_recruitment_psql_dev env  # cat psql env
    docker exec -it unique_recruitment_psql_dev psql -U postgres # attach container
+   create database 
    ```
-
    
-
 2. Build compose
 
    ```bash
@@ -47,13 +48,8 @@ Backend of recruitment system for Unique Studio
    docker-compose -f Docker-compose.local.yml up
    ```
 
-   
 
-
-
-### docker-compose
-
-- local
+------
 
 ### Directory Structure
 
@@ -67,29 +63,37 @@ uniqueRecruitmentBackend2023-Remake
 │   ├── controllers
 │   ├── middlewares
 │   ├── models
+│   ├── request
+│   ├── response
 │   └── server
 ├── pkg
+│   ├── msg
+│   └── utils
 ├── config.yaml
 ├── Docker-compose.yml
 ├── Dockerfile
 └── main.go
 ```
 
+------
 
+### Postgresql
 
-### How to import data from postgresql
-
-#### example:
+##### How to export database schema from postgresql 
 
 - ssh connect to remote server
-
 - `docker exec -it db_postgres bash       `
-- `pg_dump -U postgres -s recruitment`//dump the postgres database detail (tables,types,indexs...)  
-- `psql -d recruitment_dev -U postgres -f filepath`//import sql file to database
-- then get the sql file about applications
+- `pg_dump -U postgres -s recruitment`  
+  - dump the postgres database detail (tables,types,indexs...)  
+
+- then get the SQL file about recruitment
+- `psql -d recruitment_dev -U postgres -f filepath`  
+  - import SQL file to database
 
 
-- delete table and its dependences
+##### Delete table and its dependences
+
+
 - `drop table applications cascade;`
-​	
+  ​	
 

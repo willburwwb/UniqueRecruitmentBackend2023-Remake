@@ -18,12 +18,18 @@ func init() {
 	if err != nil {
 		panic(fmt.Errorf("pgsql config setup failed %s", err))
 	}
-	err = setting.ReadConfig("Redis", &RedisConfig)
+	err = setting.ReadConfig("SSOGrpc", &SSOGrpcConfigs)
 	if err != nil {
-		panic(fmt.Errorf("redis config setup failed %s", err))
+		panic(fmt.Errorf("sso grpc config setup failed %s", err))
 	}
-	err = setting.ReadConfig("Session", &SessConfig)
-	if err != nil {
-		panic(fmt.Errorf("session config setup failed %s", err))
-	}
+
+	// err = setting.ReadConfig("Redis", &RedisConfig)
+	// if err != nil {
+	// 	panic(fmt.Errorf("redis config setup failed %s", err))
+	// }
+	// err = setting.ReadConfig("Session", &SessConfig)
+	// if err != nil {
+	// 	panic(fmt.Errorf("session config setup failed %s", err))
+	// }
+
 }

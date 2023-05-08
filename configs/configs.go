@@ -25,6 +25,9 @@ type SessConfigs struct {
 	Secret string `mapstructure:"secret" json:"secret" yaml:"secret"`
 	Domain string `mapstructure:"domain" json:"domain" yaml:"domain"`
 }
+type SSOGrpcConfigs struct {
+	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
+}
 
 // 读取特定的config
 func (s *Setting) ReadConfig(k string, v interface{}) error {
