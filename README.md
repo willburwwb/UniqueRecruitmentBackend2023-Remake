@@ -65,7 +65,7 @@ uniqueRecruitmentBackend2023-Remake
 │   ├── models
 │   ├── request
 │   ├── response
-│   └── server
+│   └── router
 ├── pkg
 │   ├── msg
 │   └── utils

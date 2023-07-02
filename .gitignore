@@ -1,0 +1,7 @@
+# ingore config files
+.cloudbase
+.idea
+
+data
+Docker-compose.yml
+config.yaml

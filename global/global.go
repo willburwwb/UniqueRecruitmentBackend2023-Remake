@@ -20,15 +20,11 @@ var (
 	SSOConn   *grpc.ClientConn
 	SSOClient sso.SSOServiceClient
 	err       error
-	//Rdb       *redis.Client
-	//SessStore sessions.Store
 )
 var (
 	PgsqlConfig    *configs.PsqlConfigs
 	ServerConfig   *configs.ServerConfigs
 	SSOGrpcConfigs *configs.SSOGrpcConfigs
-	//RedisConfig  *configs.RedisConfigs
-	//SessConfig   *configs.SessConfigs
 )
 
 func Setup() error {
@@ -36,22 +32,12 @@ func Setup() error {
 	if err != nil {
 		return fmt.Errorf("pgsql setup failed :%s", err)
 	}
-	log.Println("pgsql connect successed")
+	log.Println("Pgsql Connect Successed")
 
 	SSOClient, err = setupSSOGrpc()
 	if err != nil {
 		return fmt.Errorf("sso grpc setup failed :%s", err)
 	}
-	// Rdb, err = setupRedis()
-	// if err != nil {
-	// 	return fmt.Errorf("rdb setup failed %s", err)
-	// }
-	// log.Println("redus setup successed")
-	// SessStore, err = setupSession()
-	// if err != nil {
-	// 	return fmt.Errorf("session setup failed %s", err)
-	// }
-	// log.Println("session setup successed")
 	return nil
 }
 func setupPgsql() (db *gorm.DB, err error) {

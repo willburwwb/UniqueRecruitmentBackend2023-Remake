@@ -1,16 +1,16 @@
 version: '3.8'
 services:
-  backend2023:
+  recruitment_backend_2023:
     build: .
     container_name: recruitment_backend_2023
     ports:
-      - "8080:3333"
+      - "3333:3333"
     volumes:
-      - "./logs:/app/logs"  #日志
+      - "./data/logs:/app/data/logs"  #日志
       - "./data/resumes:/app/data/resumes" #简历
     networks:
       - db
 networks:
   db:
     external: true
-    name: uniquerecruitmentbackend2023-remake_database
+    name: db

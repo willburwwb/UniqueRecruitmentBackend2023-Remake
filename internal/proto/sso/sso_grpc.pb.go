@@ -52,7 +52,7 @@ func (c *sSOServiceClient) GetUserByUID(ctx context.Context, in *GetUserByUIDReq
 	return out, nil
 }
 
-// SSOServiceServer is the server API for SSOService service.
+// SSOServiceServer is the router API for SSOService service.
 // All implementations must embed UnimplementedSSOServiceServer
 // for forward compatibility
 type SSOServiceServer interface {

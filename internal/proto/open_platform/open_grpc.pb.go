@@ -52,7 +52,7 @@ func (c *sMSServiceClient) GetAllSMSTemplates(ctx context.Context, in *GetAllSMS
 	return out, nil
 }
 
-// SMSServiceServer is the server API for SMSService service.
+// SMSServiceServer is the router API for SMSService service.
 // All implementations must embed UnimplementedSMSServiceServer
 // for forward compatibility
 type SMSServiceServer interface {
@@ -174,7 +174,7 @@ func (c *emailServiceClient) GetAllEmailTemplates(ctx context.Context, in *GetAl
 	return out, nil
 }
 
-// EmailServiceServer is the server API for EmailService service.
+// EmailServiceServer is the router API for EmailService service.
 // All implementations must embed UnimplementedEmailServiceServer
 // for forward compatibility
 type EmailServiceServer interface {

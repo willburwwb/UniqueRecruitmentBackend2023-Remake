@@ -1,10 +1,12 @@
 package configs
 
+import "time"
+
 type ServerConfigs struct {
-	RunMode      string `mapstructure:"run_mode" json:"run_mode" yaml:"run_mode"`
-	Addr         string `mapstructure:"addr" json:"addr" yaml:"addr"`                            //
-	ReadTimeout  int    `mapstructure:"read_timeout" json:"read_timeout" yaml:"read_timeout"`    //
-	WriteTimeout int    `mapstructure:"write_timeout" json:"write_timeout" yaml:"write_timeout"` //
+	RunMode      string        `mapstructure:"run_mode" json:"run_mode" yaml:"run_mode"`
+	Addr         string        `mapstructure:"addr" json:"addr" yaml:"addr"`                            //
+	ReadTimeout  time.Duration `mapstructure:"read_timeout" json:"read_timeout" yaml:"read_timeout"`    //
+	WriteTimeout time.Duration `mapstructure:"write_timeout" json:"write_timeout" yaml:"write_timeout"` //
 }
 type PsqlConfigs struct {
 	Host           string `mapstructure:"host" json:"host" yaml:"host"`                                      // 服务器地址
