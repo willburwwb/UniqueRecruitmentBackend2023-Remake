@@ -16,8 +16,10 @@ func MemberMiddleware(c *gin.Context) {
 	}
 	user, err := grpcsso.GetUserByUID(uid)
 	if err != nil {
-		//c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "无法获取用户信息"})
-		return
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"msg":    msg.SSOError.Msg(),
+			"detail": err,
+		})
 	}
 	c.Set("uid", user.Uid)
 	c.Next()

@@ -75,25 +75,11 @@ uniqueRecruitmentBackend2023-Remake
 └── main.go
 ```
 
-------
+<br>
+<br>
+<br>
 
-### Postgresql
-
-##### How to export database schema from postgresql 
-
-- ssh connect to remote server
-- `docker exec -it db_postgres bash       `
-- `pg_dump -U postgres -s recruitment`  
-  - dump the postgres database detail (tables,types,indexs...)  
-
-- then get the SQL file about recruitment
-- `psql -d recruitment_dev -U postgres -f filepath`  
-  - import SQL file to database
-
-
-##### Delete table and its dependences
-
-
-- `drop table applications cascade;`
-  ​	
-
+**<h2>暑假待办 （尽量不鸽</h2>**
+- 尽快与unique SSO连接，方便后续的工作！
+- 调整model tables的结构，与sso user/服务器上的postgres适配
+- 开始完成api工作
