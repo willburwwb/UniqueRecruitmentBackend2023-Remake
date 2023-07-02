@@ -1,16 +1,16 @@
 Server:
   run_mode: "debug"
   addr: ":3333"
-  read_timeout: 100
-  write_timeout: 100
+  read_timeout: 2 #minute
+  write_timeout: 2 #minute
 Pgsql:
   host: "db_postgres"
   port: 5432
   dbname: "recruitment_dev"
   user: "postgres"
   password: ""
-  max_idle_conns: 1 #minute
-  max_open_conns: 1 #minute
+  max_idle_conns: 100
+  max_open_conns: 100
   max_life_seconds: 86400
 SSOGrpc:
   addr: "dev.back.sso.hustunique.com"

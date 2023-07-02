@@ -12,6 +12,7 @@ func NewRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Use(middlewares.AuthMiddleware)
 	ping := r.Group("/ping")
 	{
 		ping.GET("", func(c *gin.Context) {
@@ -20,7 +21,6 @@ func NewRouter() *gin.Engine {
 			})
 		})
 	}
-	r.Use(middlewares.AuthMiddleware)
 	//memberRouter := r.Group("/members")
 	//{
 	//	memberRouter.GET("/me")
