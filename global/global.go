@@ -21,11 +21,6 @@ var (
 	SSOClient sso.SSOServiceClient
 	err       error
 )
-var (
-	PgsqlConfig    *configs.PsqlConfigs
-	ServerConfig   *configs.ServerConfigs
-	SSOGrpcConfigs *configs.SSOGrpcConfigs
-)
 
 func Setup() error {
 	Db, err = setupPgsql()
@@ -40,12 +35,13 @@ func Setup() error {
 	}
 	return nil
 }
+
 func setupPgsql() (db *gorm.DB, err error) {
-	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai ",
-		PgsqlConfig.Host, PgsqlConfig.User, PgsqlConfig.Dbname, PgsqlConfig.Port)
-	if PgsqlConfig.Password != "" {
-		dsn = dsn + fmt.Sprintf("password=%s", PgsqlConfig.Password)
-	}
+	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s password=%s sslmode=disable TimeZone=Asia/Shanghai ",
+		configs.Config.Pgsql.Host, configs.Config.Pgsql.User, configs.Config.Pgsql.Dbname, configs.Config.Pgsql.Port, configs.Config.Pgsql.Password)
+	//if configs.Config.Pgsql.Password != "" {
+	//	dsn = dsn + fmt.Sprintf("password=%s", configs.Config.Pgsql.Password)
+	//}
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return
@@ -54,14 +50,15 @@ func setupPgsql() (db *gorm.DB, err error) {
 	if err != nil {
 		return
 	}
-	sqlDB.SetMaxIdleConns(PgsqlConfig.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(PgsqlConfig.MaxOpenConns)
-	sqlDB.SetConnMaxLifetime(time.Duration(PgsqlConfig.MaxLifeSeconds) * time.Second)
+	sqlDB.SetMaxIdleConns(configs.Config.Pgsql.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(configs.Config.Pgsql.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(configs.Config.Pgsql.MaxLifeSeconds) * time.Second)
 	return
 }
+
 func setupSSOGrpc() (sSOClient sso.SSOServiceClient, err error) {
 	SSOConn, err = grpc.Dial(
-		SSOGrpcConfigs.Addr,
+		configs.Config.SSOGrpc.Addr,
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: false})),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
@@ -95,3 +92,10 @@ func setupSSOGrpc() (sSOClient sso.SSOServiceClient, err error) {
 // 	sess.Options(sessions.Options{Path: "/", Domain: SessConfig.Domain, HttpOnly: true})
 // 	return sess, nil
 // }
+
+func init() {
+	err := Setup()
+	if err != nil {
+		panic(fmt.Sprintf("setup global error, %v", err))
+	}
+}
