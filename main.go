@@ -1,10 +1,9 @@
 package main
 
 import (
-	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/configs"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/router"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -17,19 +16,16 @@ import (
 // @BasePath /api/v1/
 
 func main() {
-	if err := global.Setup(); err != nil {
-		panic(fmt.Errorf("global set up failed %s", err))
-	}
-	gin.SetMode(global.ServerConfig.RunMode)
+	gin.SetMode(configs.Config.Server.RunMode)
 
 	models.SetupTables()
 
 	r := router.NewRouter()
 	s := &http.Server{
-		Addr:         global.ServerConfig.Addr,
+		Addr:         configs.Config.Server.Addr,
 		Handler:      r,
-		ReadTimeout:  global.ServerConfig.ReadTimeout * time.Second,
-		WriteTimeout: global.ServerConfig.WriteTimeout * time.Second,
+		ReadTimeout:  configs.Config.Server.ReadTimeout * time.Second,
+		WriteTimeout: configs.Config.Server.WriteTimeout * time.Second,
 	}
 	if err := s.ListenAndServe(); err != nil {
 		log.Println(err)

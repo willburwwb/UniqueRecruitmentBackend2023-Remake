@@ -47,4 +47,3 @@ const (
 	InGroup GroupOrTeam = "group"
 	InTeam  GroupOrTeam = "team"
 )
-const ()

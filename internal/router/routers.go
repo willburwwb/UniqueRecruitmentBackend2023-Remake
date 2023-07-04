@@ -2,6 +2,7 @@ package router
 
 import (
 	"UniqueRecruitmentBackend/internal/middlewares"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -13,6 +14,14 @@ func NewRouter() *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(middlewares.AuthMiddleware)
+	if gin.Mode() == gin.DebugMode {
+		r.Use(cors.Default())
+	} else if gin.Mode() == gin.ReleaseMode {
+		config := cors.DefaultConfig()
+		config.AllowOrigins = []string{"https://join.hustunique.com", "https://hr.hustunique.com"}
+		config.AllowMethods = []string{"GET", "POST", "DELETE", "UPDATE", "PUT", "OPTION"}
+		r.Use(cors.New(config))
+	}
 	ping := r.Group("/ping")
 	{
 		ping.GET("", func(c *gin.Context) {
