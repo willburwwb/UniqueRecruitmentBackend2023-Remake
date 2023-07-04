@@ -14,7 +14,8 @@ var (
 	R_ENDED       = NewError(10003, "Recruitment %s has already ended", 1, nil)
 	R_ENDED_LONG  = NewError(10004, "Recruitment %s has already ended, hence you cannot modify it. If you REALLY want to extend the end date of this recruitment, please contact maintainers. This is not a bug.", 1, nil)
 
-	SendSMSError = NewError(10006, "Send sms failed", 0, nil)
+	SendSMSError         = NewError(10006, "Send sms failed", 0, nil)
+	RequestBodyTypeError = NewError(10007, "Request body type error", 0, nil)
 )
 
 type Error struct {

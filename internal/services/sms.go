@@ -11,7 +11,8 @@ import (
 type SMSType string
 
 const (
-	VerificationCode = "VerificationCode"
+	RegisterCode      = "RegisterCode"
+	ResetPasswordCode = "ResetPasswordCode"
 )
 
 type SMSBody struct {
@@ -41,7 +42,6 @@ func SendSMS(smsBody SMSBody) (*http.Response, error) {
 	cli := http.Client{}
 	resp, err := cli.Do(req)
 	if err != nil {
-		log.Println("send post requst error: ", err)
 		return nil, err
 	}
 

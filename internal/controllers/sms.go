@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"UniqueRecruitmentBackend/configs"
 	"UniqueRecruitmentBackend/internal/response"
 	"UniqueRecruitmentBackend/internal/services"
+	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg/msg"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
+	"net/http"
 )
 
 func SendSMS(c *gin.Context) {
@@ -15,14 +17,33 @@ func SendSMS(c *gin.Context) {
 	}{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		zap.Error(err)
-		response.ResponseError(c, msg.SendSMSError)
+		response.ResponseError(c, msg.RequestBodyTypeError)
 		return
 	}
 
 	switch req.Type {
-	case services.VerificationCode:
-		//code := utils.GenerateCode()
-		// TODO(yuuki) finish sms
+	case services.RegisterCode:
+		code := utils.GenerateCode()
+		sms, err := services.SendSMS(services.SMSBody{
+			Phone:      req.Phone,
+			TemplateID: configs.Config.SMS.RegisterCodeTemplateId,
+			Params:     []string{code},
+		})
+		if err != nil || sms.StatusCode != http.StatusOK {
+			response.ResponseError(c, msg.SendSMSError)
+			return
+		}
+	case services.ResetPasswordCode:
+		code := utils.GenerateCode()
+		sms, err := services.SendSMS(services.SMSBody{
+			Phone:      req.Phone,
+			TemplateID: configs.Config.SMS.ResetPasswordCodeTemplateId,
+			Params:     []string{code},
+		})
+		if err != nil || sms.StatusCode != http.StatusOK {
+			response.ResponseError(c, msg.SendSMSError)
+			return
+		}
+		// TODO
 	}
 }

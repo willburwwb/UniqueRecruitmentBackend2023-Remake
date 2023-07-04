@@ -43,7 +43,9 @@ type SSOGrpcConfigs struct {
 }
 
 type SMSConfigs struct {
-	Token string `mapstructure:"token" json:"token" yaml:"token"`
+	Token                       string `mapstructure:"token" json:"token" yaml:"token"`
+	RegisterCodeTemplateId      string `mapstructure:"register_code_template_id" yaml:"register_code_template_id"`
+	ResetPasswordCodeTemplateId string `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
 }
 
 type settings struct {
