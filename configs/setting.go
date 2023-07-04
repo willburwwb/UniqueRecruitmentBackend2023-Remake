@@ -42,10 +42,15 @@ type SSOGrpcConfigs struct {
 	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
 }
 
+type SMSConfigs struct {
+	Token string `mapstructure:"token" json:"token" yaml:"token"`
+}
+
 type settings struct {
 	Server  ServerConfigs  `mapstructure:"Server" yaml:"Server"`
 	Pgsql   PgsqlConfigs   `mapstructure:"Pgsql" yaml:"Pgsql"`
 	Redis   RedisConfigs   `mapstructure:"Redis" yaml:"Redis"`
 	Sess    SessConfigs    `mapstructure:"Sess" yaml:"Sess"`
 	SSOGrpc SSOGrpcConfigs `mapstructure:"SSOGrpc" yaml:"SSOGrpc"`
+	SMS     SMSConfigs     `mapstructure:"SMS" yaml:"SMS"`
 }
