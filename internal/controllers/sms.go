@@ -17,7 +17,7 @@ func SendSMS(c *gin.Context) {
 	}{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyTypeError)
+		response.ResponseError(c, msg.RequestBodyError)
 		return
 	}
 

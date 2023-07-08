@@ -2,7 +2,7 @@ package global
 
 func setup() {
 	setupPgsql()
-	setupRedis()
+	//setupRedis()
 	setupSSO()
 }
 

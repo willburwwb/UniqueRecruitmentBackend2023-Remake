@@ -7,12 +7,13 @@ import (
 	"net/http"
 )
 
-func MemberMiddleware(c *gin.Context) {
+func memberMiddleware(c *gin.Context) {
 	uid := c.GetHeader("X-UID") //may be sso field is X-UID
 	if uid == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"message": msg.UnauthorizedError.WithData("1", "2").Msg(),
 		})
+		return
 	}
 	user, err := grpcsso.GetUserByUID(uid)
 	if err != nil {
@@ -20,9 +21,15 @@ func MemberMiddleware(c *gin.Context) {
 			"msg":    msg.SSOError.Msg(),
 			"detail": err,
 		})
+		return
 	}
 	c.Set("uid", user.Uid)
 	c.Next()
 }
 
-var AuthMiddleware gin.HandlerFunc = MemberMiddleware
+// CandidateMiddleware used to detect whether the current user is a candidate
+func CandidateMiddleware(c *gin.Context) {
+	c.Next()
+}
+
+var MemberMiddleware gin.HandlerFunc = memberMiddleware

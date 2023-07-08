@@ -14,4 +14,5 @@ Pgsql:
   max_life_seconds: 86400
 SSOGrpc:
   addr: "dev.back.sso.hustunique.com"
-
+COS:
+  url: 

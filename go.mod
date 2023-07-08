@@ -20,7 +20,10 @@ require (
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/lib/pq v1.10.3 // indirect
+	github.com/mozillazg/go-cos v0.13.0 // indirect
+	github.com/mozillazg/go-httpheader v0.2.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	go.opentelemetry.io/otel v1.15.1 // indirect

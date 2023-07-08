@@ -25,6 +25,7 @@ func setupSSO() {
 }
 
 func setupSSOGrpc() (sSOClient sso.SSOServiceClient, err error) {
+	//log.Println("get sso addr", configs.Config.SSOGrpc.Addr)
 	SSOConn, err = grpc.Dial(
 		configs.Config.SSOGrpc.Addr,
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: false})),

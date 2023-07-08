@@ -5,9 +5,11 @@ import (
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/proto/sso"
 	"context"
+	"log"
 )
 
 func GetUserByUID(uid string) (*models.User, error) {
+	log.Println("to Get UID", uid)
 	req, err := global.SSOClient.GetUserByUID(context.Background(), &sso.GetUserByUIDRequest{Uid: uid})
 	if err != nil {
 		return nil, err

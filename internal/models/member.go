@@ -1,5 +1,8 @@
 package models
 
+// TODO(wwb)
+// fix memberEntity definition
+
 type MemberEntity struct {
 	Common
 	Name string `gorm:"not null"`

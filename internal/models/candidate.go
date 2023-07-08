@@ -1,5 +1,8 @@
 package models
 
+// TODO(wwb)
+// fix candidateEntity definition
+
 type CandidateEntity struct {
 	Common
 	Applications []ApplicationEntity `gorm:"foreignKey:CandidateID;references:Uid;constraint:OnDelete:CASCADE;"` //onetomany

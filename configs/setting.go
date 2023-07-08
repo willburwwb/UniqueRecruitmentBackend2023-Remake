@@ -47,7 +47,9 @@ type SMSConfigs struct {
 	RegisterCodeTemplateId      string `mapstructure:"register_code_template_id" yaml:"register_code_template_id"`
 	ResetPasswordCodeTemplateId string `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
 }
-
+type CosConfigs struct {
+	Url string `mapstructure:"url" json:"url" yaml:"url"`
+}
 type settings struct {
 	Server  ServerConfigs  `mapstructure:"Server" yaml:"Server"`
 	Pgsql   PgsqlConfigs   `mapstructure:"Pgsql" yaml:"Pgsql"`
@@ -55,4 +57,5 @@ type settings struct {
 	Sess    SessConfigs    `mapstructure:"Sess" yaml:"Sess"`
 	SSOGrpc SSOGrpcConfigs `mapstructure:"SSOGrpc" yaml:"SSOGrpc"`
 	SMS     SMSConfigs     `mapstructure:"SMS" yaml:"SMS"`
+	COS     CosConfigs     `mapstructure:"COS" yaml:"COS"`
 }

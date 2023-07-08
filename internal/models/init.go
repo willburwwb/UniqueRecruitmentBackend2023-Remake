@@ -5,7 +5,7 @@ import (
 )
 
 func SetupTables() {
-	db := global.Db
+	db := global.GetDB()
 	db.AutoMigrate(&Common{})
 	db.AutoMigrate(&RecruitmentEntity{})
 	db.AutoMigrate(&CandidateEntity{})

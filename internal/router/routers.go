@@ -1,7 +1,7 @@
 package router
 
 import (
-	"UniqueRecruitmentBackend/internal/middlewares"
+	"UniqueRecruitmentBackend/internal/controllers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -13,7 +13,9 @@ func NewRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
-	r.Use(middlewares.AuthMiddleware)
+
+	//r.Use(middlewares.MemberMiddleware)
+
 	if gin.Mode() == gin.DebugMode {
 		r.Use(cors.Default())
 	} else if gin.Mode() == gin.ReleaseMode {
@@ -29,6 +31,14 @@ func NewRouter() *gin.Engine {
 				"msg": "this is uniquestudio hr system",
 			})
 		})
+	}
+	recruitmentRouter := r.Group("/recruitments")
+	{
+		recruitmentRouter.GET("/:rid", controllers.GetRecruitmentById)
+		recruitmentRouter.GET("/", controllers.GetAllRecruitment)
+		recruitmentRouter.POST("/", controllers.CreateRecruitment)
+		recruitmentRouter.PUT("/:rid/schedule", controllers.GetRecruitmentById)
+		recruitmentRouter.PUT("/:rid/interviews/:name")
 	}
 	//memberRouter := r.Group("/members")
 	//{

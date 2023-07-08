@@ -10,12 +10,16 @@ var (
 
 	SSOError = NewError(10005, "SSO get UserInfo failed ", 0, nil)
 
-	R_NOT_STARTED = NewError(10002, "Recruitment %s has not started yet", 1, nil)
-	R_ENDED       = NewError(10003, "Recruitment %s has already ended", 1, nil)
-	R_ENDED_LONG  = NewError(10004, "Recruitment %s has already ended, hence you cannot modify it. If you REALLY want to extend the end date of this recruitment, please contact maintainers. This is not a bug.", 1, nil)
+	RecruitmentNotReady      = NewError(10002, "Recruitment %s has not started yet", 1, nil)
+	RecruitmentEnd           = NewError(10003, "Recruitment %s has already ended", 1, nil)
+	RecruitmentEndDontModify = NewError(10004, "Recruitment %s has already ended, hence you cannot modify it. If you REALLY want to extend the end date of this recruitment, please contact maintainers. This is not a bug.", 1, nil)
+	RecruitmentStopped       = NewError(100111, "The application deadline of recruitment %s has already passed", 1, nil)
 
-	SendSMSError         = NewError(10006, "Send sms failed", 0, nil)
-	RequestBodyTypeError = NewError(10007, "Request body type error", 0, nil)
+	SendSMSError        = NewError(10006, "Send sms failed", 0, nil)
+	RequestBodyError    = NewError(10007, "Request body error", 0, nil)
+	SaveDatabaseError   = NewError(10008, "Save %s error", 1, nil)
+	UpdateDatabaseError = NewError(10009, "Update %s error", 1, nil)
+	GetDatabaseError    = NewError(10010, "Get %s error", 1, nil)
 )
 
 type Error struct {
@@ -38,12 +42,15 @@ func (resp *Error) StatusCode() int {
 	switch resp.id {
 
 	//fail
-	case R_NOT_STARTED.id:
+	case RequestBodyError.id:
 		return http.StatusForbidden
-	case R_ENDED.id:
+	case RecruitmentNotReady.id:
 		return http.StatusForbidden
-	case R_ENDED_LONG.id:
+	case RecruitmentEnd.id:
 		return http.StatusForbidden
+	case RecruitmentEndDontModify.id:
+		return http.StatusForbidden
+
 	}
 	return http.StatusInternalServerError
 }
@@ -68,7 +75,7 @@ func (resp *Error) WithDetail(data ...string) *Error {
 	return &Error{
 		id:       resp.id,
 		paramNum: resp.paramNum,
-		msg:      fmt.Sprintf(resp.msg, data),
+		msg:      resp.msg,
 		details:  append(resp.details, data...),
 	}
 }
