@@ -13,13 +13,15 @@ var (
 	RecruitmentNotReady      = NewError(10002, "Recruitment %s has not started yet", 1, nil)
 	RecruitmentEnd           = NewError(10003, "Recruitment %s has already ended", 1, nil)
 	RecruitmentEndDontModify = NewError(10004, "Recruitment %s has already ended, hence you cannot modify it. If you REALLY want to extend the end date of this recruitment, please contact maintainers. This is not a bug.", 1, nil)
-	RecruitmentStopped       = NewError(100111, "The application deadline of recruitment %s has already passed", 1, nil)
+	RecruitmentStopped       = NewError(10011, "The application deadline of recruitment %s has already passed", 1, nil)
 
 	SendSMSError        = NewError(10006, "Send sms failed", 0, nil)
 	RequestBodyError    = NewError(10007, "Request body error", 0, nil)
 	SaveDatabaseError   = NewError(10008, "Save %s error", 1, nil)
 	UpdateDatabaseError = NewError(10009, "Update %s error", 1, nil)
 	GetDatabaseError    = NewError(10010, "Get %s error", 1, nil)
+
+	UpLoadFileError = NewError(10012, "%s upload file error", 1, nil)
 )
 
 type Error struct {

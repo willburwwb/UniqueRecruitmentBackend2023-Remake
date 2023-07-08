@@ -43,7 +43,14 @@ func CreateApplication(c *gin.Context) {
 	log.Println(filePath)
 	//resume upload to COS
 	err = upLoadAndSaveFileToCos(req.Resume, filePath)
+	if err != nil {
+		//TODO(wwb)
+		//when sso done,fix this filePath->user's uid
+		response.ResponseError(c, msg.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+		return
+	}
 
+	//save application to database
 	application, err := models.CreateAndSaveApplication(&req, filePath)
 	if err != nil {
 		response.ResponseError(c, msg.SaveDatabaseError.WithDetail(err.Error()))
@@ -66,6 +73,7 @@ func checkApplyTime(c *gin.Context, recruitment *models.RecruitmentEntity, now t
 		response.ResponseError(c, msg.RecruitmentNotReady.WithData(recruitment.Name))
 		return false
 	} else if recruitment.Deadline.Before(now) {
+		log.Println(recruitment.Deadline, now)
 		response.ResponseError(c, msg.RecruitmentStopped.WithData(recruitment.Name))
 		return false
 	} else if recruitment.End.Before(now) {

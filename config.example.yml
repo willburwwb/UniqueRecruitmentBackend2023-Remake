@@ -15,4 +15,6 @@ Pgsql:
 SSOGrpc:
   addr: "dev.back.sso.hustunique.com"
 COS:
-  url: 
+  cos_url:
+  cos_secret_id:
+  cos_secret_key:

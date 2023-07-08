@@ -1,8 +1,13 @@
 package controllers
 
-import "mime/multipart"
+import (
+	"UniqueRecruitmentBackend/global"
+	"context"
+	"mime/multipart"
+)
 
-func upLoadAndSaveFileToCos(file *multipart.FileHeader, fileName string) {
+func upLoadAndSaveFileToCos(file *multipart.FileHeader, fileName string) error {
+	cosClient := global.GetCosClient()
 	src, err := file.Open()
 	if err != nil {
 		return err

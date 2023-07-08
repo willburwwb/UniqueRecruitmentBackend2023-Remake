@@ -36,7 +36,6 @@ func CreateRecruitment(r *request.CreateRecruitmentRequest) (string, error) {
 func UpdateRecruitment(rid string, r *request.UpdateRecruitmentRequest) error {
 	db := global.GetDB()
 	return db.Model(&RecruitmentEntity{}).Where("uid = ?", rid).Updates(&RecruitmentEntity{
-		Name:      r.Name,
 		Beginning: r.Beginning,
 		Deadline:  r.Deadline,
 		End:       r.End,
@@ -46,7 +45,7 @@ func GetRecruitmentById(rid string) (*RecruitmentEntity, error) {
 	db := global.GetDB()
 	var r RecruitmentEntity
 	//remember preload need the struct filed name
-	err := db.Model(&RecruitmentEntity{}).Preload("Interviews").Find(&r).Error
+	err := db.Model(&RecruitmentEntity{}).Preload("Interviews").Where("uid = ?", rid).Find(&r).Error
 	return &r, err
 }
 func GetAllRecruitment() ([]RecruitmentEntity, error) {

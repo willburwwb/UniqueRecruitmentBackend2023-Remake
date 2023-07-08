@@ -48,7 +48,9 @@ type SMSConfigs struct {
 	ResetPasswordCodeTemplateId string `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
 }
 type CosConfigs struct {
-	Url string `mapstructure:"url" json:"url" yaml:"url"`
+	CosUrl       string `mapstructure:"cos_url" json:"cos_url" yaml:"cos_url"`
+	CosSecretID  string `mapstructure:"cos_secret_id" json:"cos_secret_id" yaml:"cos_secret_id"`
+	CosSecretKey string `mapstructure:"cos_secret_key" json:"cos_secret_key" yaml:"cos_secret_key"`
 }
 type settings struct {
 	Server  ServerConfigs  `mapstructure:"Server" yaml:"Server"`
