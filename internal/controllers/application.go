@@ -28,13 +28,6 @@ func CreateApplication(c *gin.Context) {
 		return
 	}
 
-	//design must summit resume
-	if req.Group == "Design" && req.Resume == nil {
-		response.ResponseError(c,
-			msg.RequestBodyError.WithDetail("candidate who sign up for the design group must have a resume"))
-		return
-	}
-
 	//TODO(wwb)
 	//when sso done,fix this filePath->user's uid
 	// file path example: 2023秋(rname)/web(group)/wwb(userID)/filename
@@ -58,15 +51,18 @@ func CreateApplication(c *gin.Context) {
 	}
 	response.ResponseOK(c, "Success save application", application)
 }
+
 func GetApplicationById(c *gin.Context) {
 	//这里区分两种权限，选手和member会看到不同数据。
 	//var applicationId string
 	//applicationId = c.Query("applicationId")
 
 }
+
 func UpdateApplicationById(c *gin.Context) {
 
 }
+
 func checkApplyTime(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
 	if recruitment.Beginning.After(now) {
 		// submit too early
