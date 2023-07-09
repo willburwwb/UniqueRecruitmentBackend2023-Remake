@@ -3,6 +3,7 @@ package models
 import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/request"
+	"encoding/json"
 	"errors"
 	"github.com/google/uuid"
 	"time"
@@ -38,9 +39,22 @@ type ApplicationEntity struct {
 func (a ApplicationEntity) TableName() string {
 	return "applications"
 }
+
+type ApplicationForCandidate struct {
+	Grade     string
+	Institute string
+	Major     string
+	Rank      string
+	Group     string
+	Intro     string
+	Referrer  string
+	Resume    string
+	Step      string
+}
+
 func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename string) (*ApplicationEntity, error) {
 	db := global.GetDB()
-	row := db.Model(&ApplicationEntity{}).Where("'recruitmentId' = ?", req.RecruitmentID).Find(&ApplicationEntity{}).RowsAffected
+	row := db.Where("'recruitmentId' = ?", req.RecruitmentID).Find(&ApplicationEntity{}).RowsAffected
 
 	//check now user's recruitment application >1
 	if row != 0 {
@@ -67,8 +81,57 @@ func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename st
 		// Add step status
 		Step: "",
 	}
-	err = db.Model(&ApplicationEntity{}).Create(&a).Error
+	err = db.Create(&a).Error
 	return &a, err
+}
+
+func GetApplicationByIdForCandidate(aid string) (*ApplicationForCandidate, error) {
+	db := global.GetDB()
+	var a ApplicationEntity
+
+	if err := db.Where("uid = ?", aid).Find(&a).Error; err != nil {
+		return nil, err
+	}
+
+	var afc ApplicationForCandidate
+	bytes, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(bytes, &afc); err != nil {
+		return nil, err
+	}
+
+	return &afc, err
+}
+
+func GetApplicationById(aid string) (*ApplicationEntity, error) {
+	db := global.GetDB()
+	var a ApplicationEntity
+	if err := db.Preload("Comments").Where("uid = ?", aid).Find(&a).Error; err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func UpdateApplication(aid string, filename string, req *request.UpdateApplicationRequest) error {
+	req.Resume = nil
+	bytes, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+
+	var a ApplicationEntity
+	if err := json.Unmarshal(bytes, &a); err != nil {
+		return err
+	}
+	a.Uid = aid
+	if filename != "" {
+		a.Resume = filename
+	}
+
+	db := global.GetDB()
+	return db.Updates(&a).Error
 }
 
 /*

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/response"
@@ -56,11 +57,59 @@ func GetApplicationById(c *gin.Context) {
 	//这里区分两种权限，选手和member会看到不同数据。
 	//var applicationId string
 	//applicationId = c.Query("applicationId")
-
+	aid := c.Param("aid")
+	if common.IsCandidate("") {
+		application, err := models.GetApplicationByIdForCandidate(aid)
+		if err != nil {
+			response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+			return
+		}
+		response.ResponseOK(c, "Get application success", application)
+	} else {
+		application, err := models.GetApplicationById(aid)
+		if err != nil {
+			response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+			return
+		}
+		response.ResponseOK(c, "Get application success", application)
+	}
 }
 
 func UpdateApplicationById(c *gin.Context) {
+	aid := c.Param("aid")
+	var req request.UpdateApplicationRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
 
+	recruitment, err := models.GetRecruitmentById(req.RecruitmentID)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("recruitment").WithDetail("when you submit the application"))
+		return
+	}
+	// Compare the new recruitment time with application time
+	if !checkApplyTime(c, recruitment, time.Now()) {
+		return
+	}
+
+	filePath := ""
+	if req.Resume != nil {
+		filePath = fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, "thisisuserid", req.Resume.Filename)
+		if err := upLoadAndSaveFileToCos(req.Resume, filePath); err != nil {
+			//TODO(wwb)
+			//when sso done,fix this filePath->user's uid
+			response.ResponseError(c, msg.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+			return
+		}
+	}
+
+	if err := models.UpdateApplication(aid, filePath, &req); err != nil {
+		response.ResponseError(c, msg.UpdateDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	response.ResponseOK(c, "update application success", nil)
+	return
 }
 
 func checkApplyTime(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
