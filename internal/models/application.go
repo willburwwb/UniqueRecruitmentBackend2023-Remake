@@ -5,7 +5,6 @@ import (
 	"UniqueRecruitmentBackend/internal/request"
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -60,10 +59,6 @@ func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename st
 	if row != 0 {
 		return nil, errors.New("A candidate can only apply once at the same recruitment")
 	}
-	newUUID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, err
-	}
 	a := ApplicationEntity{
 		Grade:         req.Grade,
 		Institute:     req.Institute,
@@ -75,7 +70,6 @@ func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename st
 		Referrer:      req.Referrer,
 		IsQuick:       req.IsQuick,
 		Resume:        filename,
-		Common:        Common{Uid: newUUID.String()},
 		CandidateID:   fakeCandidateId,
 		// TODO(wwb)
 		// Add step status
