@@ -10,6 +10,7 @@ func TimeParse(ti string) time.Time {
 	t, _ := time.Parse(format, ti)
 	return t
 }
+
 func TimeParseBool(ti string) bool {
 	format := "2006-01-02"
 	if _, err := time.Parse(format, ti); err != nil {

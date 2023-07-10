@@ -1,8 +1,9 @@
-Server:
+COsServer:
   run_mode: "debug"
   addr: ":3333"
   read_timeout: 2 #minute
   write_timeout: 2 #minute
+
 Pgsql:
   host: "db_postgres"
   port: 5432
@@ -12,8 +13,15 @@ Pgsql:
   max_idle_conns: 100
   max_open_conns: 100
   max_life_seconds: 86400
+
 SSOGrpc:
   addr: "dev.back.sso.hustunique.com"
+
+SMS:
+  token:
+  register_code_template_id:
+  reset_password_code_template_id:
+
 COS:
   cos_url:
   cos_secret_id:

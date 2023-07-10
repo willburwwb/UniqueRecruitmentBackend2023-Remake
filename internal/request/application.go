@@ -15,3 +15,15 @@ type CreateApplicationRequest struct {
 
 	Resume *multipart.FileHeader `form:"resume" json:"resume"` //简历
 }
+
+type UpdateApplicationRequest struct {
+	Grade         string                `form:"grade" json:"grade,omitempty"`
+	Institute     string                `form:"institute" json:"institute,omitempty"`
+	Major         string                `form:"major" json:"major,omitempty"`
+	Rank          string                `form:"rank" json:"rank,omitempty"`
+	Group         string                `form:"group" json:"group,omitempty"`
+	Intro         string                `form:"intro" json:"intro,omitempty"`       //自我介绍
+	Referrer      string                `form:"referrer" json:"referrer,omitempty"` //推荐人
+	RecruitmentID string                `form:"recruitmentID" json:"recruitmentID,omitempty"`
+	Resume        *multipart.FileHeader `form:"resume" json:"resume,omitempty"` //简历
+}
