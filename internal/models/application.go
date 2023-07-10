@@ -22,13 +22,13 @@ type ApplicationEntity struct {
 
 	Abandoned                 bool               `gorm:"not null; default false" `
 	Rejected                  bool               `gorm:"not null; default false"`
-	Step                      string             `gorm:"not null"`                                                      //constants.Step
-	CandidateID               string             `gorm:"column:candidateId;uniqueIndex:UQ_CandidateID_RecruitmentID"`   //manytoone
-	RecruitmentID             string             `gorm:"column:recruitmentId;uniqueIndex:UQ_CandidateID_RecruitmentID"` //manytoone
+	Step                      string             `gorm:"not null"`                                                                //constants.Step
+	CandidateID               string             `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"`   //manytoone
+	RecruitmentID             string             `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"` //manytoone
 	InterviewAllocationsGroup time.Time          `gorm:"column:interviewAllocationsGroup;"`
 	InterviewAllocationsTeam  time.Time          `gorm:"column:interviewAllocationsTeam;"`
-	InterviewSelections       []*InterviewEntity `gorm:"many2many:interview_selections; constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //manytomany
-	Comments                  []CommentEntity    `gorm:"foreignKey:ApplicationID; references:Uid; constraint:OnDelete:CASCADE;"`        //onetomany
+	InterviewSelections       []*InterviewEntity `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //manytomany
+	Comments                  []CommentEntity    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE;"`         //onetomany
 }
 
 func (a ApplicationEntity) TableName() string {
@@ -60,7 +60,31 @@ func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename st
 	err := db.Model(&ApplicationEntity{}).Create(&a).Error
 	return &a, err
 }
-
-/*
-
- */
+func FindOneByIdForMember(aid string) (*ApplicationEntity, error) {
+	db := global.GetDB()
+	// Only preload interviewSelections
+	// Due to the existence of sso, no preload candidate here
+	var ap ApplicationEntity
+	err := db.Model(&ApplicationEntity{}).Preload("InterviewSelections").Where("uid = ?", aid).Find(&ap).Error
+	return &ap, err
+}
+func FindOneByIdForCandidate(aid string) (*ApplicationEntity, error) {
+	db := global.GetDB()
+	// Only preload interviewSelections comments
+	// Due to the existence of sso, no preload candidate here
+	var ap ApplicationEntity
+	err := db.Model(&ApplicationEntity{}).Preload("InterviewSelections", "Comments").Where("uid = ?", aid).Find(&ap).Error
+	return &ap, err
+}
+func FindOneByIdAndUid(aid string, uid string) (bool, error) {
+	db := global.GetDB()
+	var ap ApplicationEntity
+	err := db.Model(&ApplicationEntity{}).Where("uid = ? And candidateId = ?", aid, uid).Find(&ap).Error
+	if err != nil {
+		return false, err
+	}
+	if ap.Uid != "" {
+		return true, nil
+	}
+	return false, nil
+}

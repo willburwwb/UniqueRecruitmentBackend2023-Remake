@@ -47,3 +47,11 @@ const (
 	InGroup GroupOrTeam = "group"
 	InTeam  GroupOrTeam = "team"
 )
+
+type Role uint
+
+const (
+	Admin         Role = 1
+	MemberRole    Role = 2
+	CandidateRole Role = 3
+)

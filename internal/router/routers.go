@@ -14,6 +14,8 @@ func NewRouter() *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
+	//TODO(wwb)
+	//Add access control middleware here
 	//r.Use(middlewares.MemberMiddleware)
 
 	if gin.Mode() == gin.DebugMode {
@@ -59,9 +61,9 @@ func NewRouter() *gin.Engine {
 	applicationRouter := r.Group("/applications")
 	{
 		applicationRouter.POST("/", controllers.CreateApplication)
-		//applicationRouter.GET("/:aid")
-		//applicationRouter.PUT("/:aid")
-		//applicationRouter.DELETE("/:aid")
+		applicationRouter.GET("/:aid")
+		applicationRouter.PUT("/:aid")
+		applicationRouter.DELETE("/:aid")
 		//applicationRouter.PUT("/:aid/abandoned")
 		//applicationRouter.GET("/:aid/slots/:type")
 		//applicationRouter.PUT("/:aid/slots/:type")

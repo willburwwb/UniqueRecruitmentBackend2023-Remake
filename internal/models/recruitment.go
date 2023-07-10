@@ -10,13 +10,14 @@ import (
 
 type RecruitmentEntity struct {
 	Common
-	Name         string              `gorm:"not null;unique"`
-	Beginning    time.Time           `gorm:"not null"`
-	Deadline     time.Time           `gorm:"not null"`
-	End          time.Time           `gorm:"not null"`
-	Statistics   pgtype.JSONB        `gorm:"type:jsonb"`
-	Interviews   []InterviewEntity   `gorm:"foreignKey:recruitmentId;references:uid;constraint:OnDelete:CASCADE;"` //一个hr->面试 ;级联删除
-	Applications []ApplicationEntity `gorm:"foreignKey:candidateId;references:uid;constraint:OnDelete:CASCADE;"`   //一个hr->简历 ;级联删除
+	Name       string       `gorm:"not null;unique"`
+	Beginning  time.Time    `gorm:"not null"`
+	Deadline   time.Time    `gorm:"not null"`
+	End        time.Time    `gorm:"not null"`
+	Statistics pgtype.JSONB `gorm:"type:jsonb"`
+
+	Applications []ApplicationEntity `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE;"` //一个hr->简历 ;级联删除
+	Interviews   []InterviewEntity   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE;"` //一个hr->面试 ;级联删除
 }
 
 func (c RecruitmentEntity) TableName() string {

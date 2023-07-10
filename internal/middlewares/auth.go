@@ -15,7 +15,7 @@ func memberMiddleware(c *gin.Context) {
 		})
 		return
 	}
-	user, err := grpcsso.GetUserByUID(uid)
+	user, err := grpcsso.GetUserInfoByUID(uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"msg":    msg.SSOError.Msg(),

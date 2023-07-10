@@ -22,6 +22,8 @@ var (
 	GetDatabaseError    = NewError(10010, "Get %s error", 1, nil)
 
 	UpLoadFileError = NewError(10012, "%s upload file error", 1, nil)
+
+	RoleError = NewError(10013, "%s don`t has role to %s", 2, nil)
 )
 
 type Error struct {

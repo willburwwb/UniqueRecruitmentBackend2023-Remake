@@ -10,8 +10,8 @@ type InterviewEntity struct {
 	Period        string               `gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
 	Name          string               `gorm:"not null;uniqueIndex:interviews_all"` //constants.GroupOrTeam
 	SlotNumber    int                  `gorm:"column:slotNumber;not null"`
-	RecruitmentID string               `gorm:"column:recruitmentId;uniqueIndex:interviews_all"`           //manytoone
-	Applications  []*ApplicationEntity `gorm:"many2many:interview_selections"` //manytomany
+	RecruitmentID string               `gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
+	Applications  []*ApplicationEntity `gorm:"many2many:interview_selections"`                            //manytomany
 }
 
 func (c InterviewEntity) TableName() string {

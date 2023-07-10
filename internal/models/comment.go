@@ -2,8 +2,8 @@ package models
 
 type CommentEntity struct {
 	Common
-	ApplicationID string `gorm:"columns:applicationId"` //manytoone
-	MemberID      string `gorm:"columns:memberId"`      //manytoone
+	ApplicationID string `gorm:"column:applicationId;type:uuid;"` //manytoone
+	MemberID      string `gorm:"column:memberId;type:uuid;"`      //manytoone
 	Content       string `gorm:"not null"`
 	Evaluation    string `gorm:"not null"`
 }

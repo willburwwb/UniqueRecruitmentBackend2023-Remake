@@ -10,7 +10,8 @@ func SetupTables() {
 	db.AutoMigrate(&RecruitmentEntity{})
 	db.AutoMigrate(&CandidateEntity{})
 	db.AutoMigrate(&MemberEntity{})
-	db.AutoMigrate(&CommentEntity{})
 	db.AutoMigrate(&ApplicationEntity{})
 	db.AutoMigrate(&InterviewEntity{})
+
+	db.AutoMigrate(&CommentEntity{})
 }
