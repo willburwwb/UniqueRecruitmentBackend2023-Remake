@@ -23,6 +23,7 @@ type RecruitmentEntity struct {
 func (c RecruitmentEntity) TableName() string {
 	return "recruitments"
 }
+
 func CreateRecruitment(r *request.CreateRecruitmentRequest) (string, error) {
 	db := global.GetDB()
 	ri := RecruitmentEntity{
@@ -34,6 +35,7 @@ func CreateRecruitment(r *request.CreateRecruitmentRequest) (string, error) {
 	err := db.Model(&RecruitmentEntity{}).Create(&ri).Error
 	return ri.Uid, err
 }
+
 func UpdateRecruitment(rid string, r *request.UpdateRecruitmentRequest) error {
 	db := global.GetDB()
 	return db.Model(&RecruitmentEntity{}).Where("uid = ?", rid).Updates(&RecruitmentEntity{
@@ -42,6 +44,7 @@ func UpdateRecruitment(rid string, r *request.UpdateRecruitmentRequest) error {
 		End:       r.End,
 	}).Error
 }
+
 func GetRecruitmentById(rid string) (*RecruitmentEntity, error) {
 	db := global.GetDB()
 	var r RecruitmentEntity
@@ -49,6 +52,7 @@ func GetRecruitmentById(rid string) (*RecruitmentEntity, error) {
 	err := db.Model(&RecruitmentEntity{}).Preload("Interviews").Where("uid = ?", rid).Find(&r).Error
 	return &r, err
 }
+
 func GetAllRecruitment() ([]RecruitmentEntity, error) {
 	db := global.GetDB()
 	var r []RecruitmentEntity

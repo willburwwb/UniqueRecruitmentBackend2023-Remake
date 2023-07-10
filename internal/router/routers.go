@@ -61,14 +61,19 @@ func NewRouter() *gin.Engine {
 	applicationRouter := r.Group("/applications")
 	{
 		applicationRouter.POST("/", controllers.CreateApplication)
-		applicationRouter.GET("/:aid")
-		applicationRouter.PUT("/:aid")
-		applicationRouter.DELETE("/:aid")
+		applicationRouter.GET("/:aid", controllers.GetApplicationById)
+		applicationRouter.PUT("/:aid", controllers.UpdateApplicationById)
+		//applicationRouter.DELETE("/:aid")
 		//applicationRouter.PUT("/:aid/abandoned")
 		//applicationRouter.GET("/:aid/slots/:type")
 		//applicationRouter.PUT("/:aid/slots/:type")
 		//applicationRouter.GET("/:aid/resume")
 		//applicationRouter.GET("/recruitment/:rid")
+	}
+
+	commentRouter := r.Group("/comments")
+	{
+		commentRouter.POST("/", controllers.CreateComment)
 	}
 	return r
 }

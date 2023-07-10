@@ -10,8 +10,8 @@ type CandidateEntity struct {
 	Phone        string              `gorm:"not null;unique"`
 	Mail         string              `gorm:"unique"`
 	Gender       string              `gorm:"not null"` //constants.Gender
-	PasswordSalt string              `gorm:"columns:passwordSalt;not null"`
-	PasswordHash string              `gorm:"columns:passwordHash;not null;unique"`
+	PasswordSalt string              `gorm:"column:passwordSalt;not null"`
+	PasswordHash string              `gorm:"column:passwordHash;not null;unique"`
 }
 
 func (c CandidateEntity) TableName() string {
