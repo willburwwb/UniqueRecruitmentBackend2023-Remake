@@ -15,7 +15,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreateApplication create an application. Remember to transfer data with form instead of json!!!
+// CreateApplication create an application. Remember to submit data with form instead of json!!!
+// POST applications/
 // Accept role >=candidate
 func CreateApplication(c *gin.Context) {
 	var req request.CreateApplicationRequest
@@ -29,7 +30,7 @@ func CreateApplication(c *gin.Context) {
 		return
 	}
 	// Compare the new recruitment time with application time
-	if !checkApplyTime(c, recruitment, time.Now()) {
+	if !checkRecruitmentInBtoD(c, recruitment, time.Now()) {
 		return
 	}
 
@@ -57,8 +58,11 @@ func CreateApplication(c *gin.Context) {
 	response.ResponseOK(c, "Success save application", application)
 }
 
+// GetApplicationById get candidate's application by applicationId
+// GET applications/:aid
+// TODO(wwb)
+// Remember two different views of candidate and member
 func GetApplicationById(c *gin.Context) {
-	//这里区分两种权限，选手和member会看到不同数据。
 	//var applicationId string
 	//applicationId = c.Query("applicationId")
 	aid := c.Param("aid")
@@ -79,6 +83,9 @@ func GetApplicationById(c *gin.Context) {
 	}
 }
 
+// UpdateApplicationById update candidate's application by applicationId
+// PUT applications/:aid
+// only by application's candidate
 func UpdateApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	var req request.UpdateApplicationRequest
@@ -93,7 +100,7 @@ func UpdateApplicationById(c *gin.Context) {
 		return
 	}
 	// Compare the new recruitment time with application time
-	if !checkApplyTime(c, recruitment, time.Now()) {
+	if !checkRecruitmentInBtoD(c, recruitment, time.Now()) {
 		return
 	}
 
@@ -116,6 +123,11 @@ func UpdateApplicationById(c *gin.Context) {
 	return
 }
 
+// DeleteApplicationById delete candidate's application by applicationId
+// DELETE applications/:aid
+// only by application's candidate
+// TODO(wwb)
+// add role controller to this api
 func DeleteApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	if err := models.DeleteApplication(aid); err != nil {
@@ -125,6 +137,11 @@ func DeleteApplicationById(c *gin.Context) {
 	response.ResponseOK(c, "delete application success", nil)
 }
 
+// AbandonApplicationById abandon candidate's application by applicationId
+// DELETE applications/:aid/abandoned
+// only by the member of application's group
+// TODO(wwb)
+// add role controller to this api
 func AbandonApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	if err := models.AbandonApplication(aid); err != nil {
@@ -134,6 +151,8 @@ func AbandonApplicationById(c *gin.Context) {
 	response.ResponseOK(c, "delete application success", nil)
 }
 
+// GetResumeById Download resume by application's
+// GET applications/:aid/resume
 func GetResumeById(c *gin.Context) {
 	aid := c.Param("aid")
 	application, err := models.GetApplicationById(aid)
@@ -204,18 +223,57 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	return
 }
 
-// SetApplicationInterviewTime Set interview times in batches
-func SetApplicationInterviewTime(c *gin.Context) {
-	// TODO 我没看懂这个接口是要干啥
-	//interviewType := c.Param("type")
-	//var req request.SetApplicationInterviewTimeRequest
-	//if err := c.ShouldBind(&req); err != nil {
-	//	response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
-	//	return
-	//}
+// MoveApplication move the step of application by member
+// PUT applications/:aid/step
+// member role
+func MoveApplication(c *gin.Context) {
+	req := struct {
+		From string `form:"from" json:"from,omitempty"`
+		To   string `form:"to" json:"to,omitempty"`
+	}{}
+	if err := c.ShouldBind(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+	applicationId := c.Param("aid")
+	if applicationId == "" {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail("lost aid param"))
+		return
+	}
+	application, err := models.GetApplicationById(applicationId)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithDetail("failed to get application for member"))
+		return
+	}
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("recruitment").WithDetail("when you move application"))
+		return
+	}
+	//check application's status
+	if b := checkApplyStatus(c, application); b != true {
+		return
+	}
+	if b := checkRecruitmentTimeInBtoE(c, recruitment, time.Now()); b != true {
+		return
+	}
+	// TODO(wwb)
+	// Add check member's group
+	//if b := checkMemberGroup(c,application);b
+	if application.Step != req.From {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail("application's step != request's from"))
+		return
+	}
+	if err := models.UpdateApplicationStep(applicationId, req.To); err != nil {
+		response.ResponseError(c, msg.UpdateDatabaseError.WithData("application").WithDetail("when you update application's step"))
+		return
+	}
+	response.ResponseOK(c, "Update application step success", nil)
 }
 
-func checkApplyTime(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
+// checkRecruitmentInBtoD check whether the recruitment is between the start and the deadline
+// such as summit the application/update the application
+func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
 	if recruitment.Beginning.After(now) {
 		// submit too early
 		response.ResponseError(c, msg.RecruitmentNotReady.WithData(recruitment.Name))
@@ -226,6 +284,35 @@ func checkApplyTime(c *gin.Context, recruitment *models.RecruitmentEntity, now t
 		return false
 	} else if recruitment.End.Before(now) {
 		response.ResponseError(c, msg.RecruitmentEnd.WithData(recruitment.Name))
+		return false
+	}
+	return true
+}
+
+// checkRecruitmentInBtoD check whether the recruitment is between the start and the end
+// such as move the application's step
+func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
+	if recruitment.Beginning.After(now) {
+		response.ResponseError(c, msg.RecruitmentNotReady.WithData(recruitment.Name))
+		return false
+	} else if recruitment.End.Before(now) {
+		response.ResponseError(c, msg.RecruitmentEnd.WithData(recruitment.Name))
+		return false
+	}
+	return true
+}
+
+// check application's status
+// If the resume has already been rejected or abandoned return false
+func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) bool {
+	if application.Rejected {
+		//TODO(wwb)
+		//fix this to user's name
+		response.ResponseError(c, msg.Rejected.WithData(application.Uid))
+		return false
+	}
+	if application.Abandoned {
+		response.ResponseError(c, msg.Abandoned.WithData(application.Uid))
 		return false
 	}
 	return true

@@ -26,6 +26,9 @@ var (
 	DownloadFileError = NewError(10013, "%s download fail error", 1, nil)
 
 	RoleError = NewError(10014, "%s don`t has role to %s", 2, nil)
+
+	Abandoned = NewError(10015, "Application has already been abandoned by %s", 1, nil)
+	Rejected  = NewError(10016, "Application of %s has already been rejected", 1, nil)
 )
 
 type Error struct {

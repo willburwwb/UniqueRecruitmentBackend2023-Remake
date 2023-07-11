@@ -31,8 +31,8 @@ type ApplicationEntity struct {
 	RecruitmentID             string             `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"` //manytoone
 	InterviewAllocationsGroup time.Time          `gorm:"column:interviewAllocationsGroup;"`
 	InterviewAllocationsTeam  time.Time          `gorm:"column:interviewAllocationsTeam;"`
-	InterviewSelections       []*InterviewEntity `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //manytomany
-	Comments                  []CommentEntity    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE;"`         //onetomany
+	InterviewSelections       []*InterviewEntity `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`          //manytomany
+	Comments                  []CommentEntity    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //onetomany
 }
 
 func (a ApplicationEntity) TableName() string {
@@ -99,6 +99,7 @@ func GetApplicationByIdForCandidate(aid string) (*ApplicationForCandidate, error
 	return &afc, err
 }
 
+// GetApplicationById For member
 func GetApplicationById(aid string) (*ApplicationEntity, error) {
 	db := global.GetDB()
 	var a ApplicationEntity
@@ -126,6 +127,14 @@ func UpdateApplication(aid string, filename string, req *request.UpdateApplicati
 
 	db := global.GetDB()
 	return db.Updates(&a).Error
+}
+
+func UpdateApplicationStep(aid string, step string) error {
+	db := global.GetDB()
+	if err := db.Model(&ApplicationEntity{}).Where("uid = ?", aid).Update("step", step).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func DeleteApplication(aid string) error {
