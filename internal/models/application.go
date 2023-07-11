@@ -152,6 +152,36 @@ func GetApplicationByRecruitmentId(rid string) ([]ApplicationEntity, error) {
 	return recruitmentById.Applications, nil
 }
 
+func SetApplicationStepById(aid string, req *request.SetApplicationStepRequest) error {
+	db := global.GetDB()
+	application, err := GetApplicationById(aid)
+	if err != nil {
+		return err
+	}
+	if application.Step != req.From {
+		return errors.New("the step doesn't match")
+	}
+	application.Step = req.To
+	return db.Updates(&application).Error
+}
+
+func SetApplicationInterviewTime(aid, interviewType string, time time.Time) error {
+	db := global.GetDB()
+	application, err := GetApplicationById(aid)
+	if err != nil {
+		return err
+	}
+
+	switch interviewType {
+	case "group":
+		application.InterviewAllocationsGroup = time
+	case "team":
+		application.InterviewAllocationsTeam = time
+	}
+
+	return db.Updates(&application).Error
+}
+
 /*
 
  */

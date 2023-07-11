@@ -17,6 +17,7 @@ var (
 
 	SendSMSError        = NewError(10006, "Send sms failed", 0, nil)
 	RequestBodyError    = NewError(10007, "Request body error", 0, nil)
+	RequestParamError   = NewError(10015, "Request param error", 0, nil)
 	SaveDatabaseError   = NewError(10008, "Save %s error", 1, nil)
 	UpdateDatabaseError = NewError(10009, "Update %s error", 1, nil)
 	GetDatabaseError    = NewError(10010, "Get %s error", 1, nil)

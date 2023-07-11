@@ -166,6 +166,55 @@ func GetApplicationByRecruitmentId(c *gin.Context) {
 	return
 }
 
+func SetApplicationStepById(c *gin.Context) {
+	aid := c.Param("aid")
+	var req request.SetApplicationStepRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+
+	if err := models.SetApplicationStepById(aid, &req); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData(err.Error()))
+		return
+	}
+	response.ResponseOK(c, "set application step success", nil)
+	return
+}
+
+func SetApplicationInterviewTimeById(c *gin.Context) {
+	aid := c.Param("aid")
+	interviewType := c.Param("type")
+	if interviewType == "group" || interviewType == "team" {
+		response.ResponseError(c, msg.RequestParamError.WithData("type wrong"))
+		return
+	}
+
+	var req request.SetApplicationInterviewTimeRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+
+	if err := models.SetApplicationInterviewTime(aid, interviewType, req.Time); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData(err.Error()))
+		return
+	}
+	response.ResponseOK(c, "set interview time success", nil)
+	return
+}
+
+// SetApplicationInterviewTime Set interview times in batches
+func SetApplicationInterviewTime(c *gin.Context) {
+	// TODO 我没看懂这个接口是要干啥
+	//interviewType := c.Param("type")
+	//var req request.SetApplicationInterviewTimeRequest
+	//if err := c.ShouldBind(&req); err != nil {
+	//	response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+	//	return
+	//}
+}
+
 func checkApplyTime(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
 	if recruitment.Beginning.After(now) {
 		// submit too early

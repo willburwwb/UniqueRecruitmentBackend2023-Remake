@@ -69,6 +69,9 @@ func NewRouter() *gin.Engine {
 		//applicationRouter.PUT("/:aid/slots/:type")
 		applicationRouter.GET("/:aid/resume", controllers.GetResumeById)
 		applicationRouter.GET("/recruitment/:rid", controllers.GetApplicationByRecruitmentId)
+		applicationRouter.PUT("/:aid/step", controllers.SetApplicationStepById)
+		applicationRouter.PUT("/:aid/interview/:type", controllers.SetApplicationInterviewTimeById)
+		//applicationRouter.PUT("/interview/:type")
 	}
 
 	commentRouter := r.Group("/comments")
