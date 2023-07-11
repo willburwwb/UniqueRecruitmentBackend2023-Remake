@@ -5,7 +5,7 @@ package models
 
 type CandidateEntity struct {
 	Common
-	Applications []ApplicationEntity `gorm:"foreignKey:CandidateID;references:Uid;constraint:OnDelete:CASCADE;"` //onetomany
+	Applications []ApplicationEntity `gorm:"foreignKey:CandidateID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //onetomany
 	Name         string              `gorm:"not null"`
 	Phone        string              `gorm:"not null;unique"`
 	Mail         string              `gorm:"unique"`
