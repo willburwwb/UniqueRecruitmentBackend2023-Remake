@@ -5,9 +5,11 @@ import (
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/response"
+	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg/msg"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -111,6 +113,84 @@ func UpdateApplicationById(c *gin.Context) {
 		return
 	}
 	response.ResponseOK(c, "update application success", nil)
+	return
+}
+
+func DeleteApplicationById(c *gin.Context) {
+	aid := c.Param("aid")
+	if err := models.DeleteApplication(aid); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
+		return
+	}
+	response.ResponseOK(c, "delete application success", nil)
+}
+
+func AbandonApplicationById(c *gin.Context) {
+	aid := c.Param("aid")
+	if err := models.AbandonApplication(aid); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
+		return
+	}
+	response.ResponseOK(c, "delete application success", nil)
+}
+
+func GetResumeById(c *gin.Context) {
+	aid := c.Param("aid")
+	application, err := models.GetApplicationById(aid)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+		return
+	}
+	resp, err := utils.GetCOSObjectResp(application.Resume)
+	if err != nil {
+		response.ResponseError(c, msg.DownloadFileError.WithData("application").WithDetail("download resume fail"))
+		return
+	}
+
+	reader := resp.Body
+	contentLength := resp.ContentLength
+	contentType := resp.Header.Get("Content-Type")
+
+	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
+	return
+}
+
+func DeleteApplicationById(c *gin.Context) {
+	aid := c.Param("aid")
+	if err := models.DeleteApplication(aid); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
+		return
+	}
+	response.ResponseOK(c, "delete application success", nil)
+}
+
+func AbandonApplicationById(c *gin.Context) {
+	aid := c.Param("aid")
+	if err := models.AbandonApplication(aid); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
+		return
+	}
+	response.ResponseOK(c, "delete application success", nil)
+}
+
+func GetResumeById(c *gin.Context) {
+	aid := c.Param("aid")
+	application, err := models.GetApplicationById(aid)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+		return
+	}
+	resp, err := utils.GetCOSObjectResp(application.Resume)
+	if err != nil {
+		response.ResponseError(c, msg.DownloadFileError.WithData("application").WithDetail("download resume fail"))
+		return
+	}
+
+	reader := resp.Body
+	contentLength := resp.ContentLength
+	contentType := resp.Header.Get("Content-Type")
+
+	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
 	return
 }
 

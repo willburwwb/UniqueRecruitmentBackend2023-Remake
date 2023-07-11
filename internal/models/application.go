@@ -137,6 +137,21 @@ func UpdateApplicationStep(aid string, step string) error {
 	return nil
 }
 
+func DeleteApplication(aid string) error {
+	db := global.GetDB()
+	return db.Delete(&ApplicationEntity{}, aid).Error
+}
+
+func AbandonApplication(aid string) error {
+	db := global.GetDB()
+	applicationEntity, err := GetApplicationById(aid)
+	if err != nil {
+		return err
+	}
+	applicationEntity.Abandoned = true
+	return db.Updates(&applicationEntity).Error
+}
+
 /*
 
  */

@@ -21,12 +21,13 @@ var (
 	UpdateDatabaseError = NewError(10009, "Update %s error", 1, nil)
 	GetDatabaseError    = NewError(10010, "Get %s error", 1, nil)
 
-	UpLoadFileError = NewError(10012, "%s upload file error", 1, nil)
+	UpLoadFileError   = NewError(10012, "%s upload file error", 1, nil)
+	DownloadFileError = NewError(10013, "%s download fail error", 1, nil)
 
-	RoleError = NewError(10013, "%s don`t has role to %s", 2, nil)
+	RoleError = NewError(10014, "%s don`t has role to %s", 2, nil)
 
-	Abandoned = NewError(10014, "Application has already been abandoned by %s", 1, nil)
-	Rejected  = NewError(10015, "Application of %s has already been rejected", 1, nil)
+	Abandoned = NewError(10015, "Application has already been abandoned by %s", 1, nil)
+	Rejected  = NewError(10016, "Application of %s has already been rejected", 1, nil)
 )
 
 type Error struct {

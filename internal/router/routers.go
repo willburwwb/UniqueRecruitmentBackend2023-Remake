@@ -63,11 +63,11 @@ func NewRouter() *gin.Engine {
 		applicationRouter.POST("/", controllers.CreateApplication)
 		applicationRouter.GET("/:aid", controllers.GetApplicationById)
 		applicationRouter.PUT("/:aid", controllers.UpdateApplicationById)
-		//applicationRouter.DELETE("/:aid")
-		//applicationRouter.PUT("/:aid/abandoned")
+		applicationRouter.DELETE("/:aid", controllers.DeleteApplicationById)
+		applicationRouter.PUT("/:aid/abandoned", controllers.AbandonApplicationById)
 		//applicationRouter.GET("/:aid/slots/:type")
 		//applicationRouter.PUT("/:aid/slots/:type")
-		//applicationRouter.GET("/:aid/resume")
+		applicationRouter.GET("/:aid/resume", controllers.GetResumeById)
 		//applicationRouter.GET("/recruitment/:rid")
 	}
 
