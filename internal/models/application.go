@@ -143,6 +143,15 @@ func AbandonApplication(aid string) error {
 	return db.Updates(&applicationEntity).Error
 }
 
+func GetApplicationByRecruitmentId(rid string) ([]ApplicationEntity, error) {
+	recruitmentById, err := GetRecruitmentById(rid)
+	if err != nil {
+		return nil, err
+	}
+
+	return recruitmentById.Applications, nil
+}
+
 /*
 
  */

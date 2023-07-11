@@ -155,6 +155,17 @@ func GetResumeById(c *gin.Context) {
 	return
 }
 
+func GetApplicationByRecruitmentId(c *gin.Context) {
+	rid := c.Param("rid")
+	applications, err := models.GetApplicationByRecruitmentId(rid)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+		return
+	}
+	response.ResponseOK(c, "get applications success", applications)
+	return
+}
+
 func checkApplyTime(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
 	if recruitment.Beginning.After(now) {
 		// submit too early
