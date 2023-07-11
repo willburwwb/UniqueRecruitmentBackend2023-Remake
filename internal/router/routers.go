@@ -74,6 +74,7 @@ func NewRouter() *gin.Engine {
 	commentRouter := r.Group("/comments")
 	{
 		commentRouter.POST("/", controllers.CreateComment)
+		commentRouter.DELETE("/:cid", controllers.DeleteComment)
 	}
 	return r
 }
