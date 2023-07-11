@@ -128,6 +128,21 @@ func UpdateApplication(aid string, filename string, req *request.UpdateApplicati
 	return db.Updates(&a).Error
 }
 
+func DeleteApplication(aid string) error {
+	db := global.GetDB()
+	return db.Delete(&ApplicationEntity{}, aid).Error
+}
+
+func AbandonApplication(aid string) error {
+	db := global.GetDB()
+	applicationEntity, err := GetApplicationById(aid)
+	if err != nil {
+		return err
+	}
+	applicationEntity.Abandoned = true
+	return db.Updates(&applicationEntity).Error
+}
+
 /*
 
  */

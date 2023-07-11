@@ -26,8 +26,7 @@ func CreateComment(c *gin.Context) {
 
 func DeleteComment(c *gin.Context) {
 	cid := c.Param("cid")
-	err := models.DeleteCommentById(cid)
-	if err != nil {
+	if err := models.DeleteCommentById(cid); err != nil {
 		response.ResponseError(c, msg.SaveDatabaseError.WithData("comment"))
 		return
 	}

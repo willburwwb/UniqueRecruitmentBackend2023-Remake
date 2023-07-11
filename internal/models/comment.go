@@ -31,7 +31,7 @@ func CreateComment(req *request.CreateCommentRequest) (string, error) {
 		ApplicationID: req.ApplicationID,
 		MemberID:      req.MemberID,
 		Content:       req.Content,
-		Evaluation:    req.Evaluation,
+		Evaluation:    Evaluation(req.Evaluation),
 	}
 	err := db.Create(&c).Error
 	return c.Uid, err
