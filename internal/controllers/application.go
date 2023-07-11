@@ -16,6 +16,7 @@ import (
 )
 
 // CreateApplication create an application. Remember to submit data with form instead of json!!!
+// POST applications/
 // Accept role >=candidate
 func CreateApplication(c *gin.Context) {
 	var req request.CreateApplicationRequest
@@ -57,8 +58,11 @@ func CreateApplication(c *gin.Context) {
 	response.ResponseOK(c, "Success save application", application)
 }
 
+// GetApplicationById get candidate's application by applicationId
+// GET applications/:aid
+// TODO(wwb)
+// Remember two different views of candidate and member
 func GetApplicationById(c *gin.Context) {
-	//这里区分两种权限，选手和member会看到不同数据。
 	//var applicationId string
 	//applicationId = c.Query("applicationId")
 	aid := c.Param("aid")
@@ -79,6 +83,9 @@ func GetApplicationById(c *gin.Context) {
 	}
 }
 
+// UpdateApplicationById update candidate's application by applicationId
+// PUT applications/:aid
+// only by application's candidate
 func UpdateApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	var req request.UpdateApplicationRequest
@@ -116,6 +123,11 @@ func UpdateApplicationById(c *gin.Context) {
 	return
 }
 
+// DeleteApplicationById delete candidate's application by applicationId
+// DELETE applications/:aid
+// only by application's candidate
+// TODO(wwb)
+// add role controller to this api
 func DeleteApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	if err := models.DeleteApplication(aid); err != nil {
@@ -125,6 +137,11 @@ func DeleteApplicationById(c *gin.Context) {
 	response.ResponseOK(c, "delete application success", nil)
 }
 
+// AbandonApplicationById abandon candidate's application by applicationId
+// DELETE applications/:aid/abandoned
+// only by the member of application's group
+// TODO(wwb)
+// add role controller to this api
 func AbandonApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	if err := models.AbandonApplication(aid); err != nil {
@@ -134,45 +151,8 @@ func AbandonApplicationById(c *gin.Context) {
 	response.ResponseOK(c, "delete application success", nil)
 }
 
-func GetResumeById(c *gin.Context) {
-	aid := c.Param("aid")
-	application, err := models.GetApplicationById(aid)
-	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
-		return
-	}
-	resp, err := utils.GetCOSObjectResp(application.Resume)
-	if err != nil {
-		response.ResponseError(c, msg.DownloadFileError.WithData("application").WithDetail("download resume fail"))
-		return
-	}
-
-	reader := resp.Body
-	contentLength := resp.ContentLength
-	contentType := resp.Header.Get("Content-Type")
-
-	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
-	return
-}
-
-func DeleteApplicationById(c *gin.Context) {
-	aid := c.Param("aid")
-	if err := models.DeleteApplication(aid); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
-		return
-	}
-	response.ResponseOK(c, "delete application success", nil)
-}
-
-func AbandonApplicationById(c *gin.Context) {
-	aid := c.Param("aid")
-	if err := models.AbandonApplication(aid); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
-		return
-	}
-	response.ResponseOK(c, "delete application success", nil)
-}
-
+// GetResumeById Download resume by application's
+// GET applications/:aid/resume
 func GetResumeById(c *gin.Context) {
 	aid := c.Param("aid")
 	application, err := models.GetApplicationById(aid)
@@ -242,7 +222,6 @@ func MoveApplication(c *gin.Context) {
 	response.ResponseOK(c, "Update application step success", nil)
 }
 
-func 
 // checkRecruitmentInBtoD check whether the recruitment is between the start and the deadline
 // such as summit the application/update the application
 func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
