@@ -24,6 +24,8 @@ var (
 	UpLoadFileError = NewError(10012, "%s upload file error", 1, nil)
 
 	RoleError = NewError(10013, "%s don`t has role to %s", 2, nil)
+
+	GroupNotMatch = NewError(10014, "Member' group does not match", 0, nil)
 )
 
 type Error struct {
