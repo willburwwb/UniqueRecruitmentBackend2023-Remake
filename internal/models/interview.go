@@ -9,12 +9,12 @@ import (
 
 type InterviewEntity struct {
 	Common
-	Date          time.Time            `gorm:"not null;uniqueIndex:interviews_all"`
-	Period        constants.Period     `gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
-	Name          constants.Group      `gorm:"not null;uniqueIndex:interviews_all"` //constants.Group
-	SlotNumber    int                  `gorm:"column:slotNumber;not null"`
-	RecruitmentID string               `gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
-	Applications  []*ApplicationEntity `gorm:"many2many:interview_selections"`                            //manytomany
+	Date          time.Time            `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
+	Period        constants.Period     `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
+	Name          constants.Group      `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //constants.Group
+	SlotNumber    int                  `json:"slotNumber" gorm:"column:slotNumber;not null"`
+	RecruitmentID string               `json:"recruitmentID" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
+	Applications  []*ApplicationEntity `json:"applications,omitempty" gorm:"many2many:interview_selections"`                   //manytomany
 }
 
 func (c InterviewEntity) TableName() string {
