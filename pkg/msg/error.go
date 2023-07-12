@@ -25,7 +25,8 @@ var (
 
 	RoleError = NewError(10013, "%s don`t has role to %s", 2, nil)
 
-	GroupNotMatch = NewError(10014, "Member' group does not match", 0, nil)
+	GroupNotMatch        = NewError(10014, "Member' group does not match", 0, nil)
+	InterviewUpdateError = NewError(10015, "Update interview error, %s", 1, nil)
 )
 
 type Error struct {
