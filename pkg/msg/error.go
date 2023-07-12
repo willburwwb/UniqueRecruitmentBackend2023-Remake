@@ -29,6 +29,9 @@ var (
 
 	Abandoned = NewError(10015, "Application has already been abandoned by %s", 1, nil)
 	Rejected  = NewError(10016, "Application of %s has already been rejected", 1, nil)
+	GroupNotMatch        = NewError(10017, "Member' group does not match", 0, nil)
+	InterviewUpdateError = NewError(10018, "Update interview error, %s", 1, nil)
+
 )
 
 type Error struct {

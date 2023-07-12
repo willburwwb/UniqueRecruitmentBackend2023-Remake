@@ -1,6 +1,8 @@
 package models
 
 import (
+	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/internal/request"
 	"time"
 )
 
@@ -16,4 +18,29 @@ type InterviewEntity struct {
 
 func (c InterviewEntity) TableName() string {
 	return "interviews"
+}
+
+func GetInterviewsByRidAndName(rid string, name string) (*[]InterviewEntity, error) {
+	db := global.GetDB()
+	var res []InterviewEntity
+	if err := db.Model(&InterviewEntity{}).Where("rid = ? AND name = ?", rid, name).Find(&res).Error; err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func UpdateInterview(interview *InterviewEntity) error {
+	ui := InterviewEntity{
+		Date:       interview.Date,
+		Period:     interview.Period,
+		SlotNumber: interview.SlotNumber,
+	}
+
+	db := global.GetDB()
+
+	return db.Model(&InterviewEntity{}).Updates(&ui).Error
+}
+
+func CreateAndSaveInterview(interview *request.UpdateInterviewRequest) error {
+	return nil
 }
