@@ -17,16 +17,21 @@ var (
 
 	SendSMSError        = NewError(10006, "Send sms failed", 0, nil)
 	RequestBodyError    = NewError(10007, "Request body error", 0, nil)
+	RequestParamError   = NewError(10015, "Request param error", 0, nil)
 	SaveDatabaseError   = NewError(10008, "Save %s error", 1, nil)
 	UpdateDatabaseError = NewError(10009, "Update %s error", 1, nil)
 	GetDatabaseError    = NewError(10010, "Get %s error", 1, nil)
 
-	UpLoadFileError = NewError(10012, "%s upload file error", 1, nil)
+	UpLoadFileError   = NewError(10012, "%s upload file error", 1, nil)
+	DownloadFileError = NewError(10013, "%s download fail error", 1, nil)
 
-	RoleError = NewError(10013, "%s don`t has role to %s", 2, nil)
+	RoleError = NewError(10014, "%s don`t has role to %s", 2, nil)
 
-	GroupNotMatch        = NewError(10014, "Member' group does not match", 0, nil)
-	InterviewUpdateError = NewError(10015, "Update interview error, %s", 1, nil)
+	Abandoned = NewError(10015, "Application has already been abandoned by %s", 1, nil)
+	Rejected  = NewError(10016, "Application of %s has already been rejected", 1, nil)
+	GroupNotMatch        = NewError(10017, "Member' group does not match", 0, nil)
+	InterviewUpdateError = NewError(10018, "Update interview error, %s", 1, nil)
+
 )
 
 type Error struct {

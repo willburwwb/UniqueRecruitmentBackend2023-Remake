@@ -16,8 +16,8 @@ type RecruitmentEntity struct {
 	End        time.Time    `gorm:"not null"`
 	Statistics pgtype.JSONB `gorm:"type:jsonb"`
 
-	Applications []ApplicationEntity `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE;"` //一个hr->简历 ;级联删除
-	Interviews   []InterviewEntity   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE;"` //一个hr->面试 ;级联删除
+	Applications []ApplicationEntity `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->简历 ;级联删除
+	Interviews   []InterviewEntity   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->面试 ;级联删除
 }
 
 func (c RecruitmentEntity) TableName() string {
@@ -49,7 +49,7 @@ func GetRecruitmentById(rid string) (*RecruitmentEntity, error) {
 	db := global.GetDB()
 	var r RecruitmentEntity
 	//remember preload need the struct filed name
-	err := db.Model(&RecruitmentEntity{}).Preload("Interviews").Where("uid = ?", rid).Find(&r).Error
+	err := db.Model(&RecruitmentEntity{}).Preload("Applications").Preload("Interviews").Where("uid = ?", rid).Find(&r).Error
 	return &r, err
 }
 
