@@ -1,6 +1,9 @@
 package request
 
-import "mime/multipart"
+import (
+	"mime/multipart"
+	"time"
+)
 
 type CreateApplicationRequest struct {
 	Grade         string `form:"grade" json:"grade" binding:"required"`
@@ -26,4 +29,13 @@ type UpdateApplicationRequest struct {
 	Referrer      string                `form:"referrer" json:"referrer,omitempty"` //推荐人
 	RecruitmentID string                `form:"recruitmentID" json:"recruitmentID,omitempty"`
 	Resume        *multipart.FileHeader `form:"resume" json:"resume,omitempty"` //简历
+}
+
+type SetApplicationStepRequest struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+type SetApplicationInterviewTimeRequest struct {
+	Time time.Time `json:"time"`
 }

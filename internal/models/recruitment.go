@@ -49,7 +49,7 @@ func GetRecruitmentById(rid string) (*RecruitmentEntity, error) {
 	db := global.GetDB()
 	var r RecruitmentEntity
 	//remember preload need the struct filed name
-	err := db.Model(&RecruitmentEntity{}).Preload("Interviews").Where("uid = ?", rid).Find(&r).Error
+	err := db.Model(&RecruitmentEntity{}).Preload("Applications").Preload("Interviews").Where("uid = ?", rid).Find(&r).Error
 	return &r, err
 }
 

@@ -174,6 +174,55 @@ func GetResumeById(c *gin.Context) {
 	return
 }
 
+func GetApplicationByRecruitmentId(c *gin.Context) {
+	rid := c.Param("rid")
+	applications, err := models.GetApplicationByRecruitmentId(rid)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+		return
+	}
+	response.ResponseOK(c, "get applications success", applications)
+	return
+}
+
+func SetApplicationStepById(c *gin.Context) {
+	aid := c.Param("aid")
+	var req request.SetApplicationStepRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+
+	if err := models.SetApplicationStepById(aid, &req); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData(err.Error()))
+		return
+	}
+	response.ResponseOK(c, "set application step success", nil)
+	return
+}
+
+func SetApplicationInterviewTimeById(c *gin.Context) {
+	aid := c.Param("aid")
+	interviewType := c.Param("type")
+	if interviewType == "group" || interviewType == "team" {
+		response.ResponseError(c, msg.RequestParamError.WithData("type wrong"))
+		return
+	}
+
+	var req request.SetApplicationInterviewTimeRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+
+	if err := models.SetApplicationInterviewTime(aid, interviewType, req.Time); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData(err.Error()))
+		return
+	}
+	response.ResponseOK(c, "set interview time success", nil)
+	return
+}
+
 // MoveApplication move the step of application by member
 // PUT applications/:aid/step
 // member role
@@ -255,15 +304,15 @@ func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentE
 
 // check application's status
 // If the resume has already been rejected or abandoned return false
-func checkApplyStatus(c *gin.Context, applycation *models.ApplicationEntity) bool {
-	if applycation.Rejected {
+func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) bool {
+	if application.Rejected {
 		//TODO(wwb)
 		//fix this to user's name
-		response.ResponseError(c, msg.Rejected.WithData(applycation.Uid))
+		response.ResponseError(c, msg.Rejected.WithData(application.Uid))
 		return false
 	}
-	if applycation.Abandoned {
-		response.ResponseError(c, msg.Abandoned.WithData(applycation.Uid))
+	if application.Abandoned {
+		response.ResponseError(c, msg.Abandoned.WithData(application.Uid))
 		return false
 	}
 	return true
