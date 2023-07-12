@@ -4,14 +4,14 @@ type Group string
 
 const (
 	Web     Group = "web"
-	lab     Group = "lab"
-	ai      Group = "ai"
-	game    Group = "game"
-	android Group = "android"
-	ios     Group = "ios"
-	design  Group = "design"
-	pm      Group = "pm"
-	unique  Group = "unique"
+	Lab     Group = "lab"
+	Ai      Group = "ai"
+	Game    Group = "game"
+	Android Group = "android"
+	Ios     Group = "ios"
+	Design  Group = "design"
+	Pm      Group = "pm"
+	Unique  Group = "unique" // for group interview
 )
 
 type Period string

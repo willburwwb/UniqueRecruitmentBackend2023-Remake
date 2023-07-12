@@ -41,12 +41,12 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	//	response.ResponseError(c, msg.GroupNotMatch)
 	//}
 
-	var interviews_to_add []*request.UpdateInterviewRequest
-	interviews_to_update := make(map[string]*request.UpdateInterviewRequest)
+	var interviewsToAdd []*request.UpdateInterviewRequest
+	interviewsToUpdate := make(map[string]*request.UpdateInterviewRequest)
 	for _, interview := range interviews {
 		if interview.Uid != "" {
 			// update
-			interviews_to_update[interview.Uid] = &request.UpdateInterviewRequest{
+			interviewsToUpdate[interview.Uid] = &request.UpdateInterviewRequest{
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,
@@ -54,7 +54,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 			}
 		} else {
 			// add
-			interviews_to_add = append(interviews_to_add, &request.UpdateInterviewRequest{
+			interviewsToAdd = append(interviewsToAdd, &request.UpdateInterviewRequest{
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,
@@ -62,14 +62,14 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		}
 	}
 
-	origin_interviews, err := models.GetInterviewsByRidAndName(rid, name)
+	originInterviews, err := models.GetInterviewsByRidAndName(rid, name)
 	if err != nil {
 		response.ResponseError(c, msg.GetDatabaseError.WithData("interviews").WithDetail("when you update interviews"))
 		return
 	}
 
-	for _, origin := range *origin_interviews {
-		value, ok := interviews_to_update[origin.Uid]
+	for _, origin := range *originInterviews {
+		value, ok := interviewsToUpdate[origin.Uid]
 		if ok {
 			if len(origin.Applications) != 0 && (origin.Date != value.Date || origin.Period != value.Period) {
 				response.ResponseError(c, msg.InterviewUpdateError.WithData("the interview time has been selected"))
@@ -85,14 +85,19 @@ func SetRecruitmentInterviews(c *gin.Context) {
 			}
 		} else {
 			if len(origin.Applications) != 0 {
-				// todo 没太看懂，删除逻辑是什么
+				// when some candidates have selected this interview time, abort delete
+				response.ResponseError(c, msg.InterviewHasBeenSelected.WithData("interview"))
+				return
 			} else {
-				// delete?
+				if err := models.RemoveInterviewByID(origin.Uid); err != nil {
+					response.ResponseError(c, msg.UpdateDatabaseError.WithData("interview").WithDetail(err.Error()))
+					return
+				}
 			}
 		}
 	}
 
-	for _, interview := range interviews_to_add {
+	for _, interview := range interviewsToAdd {
 		if err := models.CreateAndSaveInterview(interview); err != nil {
 			response.ResponseError(c, msg.SaveDatabaseError.WithData("interview"))
 			return

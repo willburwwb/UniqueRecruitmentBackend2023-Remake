@@ -40,7 +40,7 @@ func NewRouter() *gin.Engine {
 		recruitmentRouter.GET("/", controllers.GetAllRecruitment)
 		recruitmentRouter.POST("/", controllers.CreateRecruitment)
 		recruitmentRouter.PUT("/:rid/schedule", controllers.UpdateRecruitment)
-		//recruitmentRouter.PUT("/:rid/interviews/:name")
+		recruitmentRouter.PUT("/:rid/interviews/:name", controllers.SetRecruitmentInterviews)
 	}
 	//memberRouter := r.Group("/members")
 	//{
