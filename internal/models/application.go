@@ -40,15 +40,17 @@ func (a ApplicationEntity) TableName() string {
 }
 
 type ApplicationForCandidate struct {
-	Grade     string
-	Institute string
-	Major     string
-	Rank      string
-	Group     string
-	Intro     string
-	Referrer  string
-	Resume    string
-	Step      string
+	Common
+	Grade         string
+	Institute     string
+	Major         string
+	Rank          string
+	Group         string
+	Intro         string
+	Referrer      string
+	Resume        string
+	Step          string
+	RecruitmentID string
 }
 
 func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename string) (*ApplicationEntity, error) {
@@ -188,6 +190,12 @@ func SetApplicationInterviewTime(aid, interviewType string, time time.Time) erro
 		application.InterviewAllocationsTeam = time
 	}
 
+	return db.Updates(&application).Error
+}
+
+// TODO 上面的几个更新函数统一改调这个
+func UpdateApplicationInfo(application *ApplicationEntity) error {
+	db := global.GetDB()
 	return db.Updates(&application).Error
 }
 

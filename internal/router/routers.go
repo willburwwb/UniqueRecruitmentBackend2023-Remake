@@ -40,7 +40,7 @@ func NewRouter() *gin.Engine {
 		recruitmentRouter.GET("/", controllers.GetAllRecruitment)
 		recruitmentRouter.POST("/", controllers.CreateRecruitment)
 		recruitmentRouter.PUT("/:rid/schedule", controllers.UpdateRecruitment)
-		//recruitmentRouter.PUT("/:rid/interviews/:name")
+		recruitmentRouter.PUT("/:rid/interviews/:name", controllers.SetRecruitmentInterviews)
 	}
 	//memberRouter := r.Group("/members")
 	//{
@@ -65,13 +65,13 @@ func NewRouter() *gin.Engine {
 		applicationRouter.PUT("/:aid", controllers.UpdateApplicationById)
 		applicationRouter.DELETE("/:aid", controllers.DeleteApplicationById)
 		applicationRouter.PUT("/:aid/abandoned", controllers.AbandonApplicationById)
-		//applicationRouter.GET("/:aid/slots/:type")
-		//applicationRouter.PUT("/:aid/slots/:type")
+		applicationRouter.GET("/:aid/slots/:type", controllers.GetInterviewsSlots)
+		applicationRouter.PUT("/:aid/slots/:type", controllers.SelectInterviewSlots)
 		applicationRouter.GET("/:aid/resume", controllers.GetResumeById)
 		applicationRouter.GET("/recruitment/:rid", controllers.GetApplicationByRecruitmentId)
 		applicationRouter.PUT("/:aid/step", controllers.SetApplicationStepById)
 		applicationRouter.PUT("/:aid/interview/:type", controllers.SetApplicationInterviewTimeById)
-		//applicationRouter.PUT("/interview/:type")
+		applicationRouter.PUT("/interview/:type", controllers.SetApplicationInterviewTime)
 	}
 
 	commentRouter := r.Group("/comments")

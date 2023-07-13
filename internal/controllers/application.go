@@ -223,6 +223,99 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	return
 }
 
+// SetApplicationInterviewTime set interview time, both for candidates and members
+func SetApplicationInterviewTime(c *gin.Context) {
+	aid := c.Param("aid")
+	interviewType := c.Param("type")
+	var req struct {
+		Time time.Time `json:"time"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	application, err := models.GetApplicationById(aid)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	if !checkApplyStatus(c, application) {
+		return
+	}
+
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	if !checkRecruitmentTimeInBtoE(c, recruitment, time.Now()) {
+		return
+	}
+
+	if !checkStep(c, interviewType) {
+		return
+	}
+
+	switch interviewType {
+	case "team":
+		application.InterviewAllocationsTeam = req.Time
+	case "group":
+		application.InterviewAllocationsGroup = req.Time
+	}
+
+	if err := models.UpdateApplicationInfo(application); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+
+	response.ResponseOK(c, "Success set interview time", nil)
+	return
+}
+
+// GetInterviewsSlots get interviews time for candidate
+func GetInterviewsSlots(c *gin.Context) {
+	aid := c.Param("aid")
+	interviewType := c.Param("type")
+	application, err := models.GetApplicationByIdForCandidate(aid)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+
+	// TODO check candidate
+
+	if !checkStep(c, interviewType) {
+		return
+	}
+
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+
+	// TODO(tmy) type
+	var name string
+	if interviewType == "group" {
+		name = application.Group
+	} else {
+		name = "unique"
+	}
+
+	var res []models.InterviewEntity
+	for _, interview := range recruitment.Interviews {
+		if string(interview.Name) == name {
+			res = append(res, interview)
+		}
+	}
+	response.ResponseOK(c, "Success get interview time", res)
+	return
+}
+
+func SelectInterviewSlots(c *gin.Context) {
+	// TODO implement me !
+}
+
 // MoveApplication move the step of application by member
 // PUT applications/:aid/step
 // member role
@@ -289,7 +382,7 @@ func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntit
 	return true
 }
 
-// checkRecruitmentInBtoD check whether the recruitment is between the start and the end
+// checkRecruitmentInBtoE check whether the recruitment is between the start and the end
 // such as move the application's step
 func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
 	if recruitment.Beginning.After(now) {
@@ -315,5 +408,10 @@ func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) boo
 		response.ResponseError(c, msg.Abandoned.WithData(application.Uid))
 		return false
 	}
+	return true
+}
+
+func checkStep(c *gin.Context, interviewType string) bool {
+	// TODO The steps haven't been decided yet
 	return true
 }
