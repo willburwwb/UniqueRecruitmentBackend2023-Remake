@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"UniqueRecruitmentBackend/internal/common"
+	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/response"
@@ -201,6 +202,8 @@ func SetApplicationStepById(c *gin.Context) {
 	return
 }
 
+// SetApplicationInterviewTimeById
+// PUT /:aid/interview/:type
 func SetApplicationInterviewTimeById(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
@@ -223,7 +226,9 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	return
 }
 
-// SetApplicationInterviewTime set interview time, both for candidates and members
+// SetApplicationInterviewTime set interview time
+// only by the member of application's group
+// PUT /interview/:type
 func SetApplicationInterviewTime(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
@@ -248,7 +253,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
-	if !checkRecruitmentTimeInBtoE(c, recruitment, time.Now()) {
+	if !checkRecruitmentTimeInBtoE(c, recruitment) {
 		return
 	}
 
@@ -312,8 +317,65 @@ func GetInterviewsSlots(c *gin.Context) {
 	return
 }
 
+// SelectInterviewSlots select interview for candidate
+// PUT /:aid/slots/:type
+// candidate role
 func SelectInterviewSlots(c *gin.Context) {
-	// TODO implement me !
+	aid := c.Param("aid")
+	interviewType := c.Param("type")
+
+	var req struct {
+		Iids []string `json:"iids"`
+	}
+	if err := c.ShouldBind(&req); err != nil {
+		response.ResponseError(c, msg.RequestBodyError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+
+	application, err := models.GetApplicationById(aid)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+
+	recruitmentById, err := models.GetRecruitmentById(application.RecruitmentID)
+	if err != nil {
+		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+
+	// TODO check candidate
+
+	if !checkApplyStatus(c, application) {
+		return
+	}
+
+	if !checkRecruitmentTimeInBtoE(c, recruitmentById) {
+		return
+	}
+
+	if !checkStep(c, interviewType) {
+		return
+	}
+
+	var name constants.Group
+	if interviewType == string(constants.InGroup) {
+		name = constants.GroupMap[interviewType]
+	} else {
+		name = "unique"
+	}
+	for _, interview := range application.InterviewSelections {
+		if interview.Name != name {
+			response.ResponseError(c, msg.ReselectInterviewError.WithData("application"))
+			return
+		}
+	}
+
+	if err = models.UpdateApplicationInfo(application); err != nil {
+		response.ResponseError(c, msg.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	response.ResponseOK(c, "Success select interview time", nil)
 }
 
 // MoveApplication move the step of application by member
@@ -344,10 +406,10 @@ func MoveApplication(c *gin.Context) {
 		return
 	}
 	//check application's status
-	if b := checkApplyStatus(c, application); b != true {
+	if !checkApplyStatus(c, application) {
 		return
 	}
-	if b := checkRecruitmentTimeInBtoE(c, recruitment, time.Now()); b != true {
+	if !checkRecruitmentTimeInBtoE(c, recruitment) {
 		return
 	}
 	// TODO(wwb)
@@ -384,7 +446,8 @@ func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntit
 
 // checkRecruitmentInBtoE check whether the recruitment is between the start and the end
 // such as move the application's step
-func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
+func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentEntity) bool {
+	now := time.Now()
 	if recruitment.Beginning.After(now) {
 		response.ResponseError(c, msg.RecruitmentNotReady.WithData(recruitment.Name))
 		return false
