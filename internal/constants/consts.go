@@ -14,6 +14,17 @@ const (
 	Unique  Group = "unique" // for group interview
 )
 
+var GroupMap = map[string]Group{
+	"web":     "web",
+	"lab":     "lab",
+	"ai":      "ai",
+	"game":    "game",
+	"android": "android",
+	"ios":     "ios",
+	"design":  "design",
+	"pm":      "pm",
+}
+
 type Period string
 
 const (
