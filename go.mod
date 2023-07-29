@@ -37,6 +37,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/lib/pq v1.10.3 // indirect
 	github.com/mozillazg/go-httpheader v0.2.1 // indirect
@@ -47,6 +48,7 @@ require (
 	github.com/quic-go/qtls-go1-20 v0.3.0 // indirect
 	github.com/quic-go/quic-go v0.37.0 // indirect
 	github.com/refraction-networking/utls v1.3.3 // indirect
+	github.com/spf13/cobra v1.7.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
