@@ -47,11 +47,18 @@ type SMSConfigs struct {
 	RegisterCodeTemplateId      string `mapstructure:"register_code_template_id" yaml:"register_code_template_id"`
 	ResetPasswordCodeTemplateId string `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
 }
+
 type CosConfigs struct {
 	CosUrl       string `mapstructure:"cos_url" json:"cos_url" yaml:"cos_url"`
 	CosSecretID  string `mapstructure:"cos_secret_id" json:"cos_secret_id" yaml:"cos_secret_id"`
 	CosSecretKey string `mapstructure:"cos_secret_key" json:"cos_secret_key" yaml:"cos_secret_key"`
 }
+
+type apm struct {
+	Name          string `mapstructure:"name" json:"name" yaml:"name"`
+	ReportBackend string `mapstructure:"report_backend" json:"report_backend" yaml:"report_backend"`
+}
+
 type settings struct {
 	Server ServerConfigs `mapstructure:"Server" yaml:"Server"`
 	Pgsql  PgsqlConfigs  `mapstructure:"Pgsql" yaml:"Pgsql"`
@@ -60,4 +67,5 @@ type settings struct {
 	SSO    SSOConfigs    `mapstructure:"SSO" yaml:"SSO"`
 	SMS    SMSConfigs    `mapstructure:"SMS" yaml:"SMS"`
 	COS    CosConfigs    `mapstructure:"COS" yaml:"COS"`
+	Apm    apm           `mapstructure:"apm" yaml:"apm"`
 }

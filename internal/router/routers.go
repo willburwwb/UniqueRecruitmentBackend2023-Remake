@@ -2,6 +2,7 @@ package router
 
 import (
 	"UniqueRecruitmentBackend/internal/controllers"
+	"UniqueRecruitmentBackend/internal/tracer"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,10 +10,10 @@ import (
 
 // NewRouter create backend http group routers
 func NewRouter() *gin.Engine {
-
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Use(tracer.TracingMiddleware)
 
 	//TODO(wwb)
 	//Add access control middleware here
