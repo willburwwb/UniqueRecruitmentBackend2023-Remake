@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"UniqueRecruitmentBackend/configs"
-	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/router"
 	"UniqueRecruitmentBackend/internal/tracer"
 	"context"
@@ -39,8 +38,6 @@ func runServer() {
 	if err != nil {
 		zapx.Warn("setup tracing report backend failed", zap.Error(err))
 	}
-
-	models.SetupTables()
 
 	r := router.NewRouter()
 	s := &http.Server{
