@@ -38,7 +38,7 @@ type SessConfigs struct {
 	Domain string `mapstructure:"domain" json:"domain" yaml:"domain"`
 }
 
-type SSOGrpcConfigs struct {
+type SSOConfigs struct {
 	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
 }
 
@@ -53,11 +53,11 @@ type CosConfigs struct {
 	CosSecretKey string `mapstructure:"cos_secret_key" json:"cos_secret_key" yaml:"cos_secret_key"`
 }
 type settings struct {
-	Server  ServerConfigs  `mapstructure:"Server" yaml:"Server"`
-	Pgsql   PgsqlConfigs   `mapstructure:"Pgsql" yaml:"Pgsql"`
-	Redis   RedisConfigs   `mapstructure:"Redis" yaml:"Redis"`
-	Sess    SessConfigs    `mapstructure:"Sess" yaml:"Sess"`
-	SSOGrpc SSOGrpcConfigs `mapstructure:"SSOGrpc" yaml:"SSOGrpc"`
-	SMS     SMSConfigs     `mapstructure:"SMS" yaml:"SMS"`
-	COS     CosConfigs     `mapstructure:"COS" yaml:"COS"`
+	Server ServerConfigs `mapstructure:"Server" yaml:"Server"`
+	Pgsql  PgsqlConfigs  `mapstructure:"Pgsql" yaml:"Pgsql"`
+	Redis  RedisConfigs  `mapstructure:"Redis" yaml:"Redis"`
+	Sess   SessConfigs   `mapstructure:"Sess" yaml:"Sess"`
+	SSO    SSOConfigs    `mapstructure:"SSO" yaml:"SSO"`
+	SMS    SMSConfigs    `mapstructure:"SMS" yaml:"SMS"`
+	COS    CosConfigs    `mapstructure:"COS" yaml:"COS"`
 }

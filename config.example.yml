@@ -14,8 +14,8 @@ Pgsql:
   max_open_conns: 100
   max_life_seconds: 86400
 
-SSOGrpc:
-  addr: "dev.back.sso.hustunique.com"
+SSO:
+  addr: "https://dev.back.sso.hustunique.com/api/v1"
 
 SMS:
   token:
