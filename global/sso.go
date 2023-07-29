@@ -71,6 +71,6 @@ func newSSOClient() *SSOClient {
 	}
 }
 
-func init() {
+func setupSSO() {
 	defaultClient = newSSOClient()
 }
