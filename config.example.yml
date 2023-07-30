@@ -14,6 +14,9 @@ pgsql:
   max_open_conns: 100
   max_life_seconds: 86400
 
+redis:
+  dsn:
+
 sso:
   addr: "https://dev.back.sso.hustunique.com/api/v1"
 

@@ -5,21 +5,35 @@ import (
 	"UniqueRecruitmentBackend/internal/constants"
 	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
 	"fmt"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+type CreateApplicationRequest struct {
+	Grade         string `form:"grade" json:"grade" binding:"required"`
+	Institute     string `form:"institute" json:"institute" binding:"required"`
+	Major         string `form:"major" json:"major" binding:"required"`
+	Rank          string `form:"rank" json:"rank" binding:"required"`
+	Group         string `form:"group" json:"group" binding:"required"`
+	Intro         string `form:"intro" json:"intro" binding:"required"` //自我介绍
+	RecruitmentID string `form:"recruitmentID" json:"recruitmentID" binding:"required"`
+	Referrer      string `form:"referrer" json:"referrer"` //推荐人
+	IsQuick       bool   `form:"isQuick" json:"isQuick"`   //速通
+
+	Resume *multipart.FileHeader `form:"resume" json:"resume"` //简历
+}
+
 // CreateApplication create an application. Remember to submit data with form instead of json!!!
 // POST applications/
 // Accept role >=candidate
 func CreateApplication(c *gin.Context) {
-	var req request.CreateApplicationRequest
+	var req CreateApplicationRequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -34,18 +48,15 @@ func CreateApplication(c *gin.Context) {
 		return
 	}
 
-	//TODO(wwb)
-	//when sso done,fix this filePath->user's uid
+	uid := common.GetUID(c)
 	// file path example: 2023秋(rname)/web(group)/wwb(userID)/filename
-	filePath := fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, "thisisuserid", req.Resume.Filename)
+	filePath := fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, uid, req.Resume.Filename)
 
 	log.Println(filePath)
 	//resume upload to COS
 	err = upLoadAndSaveFileToCos(req.Resume, filePath)
 	if err != nil {
-		//TODO(wwb)
-		//when sso done,fix this filePath->user's uid
-		common.Error(c, error2.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+		common.Error(c, error2.UpLoadFileError.WithData(uid).WithDetail(err.Error()))
 		return
 	}
 
@@ -83,12 +94,24 @@ func GetApplicationById(c *gin.Context) {
 	}
 }
 
+type UpdateApplicationRequest struct {
+	Grade         string                `form:"grade" json:"grade,omitempty"`
+	Institute     string                `form:"institute" json:"institute,omitempty"`
+	Major         string                `form:"major" json:"major,omitempty"`
+	Rank          string                `form:"rank" json:"rank,omitempty"`
+	Group         string                `form:"group" json:"group,omitempty"`
+	Intro         string                `form:"intro" json:"intro,omitempty"`       //自我介绍
+	Referrer      string                `form:"referrer" json:"referrer,omitempty"` //推荐人
+	RecruitmentID string                `form:"recruitmentID" json:"recruitmentID,omitempty"`
+	Resume        *multipart.FileHeader `form:"resume" json:"resume,omitempty"` //简历
+}
+
 // UpdateApplicationById update candidate's application by applicationId
 // PUT applications/:aid
 // only by application's candidate
 func UpdateApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
-	var req request.UpdateApplicationRequest
+	var req UpdateApplicationRequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -108,9 +131,7 @@ func UpdateApplicationById(c *gin.Context) {
 	if req.Resume != nil {
 		filePath = fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, "thisisuserid", req.Resume.Filename)
 		if err := upLoadAndSaveFileToCos(req.Resume, filePath); err != nil {
-			//TODO(wwb)
-			//when sso done,fix this filePath->user's uid
-			common.Error(c, error2.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+			common.Error(c, error2.UpLoadFileError.WithData(common.GetUID(c)).WithDetail(err.Error()))
 			return
 		}
 	}
@@ -185,9 +206,14 @@ func GetApplicationByRecruitmentId(c *gin.Context) {
 	return
 }
 
+type SetApplicationStepRequest struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
 func SetApplicationStepById(c *gin.Context) {
 	aid := c.Param("aid")
-	var req request.SetApplicationStepRequest
+	var req SetApplicationStepRequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -201,6 +227,10 @@ func SetApplicationStepById(c *gin.Context) {
 	return
 }
 
+type SetApplicationInterviewTimeRequest struct {
+	Time time.Time `json:"time"`
+}
+
 // SetApplicationInterviewTimeById
 // PUT /:aid/interview/:type
 func SetApplicationInterviewTimeById(c *gin.Context) {
@@ -211,7 +241,7 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 		return
 	}
 
-	var req request.SetApplicationInterviewTimeRequest
+	var req SetApplicationInterviewTimeRequest
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return

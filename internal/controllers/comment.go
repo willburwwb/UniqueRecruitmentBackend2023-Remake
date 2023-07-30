@@ -4,12 +4,18 @@ import (
 	"UniqueRecruitmentBackend/internal/common"
 	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
 	"github.com/gin-gonic/gin"
 )
 
+type CreateCommentRequest struct {
+	ApplicationID string `json:"applicationId"`
+	MemberID      string `json:"memberId"`
+	Content       string `json:"content"`
+	Evaluation    int    `json:"evaluation"`
+}
+
 func CreateComment(c *gin.Context) {
-	var req request.CreateCommentRequest
+	var req CreateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return

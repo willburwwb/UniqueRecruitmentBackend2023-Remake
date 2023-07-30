@@ -2,23 +2,29 @@ package controllers
 
 import (
 	"UniqueRecruitmentBackend/internal/common"
+	"UniqueRecruitmentBackend/internal/constants"
 	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
 	"github.com/gin-gonic/gin"
 	"time"
 )
 
-// PUT /recruitment/:rid/interviews/:name
-// member group
+type UpdateInterviewRequest struct {
+	Uid        string           `json:"uid" form:"uid" `
+	Date       time.Time        `json:"date" form:"date" binding:"required"`
+	Period     constants.Period `json:"period" form:"period" binding:"required"`
+	SlotNumber int              `json:"slotNumber" form:"slotNumber" binding:"required"`
+}
 
 // SetRecruitmentInterviews set group/team interview time
+// PUT /recruitment/:rid/interviews/:name
+// member group
 func SetRecruitmentInterviews(c *gin.Context) {
 	// todo (get member info
 	rid := c.Param("rid")
 	name := c.Param("name")
 
-	var interviews []request.UpdateInterviewRequest
+	var interviews []UpdateInterviewRequest
 	if err := c.ShouldBind(&interviews); err != nil {
 		common.Error(c, error2.RequestBodyError.WithData(err.Error()))
 		return
@@ -41,12 +47,12 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	//	response.Error(c, msg.GroupNotMatch)
 	//}
 
-	var interviewsToAdd []*request.UpdateInterviewRequest
-	interviewsToUpdate := make(map[string]*request.UpdateInterviewRequest)
+	var interviewsToAdd []*UpdateInterviewRequest
+	interviewsToUpdate := make(map[string]*UpdateInterviewRequest)
 	for _, interview := range interviews {
 		if interview.Uid != "" {
 			// update
-			interviewsToUpdate[interview.Uid] = &request.UpdateInterviewRequest{
+			interviewsToUpdate[interview.Uid] = &UpdateInterviewRequest{
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,
@@ -54,7 +60,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 			}
 		} else {
 			// add
-			interviewsToAdd = append(interviewsToAdd, &request.UpdateInterviewRequest{
+			interviewsToAdd = append(interviewsToAdd, &UpdateInterviewRequest{
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,

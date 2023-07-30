@@ -4,18 +4,23 @@ import (
 	"UniqueRecruitmentBackend/internal/common"
 	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"time"
 )
 
-// Post recruitment/
-// admin role
+type CreateRecruitmentRequest struct {
+	Name      string    `json:"name" binding:"required"`
+	Beginning time.Time `json:"beginning" binding:"required"`
+	Deadline  time.Time `json:"deadline" binding:"required"`
+	End       time.Time `json:"end" binding:"required"`
+}
 
 // CreateRecruitment create new recruitment
+// Post recruitment/
+// admin role
 func CreateRecruitment(c *gin.Context) {
-	var req request.CreateRecruitmentRequest
+	var req CreateRecruitmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -34,13 +39,18 @@ func CreateRecruitment(c *gin.Context) {
 	})
 }
 
-// Post recruitment/:rid/schedule
-// admin role
+type UpdateRecruitmentRequest struct {
+	Beginning time.Time `json:"beginning" binding:"required"`
+	Deadline  time.Time `json:"deadline" binding:"required"`
+	End       time.Time `json:"end" binding:"required"`
+}
 
 // UpdateRecruitment update recruitment details
+// Post recruitment/:rid/schedule
+// admin role
 func UpdateRecruitment(c *gin.Context) {
 	recruitmentId := c.Param("rid")
-	var req request.UpdateRecruitmentRequest
+	var req UpdateRecruitmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil || recruitmentId == "" {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -54,9 +64,8 @@ func UpdateRecruitment(c *gin.Context) {
 	})
 }
 
-// Get recruitment/:rid
-
 // GetRecruitmentById get recruitment details by id
+// Get recruitment/:rid
 func GetRecruitmentById(c *gin.Context) {
 	recruitmentId := c.Param("rid")
 	if recruitmentId == "" {
@@ -71,9 +80,8 @@ func GetRecruitmentById(c *gin.Context) {
 	common.Success(c, "Success get one recruitment", resp)
 }
 
-// Get recruitment/
-
 // GetAllRecruitment get all recruitment details
+// Get recruitment/
 func GetAllRecruitment(c *gin.Context) {
 	// TODO(wwb)
 	// compare member joinin time and recruitment time
