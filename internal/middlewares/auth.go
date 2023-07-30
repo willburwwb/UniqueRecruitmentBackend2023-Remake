@@ -18,6 +18,10 @@ func ctxWithUID(ctx context.Context, uid string) context.Context {
 	return context.WithValue(ctx, "X-UID", uid)
 }
 
+func ctxWithRole(ctx context.Context, role constants.Role) context.Context {
+	return context.WithValue(ctx, "role", role)
+}
+
 func AuthMiddleware(c *gin.Context) {
 	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Authentication")
 	defer span.End()
@@ -48,7 +52,7 @@ func AuthMiddleware(c *gin.Context) {
 }
 
 func RoleMiddleware(c *gin.Context, role constants.Role) {
-	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Authentication")
+	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Role")
 	defer span.End()
 
 	uid := common.GetUID(c)
@@ -59,6 +63,7 @@ func RoleMiddleware(c *gin.Context, role constants.Role) {
 		common.Error(c, error2.CheckPermissionError)
 		return
 	}
+	c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
 
 	c.Next()
 }

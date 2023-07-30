@@ -66,7 +66,7 @@ func GetApplicationById(c *gin.Context) {
 	//var applicationId string
 	//applicationId = c.Query("applicationId")
 	aid := c.Param("aid")
-	if common.IsCandidate("") {
+	if common.IsCandidate(c) {
 		application, err := models.GetApplicationByIdForCandidate(aid)
 		if err != nil {
 			common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
