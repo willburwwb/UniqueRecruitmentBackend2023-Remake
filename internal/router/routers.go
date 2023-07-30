@@ -26,7 +26,6 @@ func NewRouter() *gin.Engine {
 	} else if gin.Mode() == gin.ReleaseMode {
 		config := cors.DefaultConfig()
 		config.AllowOrigins = []string{"https://join.hustunique.com", "https://hr.hustunique.com"}
-		config.AllowMethods = []string{"GET", "POST", "DELETE", "UPDATE", "PUT", "OPTION"}
 		r.Use(cors.New(config))
 	}
 	r.Use(sessions.Sessions("SSO_SESSION", global.SessStore))
