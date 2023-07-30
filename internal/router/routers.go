@@ -1,9 +1,11 @@
 package router
 
 import (
+	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/controllers"
 	"UniqueRecruitmentBackend/internal/tracer"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -27,6 +29,7 @@ func NewRouter() *gin.Engine {
 		config.AllowMethods = []string{"GET", "POST", "DELETE", "UPDATE", "PUT", "OPTION"}
 		r.Use(cors.New(config))
 	}
+	r.Use(sessions.Sessions("SSO_SESSION", global.SessStore))
 	ping := r.Group("/ping")
 	{
 		ping.GET("", func(c *gin.Context) {

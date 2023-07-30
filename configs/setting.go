@@ -10,10 +10,12 @@ const (
 )
 
 type server struct {
-	RunMode      string        `mapstructure:"run_mode" json:"run_mode" yaml:"run_mode"`
-	Addr         string        `mapstructure:"addr" json:"addr" yaml:"addr"`                            //
-	ReadTimeout  time.Duration `mapstructure:"read_timeout" json:"read_timeout" yaml:"read_timeout"`    //
-	WriteTimeout time.Duration `mapstructure:"write_timeout" json:"write_timeout" yaml:"write_timeout"` //
+	RunMode       string        `mapstructure:"run_mode" json:"run_mode" yaml:"run_mode"`
+	Addr          string        `mapstructure:"addr" json:"addr" yaml:"addr"`                            //
+	ReadTimeout   time.Duration `mapstructure:"read_timeout" json:"read_timeout" yaml:"read_timeout"`    //
+	WriteTimeout  time.Duration `mapstructure:"write_timeout" json:"write_timeout" yaml:"write_timeout"` //
+	SessionSecret string        `mapstructure:"session_secret" json:"session_secret" yaml:"session_secret"`
+	SessionDomain string        `mapstructure:"session_domain" json:"session_domain" yaml:"session_domain"`
 }
 
 type pgsql struct {
@@ -28,9 +30,10 @@ type pgsql struct {
 }
 
 type redis struct {
-	Addr     string `mapstructure:"addr" json:"addr" yaml:"addr"`
-	Password string `mapstructure:"password" json:"password" yaml:"password"`
-	DB       int    `mapstructure:"db" json:"db" yaml:"db"`
+	//Addr     string `mapstructure:"addr" json:"addr" yaml:"addr"`
+	//Password string `mapstructure:"password" json:"password" yaml:"password"`
+	//DB       int    `mapstructure:"db" json:"db" yaml:"db"`
+	Dsn string `mapstructure:"dsn" json:"dsn" yaml:"dsn"`
 }
 
 type sess struct {
