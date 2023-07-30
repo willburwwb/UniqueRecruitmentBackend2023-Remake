@@ -1,18 +1,21 @@
 package router
 
 import (
+	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/controllers"
+	"UniqueRecruitmentBackend/internal/tracer"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 // NewRouter create backend http group routers
 func NewRouter() *gin.Engine {
-
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Use(tracer.TracingMiddleware)
 
 	//TODO(wwb)
 	//Add access control middleware here
@@ -23,9 +26,9 @@ func NewRouter() *gin.Engine {
 	} else if gin.Mode() == gin.ReleaseMode {
 		config := cors.DefaultConfig()
 		config.AllowOrigins = []string{"https://join.hustunique.com", "https://hr.hustunique.com"}
-		config.AllowMethods = []string{"GET", "POST", "DELETE", "UPDATE", "PUT", "OPTION"}
 		r.Use(cors.New(config))
 	}
+	r.Use(sessions.Sessions("SSO_SESSION", global.SessStore))
 	ping := r.Group("/ping")
 	{
 		ping.GET("", func(c *gin.Context) {

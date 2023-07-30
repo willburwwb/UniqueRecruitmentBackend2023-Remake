@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"UniqueRecruitmentBackend/configs"
-	"UniqueRecruitmentBackend/internal/response"
+	"UniqueRecruitmentBackend/internal/common"
+	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/services"
 	"UniqueRecruitmentBackend/internal/utils"
-	"UniqueRecruitmentBackend/pkg/msg"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -17,7 +17,7 @@ func SendSMS(c *gin.Context) {
 	}{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError)
+		common.Error(c, error2.RequestBodyError)
 		return
 	}
 
@@ -30,7 +30,7 @@ func SendSMS(c *gin.Context) {
 			Params:     []string{code},
 		})
 		if err != nil || sms.StatusCode != http.StatusOK {
-			response.ResponseError(c, msg.SendSMSError)
+			common.Error(c, error2.SendSMSError)
 			return
 		}
 	case services.ResetPasswordCode:
@@ -41,7 +41,7 @@ func SendSMS(c *gin.Context) {
 			Params:     []string{code},
 		})
 		if err != nil || sms.StatusCode != http.StatusOK {
-			response.ResponseError(c, msg.SendSMSError)
+			common.Error(c, error2.SendSMSError)
 			return
 		}
 		// TODO

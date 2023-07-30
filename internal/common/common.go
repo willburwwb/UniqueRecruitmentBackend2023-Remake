@@ -1,23 +1,36 @@
 package common
 
-import "github.com/gin-gonic/gin"
+import (
+	"UniqueRecruitmentBackend/internal/constants"
+	"github.com/gin-gonic/gin"
+)
 
-func IsCandidate(uid string) bool {
-	// TODO wait for sso
-	return true
+func getValue(c *gin.Context, key string) string {
+	get, ok := c.Get(key)
+	if !ok {
+		return ""
+	}
+
+	value, ok := get.(string)
+	if !ok {
+		return ""
+	}
+
+	return value
 }
 
-func IsMember(uid string) bool {
-	// TODO wait for sso
-	return true
+func IsCandidate(c *gin.Context) bool {
+	return getValue(c, "role") == string(constants.CandidateRole)
 }
 
-func IsAdmin(uid string) bool {
-	// TODO wait for sso
-	return true
+func IsMember(c *gin.Context) bool {
+	return getValue(c, "role") == string(constants.MemberRole)
 }
 
-func GetUserID(c *gin.Context) string {
-	// TODO wait for sso
-	return "thisisuserid"
+func IsAdmin(c *gin.Context) bool {
+	return getValue(c, "role") == string(constants.Admin)
+}
+
+func GetUID(c *gin.Context) string {
+	return getValue(c, "X-UID")
 }

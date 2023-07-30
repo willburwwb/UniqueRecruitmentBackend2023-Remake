@@ -5,6 +5,7 @@ func setup() {
 	//setupRedis()
 	setupSSO()
 	setupCOS()
+	setupSess()
 }
 
 func init() {

@@ -1,25 +1,25 @@
 package controllers
 
 import (
+	"UniqueRecruitmentBackend/internal/common"
+	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
-	"UniqueRecruitmentBackend/internal/response"
-	"UniqueRecruitmentBackend/pkg/msg"
 	"github.com/gin-gonic/gin"
 )
 
 func CreateComment(c *gin.Context) {
 	var req request.CreateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 	commentId, err := models.CreateComment(&req)
 	if err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("comment"))
+		common.Error(c, error2.SaveDatabaseError.WithData("comment"))
 		return
 	}
-	response.ResponseOK(c, "create comment success", gin.H{
+	common.Success(c, "create comment success", gin.H{
 		"commentId": commentId,
 	})
 }
@@ -27,8 +27,8 @@ func CreateComment(c *gin.Context) {
 func DeleteComment(c *gin.Context) {
 	cid := c.Param("cid")
 	if err := models.DeleteCommentById(cid); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("comment"))
+		common.Error(c, error2.SaveDatabaseError.WithData("comment"))
 		return
 	}
-	response.ResponseOK(c, "delete comment success", nil)
+	common.Success(c, "delete comment success", nil)
 }

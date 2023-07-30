@@ -9,14 +9,16 @@ const (
 	configType string = "yaml"
 )
 
-type ServerConfigs struct {
-	RunMode      string        `mapstructure:"run_mode" json:"run_mode" yaml:"run_mode"`
-	Addr         string        `mapstructure:"addr" json:"addr" yaml:"addr"`                            //
-	ReadTimeout  time.Duration `mapstructure:"read_timeout" json:"read_timeout" yaml:"read_timeout"`    //
-	WriteTimeout time.Duration `mapstructure:"write_timeout" json:"write_timeout" yaml:"write_timeout"` //
+type server struct {
+	RunMode       string        `mapstructure:"run_mode" json:"run_mode" yaml:"run_mode"`
+	Addr          string        `mapstructure:"addr" json:"addr" yaml:"addr"`                            //
+	ReadTimeout   time.Duration `mapstructure:"read_timeout" json:"read_timeout" yaml:"read_timeout"`    //
+	WriteTimeout  time.Duration `mapstructure:"write_timeout" json:"write_timeout" yaml:"write_timeout"` //
+	SessionSecret string        `mapstructure:"session_secret" json:"session_secret" yaml:"session_secret"`
+	SessionDomain string        `mapstructure:"session_domain" json:"session_domain" yaml:"session_domain"`
 }
 
-type PgsqlConfigs struct {
+type pgsql struct {
 	Host           string `mapstructure:"host" json:"host" yaml:"host"`                                      // 服务器地址
 	Port           string `mapstructure:"port" json:"port" yaml:"port"`                                      // 端口
 	Dbname         string `mapstructure:"dbname" json:"dbname" yaml:"dbname"`                                // 数据库名
@@ -27,37 +29,46 @@ type PgsqlConfigs struct {
 	MaxLifeSeconds int64  `mapstructure:"max_life_seconds" json:"max_life_seconds" yaml:"max_life_seconds" ` // 数据库连接最长生命周期
 }
 
-type RedisConfigs struct {
-	Addr     string `mapstructure:"addr" json:"addr" yaml:"addr"`
-	Password string `mapstructure:"password" json:"password" yaml:"password"`
-	DB       int    `mapstructure:"db" json:"db" yaml:"db"`
+type redis struct {
+	//Addr     string `mapstructure:"addr" json:"addr" yaml:"addr"`
+	//Password string `mapstructure:"password" json:"password" yaml:"password"`
+	//DB       int    `mapstructure:"db" json:"db" yaml:"db"`
+	Dsn string `mapstructure:"dsn" json:"dsn" yaml:"dsn"`
 }
 
-type SessConfigs struct {
+type sess struct {
 	Secret string `mapstructure:"secret" json:"secret" yaml:"secret"`
 	Domain string `mapstructure:"domain" json:"domain" yaml:"domain"`
 }
 
-type SSOGrpcConfigs struct {
+type sso struct {
 	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
 }
 
-type SMSConfigs struct {
+type sms struct {
 	Token                       string `mapstructure:"token" json:"token" yaml:"token"`
 	RegisterCodeTemplateId      string `mapstructure:"register_code_template_id" yaml:"register_code_template_id"`
 	ResetPasswordCodeTemplateId string `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
 }
-type CosConfigs struct {
+
+type cos struct {
 	CosUrl       string `mapstructure:"cos_url" json:"cos_url" yaml:"cos_url"`
 	CosSecretID  string `mapstructure:"cos_secret_id" json:"cos_secret_id" yaml:"cos_secret_id"`
 	CosSecretKey string `mapstructure:"cos_secret_key" json:"cos_secret_key" yaml:"cos_secret_key"`
 }
+
+type apm struct {
+	Name          string `mapstructure:"name" json:"name" yaml:"name"`
+	ReportBackend string `mapstructure:"report_backend" json:"report_backend" yaml:"report_backend"`
+}
+
 type settings struct {
-	Server  ServerConfigs  `mapstructure:"Server" yaml:"Server"`
-	Pgsql   PgsqlConfigs   `mapstructure:"Pgsql" yaml:"Pgsql"`
-	Redis   RedisConfigs   `mapstructure:"Redis" yaml:"Redis"`
-	Sess    SessConfigs    `mapstructure:"Sess" yaml:"Sess"`
-	SSOGrpc SSOGrpcConfigs `mapstructure:"SSOGrpc" yaml:"SSOGrpc"`
-	SMS     SMSConfigs     `mapstructure:"SMS" yaml:"SMS"`
-	COS     CosConfigs     `mapstructure:"COS" yaml:"COS"`
+	Server server `mapstructure:"server" yaml:"server"`
+	Pgsql  pgsql  `mapstructure:"pgsql" yaml:"pgsql"`
+	Redis  redis  `mapstructure:"redis" yaml:"redis"`
+	Sess   sess   `mapstructure:"sess" yaml:"sess"`
+	SSO    sso    `mapstructure:"sso" yaml:"sso"`
+	SMS    sms    `mapstructure:"sms" yaml:"sms"`
+	COS    cos    `mapstructure:"COS" yaml:"COS"`
+	Apm    apm    `mapstructure:"apm" yaml:"apm"`
 }

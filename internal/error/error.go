@@ -1,4 +1,4 @@
-package msg
+package error
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	UnauthorizedError = NewError(10001, "Authentication %s %s failed could not found the X-UID field ", 2, nil)
+	UnauthorizedError = NewError(10001, "Authentication failed could not get uid", 0, nil)
 
 	SSOError = NewError(10005, "SSO get UserInfo failed ", 0, nil)
 
@@ -33,6 +33,8 @@ var (
 	InterviewUpdateError     = NewError(10018, "Update interview error, %s", 1, nil)
 	InterviewHasBeenSelected = NewError(10019, "Some interview time has been selected", 0, nil)
 	ReselectInterviewError   = NewError(10020, "You don't have the perssion to re-select this application", 0, nil)
+
+	CheckPermissionError = NewError(10021, "Check permission error", 0, nil)
 )
 
 type Error struct {

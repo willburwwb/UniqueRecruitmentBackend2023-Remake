@@ -1,10 +1,10 @@
-COsServer:
+server:
   run_mode: "debug"
   addr: ":3333"
   read_timeout: 2 #minute
   write_timeout: 2 #minute
 
-Pgsql:
+pgsql:
   host: "db_postgres"
   port: 5432
   dbname: "recruitment_dev"
@@ -14,15 +14,15 @@ Pgsql:
   max_open_conns: 100
   max_life_seconds: 86400
 
-SSOGrpc:
-  addr: "dev.back.sso.hustunique.com"
+sso:
+  addr: "https://dev.back.sso.hustunique.com/api/v1"
 
-SMS:
+sms:
   token:
   register_code_template_id:
   reset_password_code_template_id:
 
-COS:
+cos:
   cos_url:
   cos_secret_id:
   cos_secret_key:
