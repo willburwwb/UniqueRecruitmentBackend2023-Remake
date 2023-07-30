@@ -17,7 +17,16 @@ func IsAdmin(uid string) bool {
 	return true
 }
 
-func GetUserID(c *gin.Context) string {
-	// TODO wait for sso
-	return "thisisuserid"
+func GetUID(c *gin.Context) string {
+	get, ok := c.Get("X-UID")
+	if !ok {
+		return ""
+	}
+
+	uid, ok := get.(string)
+	if !ok {
+		return ""
+	}
+
+	return uid
 }

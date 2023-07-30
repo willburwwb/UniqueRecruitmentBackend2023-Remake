@@ -59,10 +59,10 @@ const (
 	InTeam  GroupOrTeam = "team"
 )
 
-type Role uint
+type Role string
 
 const (
-	Admin         Role = 1
-	MemberRole    Role = 2
-	CandidateRole Role = 3
+	Admin         Role = "admin"
+	MemberRole    Role = "member"
+	CandidateRole Role = "candidate"
 )

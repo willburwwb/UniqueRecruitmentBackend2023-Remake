@@ -51,16 +51,20 @@ func (client *SSOClient) GetUserInfoByUID(ctx context.Context, uid string) (*Use
 	return &userDetail, nil
 }
 
-func (client *SSOClient) CheckPermissionByRole(ctx context.Context, req CheckPermissionByRoleRequest) (*CheckPermissionByRoleResponse, error) {
+func (client *SSOClient) CheckPermissionByRole(ctx context.Context, uid, role string) (bool, error) {
 	var resp CheckPermissionByRoleResponse
 
 	path := "/rbac/user/check_permission_by_role"
+	req := CheckPermissionByRoleRequest{
+		UID:  uid,
+		Role: role,
+	}
 	err := client.Post(path).SetBody(req).Do(ctx).Into(&resp)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	return &resp, nil
+	return resp.Ok, nil
 }
 
 func newSSOClient() *SSOClient {
