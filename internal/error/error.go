@@ -1,4 +1,4 @@
-package msg
+package error
 
 import (
 	"fmt"

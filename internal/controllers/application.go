@@ -3,11 +3,11 @@ package controllers
 import (
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/constants"
+	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/response"
 	"UniqueRecruitmentBackend/internal/utils"
-	"UniqueRecruitmentBackend/pkg/msg"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,12 +22,12 @@ import (
 func CreateApplication(c *gin.Context) {
 	var req request.CreateApplicationRequest
 	if err := c.ShouldBind(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		response.ResponseError(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 	recruitment, err := models.GetRecruitmentById(req.RecruitmentID)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("recruitment").WithDetail("when you submit the application"))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("recruitment").WithDetail("when you submit the application"))
 		return
 	}
 	// Compare the new recruitment time with application time
@@ -46,14 +46,14 @@ func CreateApplication(c *gin.Context) {
 	if err != nil {
 		//TODO(wwb)
 		//when sso done,fix this filePath->user's uid
-		response.ResponseError(c, msg.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+		response.ResponseError(c, error2.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
 		return
 	}
 
 	//save application to database
 	application, err := models.CreateAndSaveApplication(&req, filePath)
 	if err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithDetail(err.Error()))
+		response.ResponseError(c, error2.SaveDatabaseError.WithDetail(err.Error()))
 		return
 	}
 	response.ResponseOK(c, "Success save application", application)
@@ -70,14 +70,14 @@ func GetApplicationById(c *gin.Context) {
 	if common.IsCandidate("") {
 		application, err := models.GetApplicationByIdForCandidate(aid)
 		if err != nil {
-			response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+			response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
 			return
 		}
 		response.ResponseOK(c, "Get application success", application)
 	} else {
 		application, err := models.GetApplicationById(aid)
 		if err != nil {
-			response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+			response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
 			return
 		}
 		response.ResponseOK(c, "Get application success", application)
@@ -91,13 +91,13 @@ func UpdateApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	var req request.UpdateApplicationRequest
 	if err := c.ShouldBind(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		response.ResponseError(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 
 	recruitment, err := models.GetRecruitmentById(req.RecruitmentID)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("recruitment").WithDetail("when you update the application"))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("recruitment").WithDetail("when you update the application"))
 		return
 	}
 	// Compare the new recruitment time with application time
@@ -111,13 +111,13 @@ func UpdateApplicationById(c *gin.Context) {
 		if err := upLoadAndSaveFileToCos(req.Resume, filePath); err != nil {
 			//TODO(wwb)
 			//when sso done,fix this filePath->user's uid
-			response.ResponseError(c, msg.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+			response.ResponseError(c, error2.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
 			return
 		}
 	}
 
 	if err := models.UpdateApplication(aid, filePath, &req); err != nil {
-		response.ResponseError(c, msg.UpdateDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.UpdateDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 	response.ResponseOK(c, "update application success", nil)
@@ -132,7 +132,7 @@ func UpdateApplicationById(c *gin.Context) {
 func DeleteApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	if err := models.DeleteApplication(aid); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
+		response.ResponseError(c, error2.SaveDatabaseError.WithData("application"))
 		return
 	}
 	response.ResponseOK(c, "delete application success", nil)
@@ -146,7 +146,7 @@ func DeleteApplicationById(c *gin.Context) {
 func AbandonApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
 	if err := models.AbandonApplication(aid); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("application"))
+		response.ResponseError(c, error2.SaveDatabaseError.WithData("application"))
 		return
 	}
 	response.ResponseOK(c, "delete application success", nil)
@@ -158,12 +158,12 @@ func GetResumeById(c *gin.Context) {
 	aid := c.Param("aid")
 	application, err := models.GetApplicationById(aid)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
 		return
 	}
 	resp, err := utils.GetCOSObjectResp(application.Resume)
 	if err != nil {
-		response.ResponseError(c, msg.DownloadFileError.WithData("application").WithDetail("download resume fail"))
+		response.ResponseError(c, error2.DownloadFileError.WithData("application").WithDetail("download resume fail"))
 		return
 	}
 
@@ -179,7 +179,7 @@ func GetApplicationByRecruitmentId(c *gin.Context) {
 	rid := c.Param("rid")
 	applications, err := models.GetApplicationByRecruitmentId(rid)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail("Get application info fail"))
 		return
 	}
 	response.ResponseOK(c, "get applications success", applications)
@@ -190,12 +190,12 @@ func SetApplicationStepById(c *gin.Context) {
 	aid := c.Param("aid")
 	var req request.SetApplicationStepRequest
 	if err := c.ShouldBind(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		response.ResponseError(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 
 	if err := models.SetApplicationStepById(aid, &req); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData(err.Error()))
+		response.ResponseError(c, error2.SaveDatabaseError.WithData(err.Error()))
 		return
 	}
 	response.ResponseOK(c, "set application step success", nil)
@@ -208,18 +208,18 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
 	if interviewType == "group" || interviewType == "team" {
-		response.ResponseError(c, msg.RequestParamError.WithData("type wrong"))
+		response.ResponseError(c, error2.RequestParamError.WithData("type wrong"))
 		return
 	}
 
 	var req request.SetApplicationInterviewTimeRequest
 	if err := c.ShouldBind(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		response.ResponseError(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 
 	if err := models.SetApplicationInterviewTime(aid, interviewType, req.Time); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData(err.Error()))
+		response.ResponseError(c, error2.SaveDatabaseError.WithData(err.Error()))
 		return
 	}
 	response.ResponseOK(c, "set interview time success", nil)
@@ -236,12 +236,12 @@ func SetApplicationInterviewTime(c *gin.Context) {
 		Time time.Time `json:"time"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.RequestBodyError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 	application, err := models.GetApplicationById(aid)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 	if !checkApplyStatus(c, application) {
@@ -250,7 +250,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 
 	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 	if !checkRecruitmentTimeInBtoE(c, recruitment) {
@@ -269,7 +269,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 	}
 
 	if err := models.UpdateApplicationInfo(application); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
@@ -283,7 +283,7 @@ func GetInterviewsSlots(c *gin.Context) {
 	interviewType := c.Param("type")
 	application, err := models.GetApplicationByIdForCandidate(aid)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
@@ -295,7 +295,7 @@ func GetInterviewsSlots(c *gin.Context) {
 
 	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
@@ -328,19 +328,19 @@ func SelectInterviewSlots(c *gin.Context) {
 		Iids []string `json:"iids"`
 	}
 	if err := c.ShouldBind(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.RequestBodyError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
 	application, err := models.GetApplicationById(aid)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
 	recruitmentById, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
@@ -366,13 +366,13 @@ func SelectInterviewSlots(c *gin.Context) {
 	}
 	for _, interview := range application.InterviewSelections {
 		if interview.Name != name {
-			response.ResponseError(c, msg.ReselectInterviewError.WithData("application"))
+			response.ResponseError(c, error2.ReselectInterviewError.WithData("application"))
 			return
 		}
 	}
 
 	if err = models.UpdateApplicationInfo(application); err != nil {
-		response.ResponseError(c, msg.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
+		response.ResponseError(c, error2.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 	response.ResponseOK(c, "Success select interview time", nil)
@@ -387,22 +387,22 @@ func MoveApplication(c *gin.Context) {
 		To   string `form:"to" json:"to,omitempty"`
 	}{}
 	if err := c.ShouldBind(&req); err != nil {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail(err.Error()))
+		response.ResponseError(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 	applicationId := c.Param("aid")
 	if applicationId == "" {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail("lost aid param"))
+		response.ResponseError(c, error2.RequestBodyError.WithDetail("lost aid param"))
 		return
 	}
 	application, err := models.GetApplicationById(applicationId)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithDetail("failed to get application for member"))
+		response.ResponseError(c, error2.GetDatabaseError.WithDetail("failed to get application for member"))
 		return
 	}
 	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
-		response.ResponseError(c, msg.GetDatabaseError.WithData("recruitment").WithDetail("when you move application"))
+		response.ResponseError(c, error2.GetDatabaseError.WithData("recruitment").WithDetail("when you move application"))
 		return
 	}
 	//check application's status
@@ -416,11 +416,11 @@ func MoveApplication(c *gin.Context) {
 	// Add check member's group
 	//if b := checkMemberGroup(c,application);b
 	if application.Step != req.From {
-		response.ResponseError(c, msg.RequestBodyError.WithDetail("application's step != request's from"))
+		response.ResponseError(c, error2.RequestBodyError.WithDetail("application's step != request's from"))
 		return
 	}
 	if err := models.UpdateApplicationStep(applicationId, req.To); err != nil {
-		response.ResponseError(c, msg.UpdateDatabaseError.WithData("application").WithDetail("when you update application's step"))
+		response.ResponseError(c, error2.UpdateDatabaseError.WithData("application").WithDetail("when you update application's step"))
 		return
 	}
 	response.ResponseOK(c, "Update application step success", nil)
@@ -431,14 +431,14 @@ func MoveApplication(c *gin.Context) {
 func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
 	if recruitment.Beginning.After(now) {
 		// submit too early
-		response.ResponseError(c, msg.RecruitmentNotReady.WithData(recruitment.Name))
+		response.ResponseError(c, error2.RecruitmentNotReady.WithData(recruitment.Name))
 		return false
 	} else if recruitment.Deadline.Before(now) {
 		log.Println(recruitment.Deadline, now)
-		response.ResponseError(c, msg.RecruitmentStopped.WithData(recruitment.Name))
+		response.ResponseError(c, error2.RecruitmentStopped.WithData(recruitment.Name))
 		return false
 	} else if recruitment.End.Before(now) {
-		response.ResponseError(c, msg.RecruitmentEnd.WithData(recruitment.Name))
+		response.ResponseError(c, error2.RecruitmentEnd.WithData(recruitment.Name))
 		return false
 	}
 	return true
@@ -449,10 +449,10 @@ func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntit
 func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentEntity) bool {
 	now := time.Now()
 	if recruitment.Beginning.After(now) {
-		response.ResponseError(c, msg.RecruitmentNotReady.WithData(recruitment.Name))
+		response.ResponseError(c, error2.RecruitmentNotReady.WithData(recruitment.Name))
 		return false
 	} else if recruitment.End.Before(now) {
-		response.ResponseError(c, msg.RecruitmentEnd.WithData(recruitment.Name))
+		response.ResponseError(c, error2.RecruitmentEnd.WithData(recruitment.Name))
 		return false
 	}
 	return true
@@ -464,11 +464,11 @@ func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) boo
 	if application.Rejected {
 		//TODO(wwb)
 		//fix this to user's name
-		response.ResponseError(c, msg.Rejected.WithData(application.Uid))
+		response.ResponseError(c, error2.Rejected.WithData(application.Uid))
 		return false
 	}
 	if application.Abandoned {
-		response.ResponseError(c, msg.Abandoned.WithData(application.Uid))
+		response.ResponseError(c, error2.Abandoned.WithData(application.Uid))
 		return false
 	}
 	return true

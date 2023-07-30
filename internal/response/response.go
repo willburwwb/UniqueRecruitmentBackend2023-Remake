@@ -1,7 +1,7 @@
 package response
 
 import (
-	"UniqueRecruitmentBackend/pkg/msg"
+	error2 "UniqueRecruitmentBackend/internal/error"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -12,7 +12,7 @@ import (
 //			"details": err.Details(),
 //		})
 //	}
-func ResponseError(c *gin.Context, err *msg.Error) {
+func ResponseError(c *gin.Context, err *error2.Error) {
 	c.JSON(err.StatusCode(), gin.H{
 		"msg":     err.Msg(),
 		"details": err.Details(),

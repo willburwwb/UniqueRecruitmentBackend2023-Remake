@@ -1,8 +1,8 @@
 package middlewares
 
 import (
+	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/pkg/grpcsso"
-	"UniqueRecruitmentBackend/pkg/msg"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -11,14 +11,14 @@ func memberMiddleware(c *gin.Context) {
 	uid := c.GetHeader("X-UID") //may be sso field is X-UID
 	if uid == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"message": msg.UnauthorizedError.WithData("1", "2").Msg(),
+			"message": error2.UnauthorizedError.WithData("1", "2").Msg(),
 		})
 		return
 	}
 	user, err := grpcsso.GetUserInfoByUID(uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"msg":    msg.SSOError.Msg(),
+			"msg":    error2.SSOError.Msg(),
 			"detail": err,
 		})
 		return
