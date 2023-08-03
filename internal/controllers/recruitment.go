@@ -4,7 +4,6 @@ import (
 	"UniqueRecruitmentBackend/internal/common"
 	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -15,7 +14,7 @@ import (
 
 // CreateRecruitment create new recruitment
 func CreateRecruitment(c *gin.Context) {
-	var req request.CreateRecruitmentRequest
+	var req models.RecruitmentEntity
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -40,8 +39,12 @@ func CreateRecruitment(c *gin.Context) {
 // UpdateRecruitment update recruitment details
 func UpdateRecruitment(c *gin.Context) {
 	recruitmentId := c.Param("rid")
-	var req request.UpdateRecruitmentRequest
-	if err := c.ShouldBindJSON(&req); err != nil || recruitmentId == "" {
+	if recruitmentId == "" {
+		common.Error(c, error2.RequestBodyError.WithDetail("recruitment id is null"))
+		return
+	}
+	var req models.RecruitmentEntity
+	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
@@ -57,13 +60,19 @@ func UpdateRecruitment(c *gin.Context) {
 // Get recruitment/:rid
 
 // GetRecruitmentById get recruitment details by id
+// member can only get the recruitments' detail after join in
 func GetRecruitmentById(c *gin.Context) {
 	recruitmentId := c.Param("rid")
 	if recruitmentId == "" {
 		common.Error(c, error2.RequestBodyError.WithDetail("lost http query params [rid]"))
 		return
 	}
-	resp, err := models.GetRecruitmentById(recruitmentId)
+	role, err := getUserRoleByUID(c, common.GetUID(c))
+	if err != nil {
+		common.Error(c, error2.CheckPermissionError.WithDetail(err.Error()))
+		return
+	}
+	resp, err := models.GetRecruitmentById(recruitmentId, role)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 		return
@@ -76,7 +85,7 @@ func GetRecruitmentById(c *gin.Context) {
 // GetAllRecruitment get all recruitment details
 func GetAllRecruitment(c *gin.Context) {
 	// TODO(wwb)
-	// compare member joinin time and recruitment time
+	// compare member join in time and recruitment time
 	resp, err := models.GetAllRecruitment()
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
@@ -85,6 +94,22 @@ func GetAllRecruitment(c *gin.Context) {
 	common.Success(c, "Success get all recruitment", resp)
 }
 
+// Get recruitment/:rid/pending
+
+// GetPendingRecruitment get pending recruitment details
+func GetPendingRecruitment(c *gin.Context) {
+	role, err := getUserRoleByUID(c, common.GetUID(c))
+	if err != nil {
+		common.Error(c, error2.CheckPermissionError.WithDetail(err.Error()))
+		return
+	}
+	resp, err := models.GetPendingRecruitment(role)
+	if err != nil {
+		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
+		return
+	}
+	common.Success(c, "Success get pending recruitment", resp)
+}
 func compareTime(a string, b string) bool {
 	ta := utils.TimeParse(a)
 	tb := utils.TimeParse(b)

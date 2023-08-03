@@ -24,7 +24,7 @@ func CreateApplication(c *gin.Context) {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
-	recruitment, err := models.GetRecruitmentById(req.RecruitmentID)
+	recruitment, err := models.GetRecruitmentById(req.RecruitmentID, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail("when you submit the application"))
 		return
@@ -94,7 +94,7 @@ func UpdateApplicationById(c *gin.Context) {
 		return
 	}
 
-	recruitment, err := models.GetRecruitmentById(req.RecruitmentID)
+	recruitment, err := models.GetRecruitmentById(req.RecruitmentID, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail("when you update the application"))
 		return
@@ -247,7 +247,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 		return
 	}
 
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -292,7 +292,7 @@ func GetInterviewsSlots(c *gin.Context) {
 		return
 	}
 
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -337,7 +337,7 @@ func SelectInterviewSlots(c *gin.Context) {
 		return
 	}
 
-	recruitmentById, err := models.GetRecruitmentById(application.RecruitmentID)
+	recruitmentById, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -399,7 +399,7 @@ func MoveApplication(c *gin.Context) {
 		common.Error(c, error2.GetDatabaseError.WithDetail("failed to get application for member"))
 		return
 	}
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail("when you move application"))
 		return

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"UniqueRecruitmentBackend/internal/common"
+	"UniqueRecruitmentBackend/internal/constants"
 	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
@@ -25,7 +26,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	}
 
 	// judge whether the recruitment has expired
-	resp, err := models.GetRecruitmentById(rid)
+	resp, err := models.GetRecruitmentById(rid, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 		return

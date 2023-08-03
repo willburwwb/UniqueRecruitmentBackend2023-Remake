@@ -45,6 +45,7 @@ func NewRouter() *gin.Engine {
 		recruitmentRouter.Use(middlewares.MemberRoleOrAdminMiddleWare)
 		recruitmentRouter.GET("/:rid", controllers.GetRecruitmentById)
 		recruitmentRouter.GET("/", controllers.GetAllRecruitment)
+		recruitmentRouter.GET("/pending", controllers.GetPendingRecruitment)
 		recruitmentRouter.Use(middlewares.AdminRoleMiddleWare)
 		recruitmentRouter.POST("/", controllers.CreateRecruitment)
 		recruitmentRouter.PUT("/:rid/schedule", controllers.UpdateRecruitment)

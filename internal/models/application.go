@@ -2,6 +2,7 @@ package models
 
 import (
 	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/request"
 	"encoding/json"
 	"errors"
@@ -182,7 +183,7 @@ func AbandonApplication(aid string) error {
 }
 
 func GetApplicationByRecruitmentId(rid string) ([]ApplicationEntity, error) {
-	recruitmentById, err := GetRecruitmentById(rid)
+	recruitmentById, err := GetRecruitmentById(rid, constants.CandidateRole)
 	if err != nil {
 		return nil, err
 	}
