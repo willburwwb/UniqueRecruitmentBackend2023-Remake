@@ -3,6 +3,7 @@ package router
 import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/controllers"
+	"UniqueRecruitmentBackend/internal/middlewares"
 	"UniqueRecruitmentBackend/internal/tracer"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -37,10 +38,14 @@ func NewRouter() *gin.Engine {
 			})
 		})
 	}
+
+	r.Use(middlewares.LocalAuthMiddleware)
 	recruitmentRouter := r.Group("/recruitments")
 	{
+		recruitmentRouter.Use(middlewares.MemberRoleOrAdminMiddleWare)
 		recruitmentRouter.GET("/:rid", controllers.GetRecruitmentById)
 		recruitmentRouter.GET("/", controllers.GetAllRecruitment)
+		recruitmentRouter.Use(middlewares.AdminRoleMiddleWare)
 		recruitmentRouter.POST("/", controllers.CreateRecruitment)
 		recruitmentRouter.PUT("/:rid/schedule", controllers.UpdateRecruitment)
 		recruitmentRouter.PUT("/:rid/interviews/:name", controllers.SetRecruitmentInterviews)

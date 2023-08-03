@@ -6,11 +6,28 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - "~/db_postgres:/var/lib/postgresql/data"
+      - "D:\\service\\db_postgres:/var/lib/postgresql/data"
     environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=""
       - POSTGRES_DB=recruitment_dev
     networks:
       - db
+
+  redis:
+    image: redis:latest
+    restart: always
+    container_name: db_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - D:\\service\\db_redis:/data
+    command: [ "redis-server", "--requirepass", "your_password" ]
+    expose:
+      - "6379:6379"
+    networks:
+      - db
+
   recruitment_backend2023:
     build: .
     container_name: recruitment_backend_2023

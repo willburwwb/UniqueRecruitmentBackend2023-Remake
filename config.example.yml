@@ -17,6 +17,9 @@ pgsql:
 sso:
   addr: "https://dev.back.sso.hustunique.com/api/v1"
 
+redis:
+  dsn: ""
+
 sms:
   token:
   register_code_template_id:

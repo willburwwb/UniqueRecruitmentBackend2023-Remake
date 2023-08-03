@@ -5,6 +5,8 @@ import (
 	"UniqueRecruitmentBackend/internal/constants"
 	"context"
 	"github.com/imroc/req/v3"
+	"net/http"
+	"time"
 )
 
 type SSOClient struct {
@@ -23,7 +25,10 @@ type CheckPermissionByRoleRequest struct {
 }
 
 type CheckPermissionByRoleResponse struct {
-	Ok bool `json:"ok"`
+	Message string `json:"message"`
+	Data    struct {
+		OK bool `json:"ok"`
+	} `json:"data"`
 }
 
 type UserDetail struct {
@@ -50,7 +55,22 @@ func (client *SSOClient) GetUserInfoByUID(ctx context.Context, uid string) (*Use
 
 	return &userDetail, nil
 }
-
+func makeUidCookie(uid string) *http.Cookie {
+	return &http.Cookie{
+		Name:    "uid",
+		Value:   uid,
+		Expires: time.Now().Add(1 * time.Hour),
+		Path:    "/",
+	}
+}
+func makeSSOCookie() *http.Cookie {
+	return &http.Cookie{
+		Name:    "SSO_SESSION",
+		Value:   "MTY5MTA2ODI0OXxOd3dBTkVSUVIwdFZVVWxhTjFneVIxSlpVVk5PVFZST05ETXlRek0xUmtOQ1ZWVlJSMDVHUkRkVFdrMU1Xa3BOUmxCV1NGSkdRa0U9fGWADr71d6ZtXU51aNvnBKZfUqYurIYSmf3lPEjX-I0r",
+		Expires: time.Now().Add(1 * time.Hour),
+		Path:    "/api/v1",
+	}
+}
 func (client *SSOClient) CheckPermissionByRole(ctx context.Context, uid, role string) (bool, error) {
 	var resp CheckPermissionByRoleResponse
 
@@ -59,12 +79,16 @@ func (client *SSOClient) CheckPermissionByRole(ctx context.Context, uid, role st
 		UID:  uid,
 		Role: role,
 	}
-	err := client.Post(path).SetBody(req).Do(ctx).Into(&resp)
+	/*
+		Due to the permission control of sso
+		HTTP request needs to carry cookie
+	*/
+	err := client.Post(path).SetBody(req).SetCookies(makeUidCookie(uid), makeSSOCookie()).Do(ctx).Into(&resp)
 	if err != nil {
 		return false, err
 	}
 
-	return resp.Ok, nil
+	return resp.Data.OK, nil
 }
 
 func newSSOClient() *SSOClient {

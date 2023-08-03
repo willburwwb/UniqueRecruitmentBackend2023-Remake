@@ -24,7 +24,7 @@ func IsCandidate(c *gin.Context) bool {
 }
 
 func IsMember(c *gin.Context) bool {
-	return getValue(c, "role") == string(constants.MemberRole)
+	return getValue(c, "role") == string(constants.MemberRole) || getValue(c, "role") == string(constants.Admin)
 }
 
 func IsAdmin(c *gin.Context) bool {

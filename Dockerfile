@@ -2,6 +2,9 @@ FROM golang:alpine AS builder
 ENV GO111MODULE=on 
 ENV GOPROXY=http://goproxy.cn,direct
 WORKDIR /app
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 COPY . .
 RUN GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -ldflags="-s -w" -installsuffix cgo -o main .
 

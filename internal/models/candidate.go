@@ -1,7 +1,6 @@
 package models
 
-// TODO(wwb)
-// fix candidateEntity definition
+// not use
 
 type CandidateEntity struct {
 	Common

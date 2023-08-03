@@ -27,6 +27,7 @@ func AuthMiddleware(c *gin.Context) {
 	defer span.End()
 
 	cookie, err := c.Cookie("uid")
+
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
 		common.Error(c, error2.UnauthorizedError)
@@ -51,19 +52,56 @@ func AuthMiddleware(c *gin.Context) {
 	c.Next()
 }
 
-func RoleMiddleware(c *gin.Context, role constants.Role) {
-	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Role")
+/*
+Due to session is stored in redis of sso,
+I can only think of not fetching data from redis,uid is only fetched from http cookies,
+and AuthMiddleware is used when deploying to the server
+*/
+
+func LocalAuthMiddleware(c *gin.Context) {
+	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Authentication")
 	defer span.End()
 
-	uid := common.GetUID(c)
-	client := global.GetSSOClient()
-	ok, err := client.CheckPermissionByRole(apmCtx, uid, string(role))
-	if err != nil || !ok {
+	cookie, err := c.Cookie("uid")
+
+	if errors.Is(err, http.ErrNoCookie) {
+		c.Abort()
+		common.Error(c, error2.UnauthorizedError)
+		return
+	}
+
+	uid := cookie
+	c.Request = c.Request.WithContext(ctxWithUID(apmCtx, uid))
+	c.Set("X-UID", uid)
+	//log.Println("uid", uid, "uid", c.GetString("X-UID"))
+	span.SetAttributes(attribute.String("UID", uid))
+	c.Next()
+}
+
+func RoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Role")
+		defer span.End()
+
+		uid := common.GetUID(c)
+		client := global.GetSSOClient()
+
+		for _, role := range roles {
+			ok, err := client.CheckPermissionByRole(apmCtx, uid, string(role))
+			if err == nil && ok {
+				c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
+				c.Next()
+				return
+			}
+		}
 		c.Abort()
 		common.Error(c, error2.CheckPermissionError)
 		return
 	}
-	c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
-
-	c.Next()
 }
+
+var AdminRoleMiddleWare gin.HandlerFunc = RoleMiddleware(constants.Admin)
+
+// admin is also member
+
+var MemberRoleOrAdminMiddleWare gin.HandlerFunc = RoleMiddleware(constants.MemberRole, constants.Admin)

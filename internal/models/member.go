@@ -5,8 +5,7 @@ import (
 	"UniqueRecruitmentBackend/internal/constants"
 )
 
-// TODO(wwb)
-// fix memberEntity definition
+// not use
 
 type MemberEntity struct {
 	Common
@@ -21,7 +20,7 @@ type MemberEntity struct {
 	IsAdmin      bool             `gorm:"column:isAdmin;not null;default:false"`
 	Group        constants.Group  `gorm:"not null"` //constants.Group
 	Avatar       string
-	Comments     []CommentEntity `gorm:"foreignKey:MemberID;references:Uid;constraint:OnDelete:CASCADE，OnUpdate:CASCADE;"` //onetomany
+	Comments     []CommentEntity `gorm:"foreignKey:MemberID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //onetomany
 	PasswordSalt string          `gorm:"column:passwordSalt;not null"`
 	PasswordHash string          `gorm:"column:passwordHash;not null;unique"`
 }
