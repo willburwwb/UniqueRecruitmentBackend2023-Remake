@@ -33,12 +33,12 @@ const (
 	Evening   Period = "evening"
 )
 
-type Gender string
+type Gender int
 
 const (
-	Male   Gender = "male"
-	Female Gender = "female"
-	Oth    Gender = "oth"
+	Male   Gender = 1
+	Female Gender = 2
+	Oth    Gender = 3
 )
 
 type Grade string

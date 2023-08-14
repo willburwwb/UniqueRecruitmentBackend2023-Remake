@@ -33,5 +33,4 @@ func setupPgsql() {
 	sqlDB.SetMaxOpenConns(configs.Config.Pgsql.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(configs.Config.Pgsql.MaxLifeSeconds) * time.Second)
 
-	return
 }

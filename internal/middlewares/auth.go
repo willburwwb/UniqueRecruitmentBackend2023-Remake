@@ -8,18 +8,24 @@ import (
 	"UniqueRecruitmentBackend/internal/tracer"
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel/attribute"
-	"net/http"
 )
 
+type contextKey string
+
+const XUID contextKey = "X-UID"
+const Role contextKey = "role"
+
 func ctxWithUID(ctx context.Context, uid string) context.Context {
-	return context.WithValue(ctx, "X-UID", uid)
+	return context.WithValue(ctx, XUID, uid)
 }
 
 func ctxWithRole(ctx context.Context, role constants.Role) context.Context {
-	return context.WithValue(ctx, "role", role)
+	return context.WithValue(ctx, Role, role)
 }
 
 func AuthMiddleware(c *gin.Context) {
@@ -73,7 +79,7 @@ func LocalAuthMiddleware(c *gin.Context) {
 	uid := cookie
 	c.Request = c.Request.WithContext(ctxWithUID(apmCtx, uid))
 	c.Set("X-UID", uid)
-	//log.Println("uid", uid, "uid", c.GetString("X-UID"))
+	//log.Println("local auth uid", uid, "uid", c.Value("X-UID"))
 	span.SetAttributes(attribute.String("UID", uid))
 	c.Next()
 }
@@ -90,13 +96,13 @@ func RoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
 			ok, err := client.CheckPermissionByRole(apmCtx, uid, string(role))
 			if err == nil && ok {
 				c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
+				//log.Println(c.GetString("X-UID"), "has role", role)
 				c.Next()
 				return
 			}
 		}
 		c.Abort()
 		common.Error(c, error2.CheckPermissionError)
-		return
 	}
 }
 

@@ -5,17 +5,17 @@ import (
 	"time"
 )
 
-type CreateRecruitmentRequest struct {
+type CreateRecruitment struct {
 	Name      string    `json:"name" binding:"required"`
 	Beginning time.Time `json:"beginning" binding:"required"`
 	Deadline  time.Time `json:"deadline" binding:"required"`
 	End       time.Time `json:"end" binding:"required"`
 }
 
-type UpdateRecruitmentRequest struct {
-	Beginning time.Time `json:"beginning" binding:"required"`
-	Deadline  time.Time `json:"deadline" binding:"required"`
-	End       time.Time `json:"end" binding:"required"`
+type UpdateRecruitment struct {
+	Beginning time.Time `json:"beginning"`
+	Deadline  time.Time `json:"deadline"`
+	End       time.Time `json:"end"`
 }
 
 type InterviewInfo struct {
@@ -25,6 +25,6 @@ type InterviewInfo struct {
 	SlotNumber int              `json:"slotNumber"`
 }
 
-type SetRecruitmentInterviewTimeRequest struct {
+type SetRecruitmentInterviewTime struct {
 	Interviews []InterviewInfo
 }

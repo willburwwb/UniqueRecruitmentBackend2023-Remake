@@ -2,11 +2,14 @@ package controllers
 
 import (
 	"UniqueRecruitmentBackend/internal/common"
+	"UniqueRecruitmentBackend/internal/constants"
 	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
+	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
-	"github.com/gin-gonic/gin"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Post recruitment/
@@ -14,7 +17,7 @@ import (
 
 // CreateRecruitment create new recruitment
 func CreateRecruitment(c *gin.Context) {
-	var req models.RecruitmentEntity
+	var req request.CreateRecruitment
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -43,7 +46,7 @@ func UpdateRecruitment(c *gin.Context) {
 		common.Error(c, error2.RequestBodyError.WithDetail("recruitment id is null"))
 		return
 	}
-	var req models.RecruitmentEntity
+	var req request.UpdateRecruitment
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -67,17 +70,41 @@ func GetRecruitmentById(c *gin.Context) {
 		common.Error(c, error2.RequestBodyError.WithDetail("lost http query params [rid]"))
 		return
 	}
-	role, err := getUserRoleByUID(c, common.GetUID(c))
+	userInfo, err := getUserInfoByUID(c, common.GetUID(c))
 	if err != nil {
 		common.Error(c, error2.CheckPermissionError.WithDetail(err.Error()))
 		return
 	}
-	resp, err := models.GetRecruitmentById(recruitmentId, role)
-	if err != nil {
-		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
-		return
+
+	if utils.CheckRoleByUserDetail(userInfo, constants.Admin) {
+		resp, err := models.GetRecruitmentById(recruitmentId, constants.Admin)
+		if err != nil {
+			common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
+			return
+		}
+		common.Success(c, "Success get recruitment by admin role", resp)
+	} else if utils.CheckRoleByUserDetail(userInfo, constants.MemberRole) {
+		resp, err := models.GetRecruitmentById(recruitmentId, constants.MemberRole)
+		if err != nil {
+			common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
+			return
+		}
+
+		//TODO(wwb)
+		//Compare member join in time and recruitment time
+		// if compareTime(resp.Beginning.String(), userInfo.) {
+
+		// }
+
+		common.Success(c, "Success get recruitment by member role", resp)
+	} else {
+		resp, err := models.GetRecruitmentById(recruitmentId, constants.CandidateRole)
+		if err != nil {
+			common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
+			return
+		}
+		common.Success(c, "Success get recruitment by candidate role", resp)
 	}
-	common.Success(c, "Success get one recruitment", resp)
 }
 
 // Get recruitment/

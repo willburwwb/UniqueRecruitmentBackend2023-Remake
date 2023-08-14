@@ -3,6 +3,8 @@ package models
 import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/constants"
+	"UniqueRecruitmentBackend/internal/request"
+	"encoding/json"
 	"time"
 
 	"github.com/jackc/pgx/pgtype"
@@ -24,15 +26,32 @@ func (c RecruitmentEntity) TableName() string {
 	return "recruitments"
 }
 
-func CreateRecruitment(r *RecruitmentEntity) (string, error) {
+func CreateRecruitment(req *request.CreateRecruitment) (string, error) {
 	db := global.GetDB()
+	r := &RecruitmentEntity{
+		Name:      req.Name,
+		Beginning: req.Beginning,
+		Deadline:  req.Deadline,
+		End:       req.End,
+	}
 	err := db.Model(&RecruitmentEntity{}).Create(r).Error
 	return r.Uid, err
 }
 
-func UpdateRecruitment(rid string, r *RecruitmentEntity) error {
+func UpdateRecruitment(rid string, req *request.UpdateRecruitment) error {
+	
+	bytes, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	var r RecruitmentEntity
+	if err := json.Unmarshal(bytes, &r); err != nil {
+		return err
+	}
+	r.Uid = rid
+	
 	db := global.GetDB()
-	return db.Model(&RecruitmentEntity{}).Where("uid = ?", rid).Updates(r).Error
+	return db.Updates(&r).Error
 }
 
 func GetRecruitmentById(rid string, role constants.Role) (*RecruitmentEntity, error) {

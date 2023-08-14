@@ -4,9 +4,10 @@ import (
 	"UniqueRecruitmentBackend/configs"
 	"UniqueRecruitmentBackend/internal/constants"
 	"context"
-	"github.com/imroc/req/v3"
 	"net/http"
 	"time"
+
+	"github.com/imroc/req/v3"
 )
 
 type SSOClient struct {
@@ -30,7 +31,12 @@ type CheckPermissionByRoleResponse struct {
 		OK bool `json:"ok"`
 	} `json:"data"`
 }
-
+type UserDetailResponse struct {
+	Message string `json:"message"`
+	Data    struct {
+		UserDetail
+	} `json:"data"`
+}
 type UserDetail struct {
 	UID         string           `json:"uid"`
 	Phone       string           `json:"phone"`
@@ -44,17 +50,6 @@ type UserDetail struct {
 	LarkUnionID string           `json:"lark_union_id"`
 }
 
-func (client *SSOClient) GetUserInfoByUID(ctx context.Context, uid string) (*UserDetail, error) {
-	var userDetail UserDetail
-
-	path := "/rbac/user"
-	err := client.Get(path).SetQueryParam("uid", uid).Do(ctx).Into(&userDetail)
-	if err != nil {
-		return nil, err
-	}
-
-	return &userDetail, nil
-}
 func makeUidCookie(uid string) *http.Cookie {
 	return &http.Cookie{
 		Name:    "uid",
@@ -66,11 +61,25 @@ func makeUidCookie(uid string) *http.Cookie {
 func makeSSOCookie() *http.Cookie {
 	return &http.Cookie{
 		Name:    "SSO_SESSION",
-		Value:   "MTY5MTA2ODI0OXxOd3dBTkVSUVIwdFZVVWxhTjFneVIxSlpVVk5PVFZST05ETXlRek0xUmtOQ1ZWVlJSMDVHUkRkVFdrMU1Xa3BOUmxCV1NGSkdRa0U9fGWADr71d6ZtXU51aNvnBKZfUqYurIYSmf3lPEjX-I0r",
+		Value:   "MTY5MTk5ODAyMnxOd3dBTkZkUFJqZE1WVlZZUlZNMk5sSkRRMUZHVUV4TVVrbE5ORlpUU2xWRlIxaExXVXN6U1VwRU4wODFTVFZRVmpkT1FVbEZRMEU9fEeHRTQ8Gn2uxcqDvvnUxhqgQXk1AImfHswzSSEk2XBe",
 		Expires: time.Now().Add(1 * time.Hour),
 		Path:    "/api/v1",
 	}
 }
+
+func (client *SSOClient) GetUserInfoByUID(ctx context.Context, uid string) (*UserDetail, error) {
+	var req UserDetailResponse
+
+	path := "/rbac/user"
+	err := client.Get(path).SetQueryParam("uid", uid).SetCookies(makeUidCookie(uid), makeSSOCookie()).
+		Do(ctx).Into(&req)
+
+	if err != nil {
+		return nil, err
+	}
+	return &req.Data.UserDetail, nil
+}
+
 func (client *SSOClient) CheckPermissionByRole(ctx context.Context, uid, role string) (bool, error) {
 	var resp CheckPermissionByRoleResponse
 
