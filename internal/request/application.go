@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type CreateApplicationRequest struct {
+type CreateApplication struct {
 	Grade         string `form:"grade" json:"grade" binding:"required"`
 	Institute     string `form:"institute" json:"institute" binding:"required"`
 	Major         string `form:"major" json:"major" binding:"required"`
@@ -19,7 +19,7 @@ type CreateApplicationRequest struct {
 	Resume *multipart.FileHeader `form:"resume" json:"resume"` //简历
 }
 
-type UpdateApplicationRequest struct {
+type UpdateApplication struct {
 	Grade         string                `form:"grade" json:"grade,omitempty"`
 	Institute     string                `form:"institute" json:"institute,omitempty"`
 	Major         string                `form:"major" json:"major,omitempty"`
@@ -31,11 +31,11 @@ type UpdateApplicationRequest struct {
 	Resume        *multipart.FileHeader `form:"resume" json:"resume,omitempty"` //简历
 }
 
-type SetApplicationStepRequest struct {
+type SetApplicationStep struct {
 	From string `json:"from"`
 	To   string `json:"to"`
 }
 
-type SetApplicationInterviewTimeRequest struct {
+type SetApplicationInterviewTime struct {
 	Time time.Time `json:"time"`
 }

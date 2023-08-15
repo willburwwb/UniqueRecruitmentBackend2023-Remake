@@ -137,8 +137,9 @@ func GetPendingRecruitment(c *gin.Context) {
 	}
 	common.Success(c, "Success get pending recruitment", resp)
 }
-func compareTime(a string, b string) bool {
-	ta := utils.TimeParse(a)
-	tb := utils.TimeParse(b)
-	return ta.After(tb)
-}
+
+// func compareTime(a string, b string) bool {
+// 	ta := utils.TimeParse(a)
+// 	tb := utils.TimeParse(b)
+// 	return ta.After(tb)
+// }

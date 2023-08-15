@@ -69,7 +69,6 @@ func LocalAuthMiddleware(c *gin.Context) {
 	defer span.End()
 
 	cookie, err := c.Cookie("uid")
-
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
 		common.Error(c, error2.UnauthorizedError)
@@ -79,23 +78,81 @@ func LocalAuthMiddleware(c *gin.Context) {
 	uid := cookie
 	c.Request = c.Request.WithContext(ctxWithUID(apmCtx, uid))
 	c.Set("X-UID", uid)
-	//log.Println("local auth uid", uid, "uid", c.Value("X-UID"))
+	// log.Println("local auth uid", uid, "uid", c.Value("X-UID"))
 	span.SetAttributes(attribute.String("UID", uid))
 	c.Next()
 }
 
-func RoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
+func getUserRoleByUID(c *gin.Context) (constants.Role, error) {
+	uid := common.GetUID(c)
+	s := global.GetSSOClient()
+	userDetail, err := s.GetUserInfoByUID(c, uid)
+	if err != nil {
+		return "", err
+	}
+	roles := userDetail.Roles
+	for _, v := range roles {
+		if v == "admin" {
+			return constants.Admin, nil
+		}
+	}
+	for _, v := range roles {
+		if v == "member" {
+			return constants.MemberRole, nil
+		}
+	}
+	return constants.CandidateRole, nil
+}
+func SetUpUserRole(c *gin.Context) {
+	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Role")
+	defer span.End()
+	role, err := getUserRoleByUID(c)
+	if err != nil {
+		c.Abort()
+		common.Error(c, error2.CheckPermissionError)
+		return
+	}
+	c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
+	c.Set("role", string(role))
+	c.Next()
+}
+
+var GlobalRoleMiddleWare gin.HandlerFunc = SetUpUserRole
+
+// func RoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Role")
+// 		defer span.End()
+
+// 		uid := common.GetUID(c)
+// 		client := global.GetSSOClient()
+
+//			for _, role := range roles {
+//				ok, err := client.CheckPermissionByRole(apmCtx, uid, string(role))
+//				if err == nil && ok {
+//					c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
+//					//log.Println(c.GetString("X-UID"), "has role", role)
+//					c.Next()
+//					return
+//				}
+//			}
+//			c.Abort()
+//			common.Error(c, error2.CheckPermissionError)
+//		}
+//	}
+func CheckRoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Role")
-		defer span.End()
-
-		uid := common.GetUID(c)
-		client := global.GetSSOClient()
-
 		for _, role := range roles {
-			ok, err := client.CheckPermissionByRole(apmCtx, uid, string(role))
-			if err == nil && ok {
-				c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
+			var ok bool
+			switch role {
+			case constants.Admin:
+				ok = common.IsAdmin(c)
+			case constants.MemberRole:
+				ok = common.IsMember(c)
+			case constants.CandidateRole:
+				ok = common.IsCandidate(c)
+			}
+			if ok {
 				//log.Println(c.GetString("X-UID"), "has role", role)
 				c.Next()
 				return
@@ -106,8 +163,8 @@ func RoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
 	}
 }
 
-var AdminRoleMiddleWare gin.HandlerFunc = RoleMiddleware(constants.Admin)
+var CheckAdminRoleMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.Admin)
 
 // admin is also member
 
-var MemberRoleOrAdminMiddleWare gin.HandlerFunc = RoleMiddleware(constants.MemberRole, constants.Admin)
+var CheckMemberRoleOrAdminMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.MemberRole, constants.Admin)

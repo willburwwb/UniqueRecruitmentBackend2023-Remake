@@ -52,6 +52,18 @@ const (
 )
 
 type Step string
+
+const (
+	SignUp             Step = "SignUp"             //报名
+	WrittenTest        Step = "WrittenTest"        //笔试
+	GroupTimeSelection Step = "GroupTimeSelection" //组面时间选择
+	GroupInterview     Step = "GroupInterview"     //组面
+	StressTest         Step = "StressTest"         // 熬测
+	TeamTimeSelection  Step = "TeamTimeSelection"  // 面试时间选择
+	TeamInterview      Step = "TeamInterview"      // 群面
+	Pass               Step = "Pass"               // 通过
+)
+
 type GroupOrTeam string
 
 const (

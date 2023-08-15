@@ -10,7 +10,7 @@ import (
 )
 
 // used for insert data without sso
-const fakeCandidateId = "b234d3f4-1e74-11ee-8b78-b69bc9af8fe4"
+// const fakeCandidateId = "b234d3f4-1e74-11ee-8b78-b69bc9af8fe4"
 
 // ApplicationEntity records the detail of application for candidate
 // and the model has been modified to fit sso
@@ -81,7 +81,7 @@ type ApplicationForCandidate struct {
 	RecruitmentID string
 }
 
-func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename string) (*ApplicationEntity, error) {
+func CreateAndSaveApplication(req *request.CreateApplication, uid string, filePath string) (*ApplicationEntity, error) {
 	db := global.GetDB()
 	row := db.Where("'recruitmentId' = ?", req.RecruitmentID).Find(&ApplicationEntity{}).RowsAffected
 
@@ -99,11 +99,9 @@ func CreateAndSaveApplication(req *request.CreateApplicationRequest, filename st
 		RecruitmentID: req.RecruitmentID,
 		Referrer:      req.Referrer,
 		IsQuick:       req.IsQuick,
-		Resume:        filename,
-		CandidateID:   fakeCandidateId,
-		// TODO(wwb)
-		// Add step status
-		Step: "",
+		Resume:        filePath,
+		CandidateID:   uid,
+		Step:          string(constants.SignUp),
 	}
 	err := db.Create(&a).Error
 	return &a, err
@@ -139,7 +137,7 @@ func GetApplicationById(aid string) (*ApplicationEntity, error) {
 	return &a, nil
 }
 
-func UpdateApplication(aid string, filename string, req *request.UpdateApplicationRequest) error {
+func UpdateApplication(aid string, filename string, req *request.UpdateApplication) error {
 	req.Resume = nil
 	bytes, err := json.Marshal(req)
 	if err != nil {
@@ -169,7 +167,7 @@ func UpdateApplicationStep(aid string, step string) error {
 
 func DeleteApplication(aid string) error {
 	db := global.GetDB()
-	return db.Delete(&ApplicationEntity{}, aid).Error
+	return db.Where("uid = ?", aid).Delete(&ApplicationEntity{}).Error
 }
 
 func AbandonApplication(aid string) error {
@@ -183,7 +181,7 @@ func AbandonApplication(aid string) error {
 }
 
 func GetApplicationByRecruitmentId(rid string) ([]ApplicationEntity, error) {
-	recruitmentById, err := GetRecruitmentById(rid, constants.CandidateRole)
+	recruitmentById, err := GetRecruitmentById(rid, constants.MemberRole)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +189,7 @@ func GetApplicationByRecruitmentId(rid string) ([]ApplicationEntity, error) {
 	return recruitmentById.Applications, nil
 }
 
-func SetApplicationStepById(aid string, req *request.SetApplicationStepRequest) error {
+func SetApplicationStepById(aid string, req *request.SetApplicationStep) error {
 	db := global.GetDB()
 	application, err := GetApplicationById(aid)
 	if err != nil {

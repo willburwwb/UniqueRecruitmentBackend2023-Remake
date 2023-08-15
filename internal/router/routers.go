@@ -5,10 +5,11 @@ import (
 	"UniqueRecruitmentBackend/internal/controllers"
 	"UniqueRecruitmentBackend/internal/middlewares"
 	"UniqueRecruitmentBackend/internal/tracer"
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // NewRouter create backend http group routers
@@ -40,16 +41,20 @@ func NewRouter() *gin.Engine {
 	}
 
 	r.Use(middlewares.LocalAuthMiddleware)
+	r.Use(middlewares.GlobalRoleMiddleWare)
 	recruitmentRouter := r.Group("/recruitments")
 	{
-		recruitmentRouter.Use(middlewares.MemberRoleOrAdminMiddleWare)
+		// public
 		recruitmentRouter.GET("/:rid", controllers.GetRecruitmentById)
-		recruitmentRouter.GET("/", controllers.GetAllRecruitment)
 		recruitmentRouter.GET("/pending", controllers.GetPendingRecruitment)
-		recruitmentRouter.Use(middlewares.AdminRoleMiddleWare)
-		recruitmentRouter.POST("/", controllers.CreateRecruitment)
-		recruitmentRouter.PUT("/:rid/schedule", controllers.UpdateRecruitment)
-		recruitmentRouter.PUT("/:rid/interviews/:name", controllers.SetRecruitmentInterviews)
+
+		// member role
+		recruitmentRouter.GET("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllRecruitment)
+
+		// admin role
+		recruitmentRouter.POST("/", middlewares.CheckAdminRoleMiddleWare, controllers.CreateRecruitment)
+		recruitmentRouter.PUT("/:rid/schedule", middlewares.CheckAdminRoleMiddleWare, controllers.UpdateRecruitment)
+		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckAdminRoleMiddleWare, controllers.SetRecruitmentInterviews)
 	}
 	//memberRouter := r.Group("/members")
 	//{

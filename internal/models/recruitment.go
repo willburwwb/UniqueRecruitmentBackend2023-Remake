@@ -39,7 +39,7 @@ func CreateRecruitment(req *request.CreateRecruitment) (string, error) {
 }
 
 func UpdateRecruitment(rid string, req *request.UpdateRecruitment) error {
-	
+
 	bytes, err := json.Marshal(req)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func UpdateRecruitment(rid string, req *request.UpdateRecruitment) error {
 		return err
 	}
 	r.Uid = rid
-	
+
 	db := global.GetDB()
 	return db.Updates(&r).Error
 }
@@ -81,9 +81,10 @@ func GetPendingRecruitment(role constants.Role) (*RecruitmentEntity, error) {
 	var err error
 	if role == constants.MemberRole || role == constants.Admin {
 		err = db.Model(&RecruitmentEntity{}).Preload("Applications").Preload("Interviews").
-			Where("? BETWEEN beginning AND end", time.Now()).Find(&r).Error
+			Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).Find(&r).Error
 	} else {
-		err = db.Model(&RecruitmentEntity{}).Where("? BETWEEN beginning AND end", time.Now()).Find(&r).Error
+
+		err = db.Model(&RecruitmentEntity{}).Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).Find(&r).Error
 	}
 	return &r, err
 }

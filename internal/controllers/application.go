@@ -19,38 +19,39 @@ import (
 // POST applications/
 // Accept role >=candidate
 func CreateApplication(c *gin.Context) {
-	var req request.CreateApplicationRequest
+	var req request.CreateApplication
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
+	if constants.GroupMap[req.Group] == "" {
+		common.Error(c, error2.RequestBodyError.WithDetail("group wrong"))
+		return
+	}
 	recruitment, err := models.GetRecruitmentById(req.RecruitmentID, constants.CandidateRole)
-	if err != nil {
+	if err != nil || recruitment.Uid == "" {
 		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail("when you submit the application"))
 		return
 	}
-	// Compare the new recruitment time with application time
+	// Compare the recruitment time with application time
 	if !checkRecruitmentInBtoD(c, recruitment, time.Now()) {
 		return
 	}
 
-	//TODO(wwb)
-	//when sso done,fix this filePath->user's uid
-	// file path example: 2023秋(rname)/web(group)/wwb(userID)/filename
-	filePath := fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, "thisisuserid", req.Resume.Filename)
+	// file path example: 2023秋(rname)/web(group)/wwb(uid)/filename
+	uid := common.GetUID(c)
+	filePath := fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, uid, req.Resume.Filename)
 
 	log.Println(filePath)
 	//resume upload to COS
 	err = upLoadAndSaveFileToCos(req.Resume, filePath)
 	if err != nil {
-		//TODO(wwb)
-		//when sso done,fix this filePath->user's uid
-		common.Error(c, error2.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+		common.Error(c, error2.UpLoadFileError.WithData(uid).WithDetail(err.Error()))
 		return
 	}
 
 	//save application to database
-	application, err := models.CreateAndSaveApplication(&req, filePath)
+	application, err := models.CreateAndSaveApplication(&req, uid, filePath)
 	if err != nil {
 		common.Error(c, error2.SaveDatabaseError.WithDetail(err.Error()))
 		return
@@ -60,11 +61,8 @@ func CreateApplication(c *gin.Context) {
 
 // GetApplicationById get candidate's application by applicationId
 // GET applications/:aid
-// TODO(wwb)
-// Remember two different views of candidate and member
+// candidate and member will see two different views of application
 func GetApplicationById(c *gin.Context) {
-	//var applicationId string
-	//applicationId = c.Query("applicationId")
 	aid := c.Param("aid")
 	if common.IsCandidate(c) {
 		application, err := models.GetApplicationByIdForCandidate(aid)
@@ -88,7 +86,7 @@ func GetApplicationById(c *gin.Context) {
 // only by application's candidate
 func UpdateApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
-	var req request.UpdateApplicationRequest
+	var req request.UpdateApplication
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -104,13 +102,19 @@ func UpdateApplicationById(c *gin.Context) {
 		return
 	}
 
+	uid := common.GetUID(c)
+
+	application, err := models.GetApplicationById(aid)
+	if err != nil || application.CandidateID != uid {
+		common.Error(c, error2.UpdateDatabaseError.WithData("application").WithDetail("you can't update other's application"))
+		return
+	}
+
 	filePath := ""
 	if req.Resume != nil {
-		filePath = fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, "thisisuserid", req.Resume.Filename)
+		filePath = fmt.Sprintf("%s/%s/%s/%s", recruitment.Name, req.Group, uid, req.Resume.Filename)
 		if err := upLoadAndSaveFileToCos(req.Resume, filePath); err != nil {
-			//TODO(wwb)
-			//when sso done,fix this filePath->user's uid
-			common.Error(c, error2.UpLoadFileError.WithData("thisisuserid").WithDetail(err.Error()))
+			common.Error(c, error2.UpLoadFileError.WithData(uid).WithDetail(err.Error()))
 			return
 		}
 	}
@@ -120,16 +124,25 @@ func UpdateApplicationById(c *gin.Context) {
 		return
 	}
 	common.Success(c, "update application success", nil)
-	return
 }
 
 // DeleteApplicationById delete candidate's application by applicationId
 // DELETE applications/:aid
 // only by application's candidate
-// TODO(wwb)
-// add role controller to this api
 func DeleteApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
+	if aid == "" {
+		common.Error(c, error2.RequestBodyError.WithDetail("lost aid param"))
+		return
+	}
+
+	uid := common.GetUID(c)
+	application, err := models.GetApplicationById(aid)
+	if err != nil || application.CandidateID != uid {
+		common.Error(c, error2.UpdateDatabaseError.WithData("application").WithDetail("you can't delete other's application"))
+		return
+	}
+
 	if err := models.DeleteApplication(aid); err != nil {
 		common.Error(c, error2.SaveDatabaseError.WithData("application"))
 		return
@@ -140,19 +153,25 @@ func DeleteApplicationById(c *gin.Context) {
 // AbandonApplicationById abandon candidate's application by applicationId
 // DELETE applications/:aid/abandoned
 // only by the member of application's group
-// TODO(wwb)
-// add role controller to this api
 func AbandonApplicationById(c *gin.Context) {
 	aid := c.Param("aid")
+	uid := common.GetUID(c)
+
+	// check member's role to abandon application
+	if !checkMemberGroup(c, aid, uid) {
+		return
+	}
 	if err := models.AbandonApplication(aid); err != nil {
 		common.Error(c, error2.SaveDatabaseError.WithData("application"))
 		return
 	}
-	common.Success(c, "delete application success", nil)
+	common.Success(c, "abandon application success", nil)
 }
 
 // GetResumeById Download resume by application's
 // GET applications/:aid/resume
+// TODO(wwb)
+// check this api
 func GetResumeById(c *gin.Context) {
 	aid := c.Param("aid")
 	application, err := models.GetApplicationById(aid)
@@ -171,9 +190,12 @@ func GetResumeById(c *gin.Context) {
 	contentType := resp.Header.Get("Content-Type")
 
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
-	return
+
 }
 
+// GetApplicationByRecruitmentId get all applications by recruitmentId
+// GET applications/recruitment/:rid
+// member role
 func GetApplicationByRecruitmentId(c *gin.Context) {
 	rid := c.Param("rid")
 	applications, err := models.GetApplicationByRecruitmentId(rid)
@@ -182,27 +204,33 @@ func GetApplicationByRecruitmentId(c *gin.Context) {
 		return
 	}
 	common.Success(c, "get applications success", applications)
-	return
 }
 
+// PUT applications/:aid/step
+// only by the member of application's group
 func SetApplicationStepById(c *gin.Context) {
 	aid := c.Param("aid")
-	var req request.SetApplicationStepRequest
+	var req request.SetApplicationStep
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
-
+	uid := common.GetUID(c)
+	// check member's role to set application step
+	if !checkMemberGroup(c, aid, uid) {
+		return
+	}
 	if err := models.SetApplicationStepById(aid, &req); err != nil {
 		common.Error(c, error2.SaveDatabaseError.WithData(err.Error()))
 		return
 	}
 	common.Success(c, "set application step success", nil)
-	return
+
 }
 
-// SetApplicationInterviewTimeById
+// SetApplicationInterviewTimeById set application's group/team interview time
 // PUT /:aid/interview/:type
+// only by the member of application's group
 func SetApplicationInterviewTimeById(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
@@ -211,9 +239,15 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 		return
 	}
 
-	var req request.SetApplicationInterviewTimeRequest
+	var req request.SetApplicationInterviewTime
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+
+	uid := common.GetUID(c)
+	// check member's role to set application interview time
+	if !checkMemberGroup(c, aid, uid) {
 		return
 	}
 
@@ -222,12 +256,11 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 		return
 	}
 	common.Success(c, "set interview time success", nil)
-	return
 }
 
 // SetApplicationInterviewTime set interview time
-// only by the member of application's group
 // PUT /interview/:type
+// only by the member of application's group
 func SetApplicationInterviewTime(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
@@ -273,7 +306,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 	}
 
 	common.Success(c, "Success set interview time", nil)
-	return
+
 }
 
 // GetInterviewsSlots get interviews time for candidate
@@ -313,7 +346,7 @@ func GetInterviewsSlots(c *gin.Context) {
 		}
 	}
 	common.Success(c, "Success get interview time", res)
-	return
+
 }
 
 // SelectInterviewSlots select interview for candidate
@@ -476,4 +509,24 @@ func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) boo
 func checkStep(c *gin.Context, interviewType string) bool {
 	// TODO The steps haven't been decided yet
 	return true
+}
+
+// check if the user is a member of group the application applied
+func checkMemberGroup(c *gin.Context, aid string, uid string) bool {
+	application, err := models.GetApplicationByIdForCandidate(aid)
+	if err != nil {
+		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return false
+	}
+
+	userInfo, err := getUserInfoByUID(c, uid)
+	if err != nil {
+		common.Error(c, error2.CheckPermissionError.WithDetail(err.Error()))
+		return false
+	}
+	if utils.CheckInArrary(application.Group, userInfo.Groups) {
+		return true
+	}
+	common.Error(c, error2.GroupNotMatch)
+	return false
 }
