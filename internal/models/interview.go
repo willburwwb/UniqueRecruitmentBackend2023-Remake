@@ -4,7 +4,10 @@ import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/request"
+	"encoding/json"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type InterviewEntity struct {
@@ -30,22 +33,70 @@ func GetInterviewsByRidAndName(rid string, name string) (*[]InterviewEntity, err
 	return &res, nil
 }
 
-func UpdateInterview(interview *InterviewEntity) error {
-	ui := InterviewEntity{
-		Date:       interview.Date,
-		Period:     interview.Period,
-		SlotNumber: interview.SlotNumber,
+// func UpdateInterview(interview *InterviewEntity) error {
+// 	ui := InterviewEntity{
+// 		Date:       interview.Date,
+// 		Period:     interview.Period,
+// 		SlotNumber: interview.SlotNumber,
+// 	}
+
+// 	db := global.GetDB()
+
+//		return db.Updates(&ui).Error
+//	}
+func CreateAndSaveInterview(rid string, name string, interviews []request.CreateInterview) error {
+	var interviewEntitys []InterviewEntity
+	for _, interview := range interviews {
+		var interviewEntity InterviewEntity
+		bytes, err := json.Marshal(interview)
+		if err != nil {
+			return err
+		}
+		json.Unmarshal(bytes, &interviewEntity)
+		interviewEntity.RecruitmentID = rid
+		interviewEntity.Name = constants.Group(name)
+		interviewEntitys = append(interviewEntitys, interviewEntity)
 	}
-
 	db := global.GetDB()
-
-	return db.Updates(&ui).Error
+	return db.Create(&interviewEntitys).Error
 }
-
-func CreateAndSaveInterview(interview *request.UpdateInterviewRequest) error {
-	return nil
+func UpdateInterviews(rid string, name string, interviews []request.UpdateInterview) error {
+	var interviewEntitys []InterviewEntity
+	for _, interview := range interviews {
+		var interviewEntity InterviewEntity
+		bytes, err := json.Marshal(interview)
+		if err != nil {
+			return err
+		}
+		json.Unmarshal(bytes, &interviewEntity)
+		interviewEntity.RecruitmentID = rid
+		interviewEntity.Name = constants.Group(name)
+		interviewEntitys = append(interviewEntitys, interviewEntity)
+	}
+	db := global.GetDB()
+	err := db.Transaction(func(tx *gorm.DB) error {
+		for _, interviewEntity := range interviewEntitys {
+			errUpdate := tx.Updates(interviewEntity).Error
+			if errUpdate != nil {
+				return errUpdate
+			}
+		}
+		return nil
+	})
+	return err
 }
-
+func DeleteInterviews(name string, interviews []request.DeleteInterviewUID) error {
+	db := global.GetDB()
+	err := db.Transaction(func(tx *gorm.DB) error {
+		for _, interview := range interviews {
+			if errDelete := tx.Delete(&InterviewEntity{}, interview).Error; errDelete != nil {
+				return errDelete
+			}
+		}
+		return nil
+	})
+	return err
+}
 func CreateInterviewsInBatches(interviews []InterviewEntity) error {
 	db := global.GetDB()
 	return db.Create(&interviews).Error

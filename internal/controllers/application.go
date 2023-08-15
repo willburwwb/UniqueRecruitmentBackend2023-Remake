@@ -234,14 +234,33 @@ func SetApplicationStepById(c *gin.Context) {
 func SetApplicationInterviewTimeById(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
-	if interviewType == "group" || interviewType == "team" {
-		common.Error(c, error2.RequestParamError.WithData("type wrong"))
+	if interviewType != "group" && interviewType != "team" {
+		common.Error(c, error2.RequestParamError.WithDetail("type wrong"))
 		return
 	}
-
 	var req request.SetApplicationInterviewTime
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+
+	// check application's status such as abandoned
+	application, err := models.GetApplicationById(aid)
+	if err != nil {
+		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	if !checkApplyStatus(c, application) {
+		return
+	}
+
+	// check update application time is between the start and the end
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
+	if err != nil {
+		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	if !checkRecruitmentTimeInBtoE(c, recruitment) {
 		return
 	}
 
@@ -258,58 +277,9 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	common.Success(c, "set interview time success", nil)
 }
 
-// SetApplicationInterviewTime set interview time
-// PUT /interview/:type
-// only by the member of application's group
-func SetApplicationInterviewTime(c *gin.Context) {
-	aid := c.Param("aid")
-	interviewType := c.Param("type")
-	var req struct {
-		Time time.Time `json:"time"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Error(c, error2.RequestBodyError.WithData("application").WithDetail(err.Error()))
-		return
-	}
-	application, err := models.GetApplicationById(aid)
-	if err != nil {
-		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
-		return
-	}
-	if !checkApplyStatus(c, application) {
-		return
-	}
-
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
-	if err != nil {
-		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
-		return
-	}
-	if !checkRecruitmentTimeInBtoE(c, recruitment) {
-		return
-	}
-
-	if !checkStep(c, interviewType) {
-		return
-	}
-
-	switch interviewType {
-	case "team":
-		application.InterviewAllocationsTeam = req.Time
-	case "group":
-		application.InterviewAllocationsGroup = req.Time
-	}
-
-	if err := models.UpdateApplicationInfo(application); err != nil {
-		common.Error(c, error2.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
-		return
-	}
-
-	common.Success(c, "Success set interview time", nil)
-
-}
-
 // GetInterviewsSlots get interviews time for candidate
+// GET /:aid/slots/:type
+// candidate / member role
 func GetInterviewsSlots(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
@@ -319,13 +289,12 @@ func GetInterviewsSlots(c *gin.Context) {
 		return
 	}
 
-	// TODO check candidate
+	// check application's step such as group/team when get interview time
+	// 	if !checkStep(c, application.Step, constants.GroupTimeSelection) {
+	// 		return
+	// 	}
 
-	if !checkStep(c, interviewType) {
-		return
-	}
-
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.MemberRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -349,7 +318,7 @@ func GetInterviewsSlots(c *gin.Context) {
 
 }
 
-// SelectInterviewSlots select interview for candidate
+// SelectInterviewSlots select group/team interview time for candidate
 // PUT /:aid/slots/:type
 // candidate role
 func SelectInterviewSlots(c *gin.Context) {
@@ -386,9 +355,9 @@ func SelectInterviewSlots(c *gin.Context) {
 		return
 	}
 
-	if !checkStep(c, interviewType) {
-		return
-	}
+	// if !checkStep(c, interviewType) {
+	// 	return
+	// }
 
 	var name constants.Group
 	if interviewType == string(constants.InGroup) {
@@ -458,6 +427,57 @@ func MoveApplication(c *gin.Context) {
 	common.Success(c, "Update application step success", nil)
 }
 
+// SetApplicationInterviewTime set interview time
+// PUT /interview/:type
+// only by the member of application's group
+func SetApplicationInterviewTime(c *gin.Context) {
+	aid := c.Param("aid")
+	interviewType := c.Param("type")
+	var req struct {
+		Time time.Time `json:"time"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Error(c, error2.RequestBodyError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	application, err := models.GetApplicationById(aid)
+	if err != nil {
+		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	if !checkApplyStatus(c, application) {
+		return
+	}
+
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
+	if err != nil {
+		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+	if !checkRecruitmentTimeInBtoE(c, recruitment) {
+		return
+	}
+
+	// if !checkStep(c, interviewType) {
+	// 	return
+	// }
+
+	switch interviewType {
+	case "team":
+		application.InterviewAllocationsTeam = req.Time
+	case "group":
+		application.InterviewAllocationsGroup = req.Time
+	}
+
+	if err := models.UpdateApplicationInfo(application); err != nil {
+		common.Error(c, error2.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
+		return
+	}
+
+	common.Success(c, "Success set interview time", nil)
+
+}
+
 // checkRecruitmentInBtoD check whether the recruitment is between the start and the deadline
 // such as summit the application/update the application
 func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
@@ -494,21 +514,22 @@ func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentE
 // If the resume has already been rejected or abandoned return false
 func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) bool {
 	if application.Rejected {
-		//TODO(wwb)
-		//fix this to user's name
-		common.Error(c, error2.Rejected.WithData(application.Uid))
+		common.Error(c, error2.Rejected.WithData(application.CandidateID))
 		return false
 	}
 	if application.Abandoned {
-		common.Error(c, error2.Abandoned.WithData(application.Uid))
+		common.Error(c, error2.Abandoned.WithData(application.CandidateID))
 		return false
 	}
 	return true
 }
 
-func checkStep(c *gin.Context, interviewType string) bool {
+func checkStep(c *gin.Context, applicationInterviewType string, interviewType constants.Step) bool {
 	// TODO The steps haven't been decided yet
-	return true
+	if applicationInterviewType == string(interviewType) {
+		return true
+	}
+	return false
 }
 
 // check if the user is a member of group the application applied
