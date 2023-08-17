@@ -31,10 +31,12 @@ var (
 	Rejected                 = NewError(10016, "Application of %s has already been rejected", 1, nil)
 	GroupNotMatch            = NewError(10017, "Member' group does not match", 0, nil)
 	InterviewUpdateError     = NewError(10018, "Update interview error, %s", 1, nil)
-	InterviewHasBeenSelected = NewError(10019, "Some interview time has been selected", 0, nil)
+	InterviewHasBeenSelected = NewError(10019, "Interview %s have been selected", 1, nil)
 	ReselectInterviewError   = NewError(10020, "You don't have the perssion to re-select this application", 0, nil)
 
 	CheckPermissionError = NewError(10021, "Check permission error", 0, nil)
+
+	RemoveDatabaseError = NewError(10022, "Remove %s error", 1, nil)
 )
 
 type Error struct {

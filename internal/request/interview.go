@@ -18,7 +18,7 @@ type CreateInterview struct {
 	SlotNumber int              `json:"slotNumber" form:"slotNumber" binding:"required"`
 }
 type UpdateInterview struct {
-	Uid        string           `json:"uid" form:"uid" `
+	Uid        string           `json:"uid" form:"uid" binding:"required"`
 	Date       time.Time        `json:"date" form:"date"`
 	Period     constants.Period `json:"period" form:"period"`
 	SlotNumber int              `json:"slotNumber" form:"slotNumber"`

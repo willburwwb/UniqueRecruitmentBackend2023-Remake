@@ -50,10 +50,10 @@ func NewRouter() *gin.Engine {
 
 		// member role
 		recruitmentRouter.GET("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllRecruitment)
-		
-		recruitmentRouter.POST("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.CreateRecruitmentInterviews)
-		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.UpdateRecruitmentInterviews)
-		recruitmentRouter.DELETE("/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.DeleteRecruitmentInterviews)
+
+		//recruitmentRouter.POST("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.CreateRecruitmentInterviews)
+		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetRecruitmentInterviews)
+		//recruitmentRouter.DELETE("/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.DeleteRecruitmentInterviews)
 
 		// admin role
 		recruitmentRouter.POST("/", middlewares.CheckAdminRoleMiddleWare, controllers.CreateRecruitment)

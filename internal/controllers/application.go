@@ -228,9 +228,9 @@ func SetApplicationStepById(c *gin.Context) {
 
 }
 
-// SetApplicationInterviewTimeById set application's group/team interview time
+// SetApplicationInterviewTimeById allocate application's group/team interview time
 // PUT /:aid/interview/:type
-// only by the member of application's group
+// by the member of application's group
 func SetApplicationInterviewTimeById(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
@@ -254,6 +254,15 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 		return
 	}
 
+	// check member's role to set application interview time
+	uid := common.GetUID(c)
+	// if common.IsCandidate(c) && !checkIsApplicationOwner(c, uid, application) {
+	// 	return
+	// }
+	if common.IsMember(c) && !checkMemberGroup(c, aid, uid) {
+		return
+	}
+
 	// check update application time is between the start and the end
 	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
 	if err != nil {
@@ -264,12 +273,6 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 		return
 	}
 
-	uid := common.GetUID(c)
-	// check member's role to set application interview time
-	if !checkMemberGroup(c, aid, uid) {
-		return
-	}
-
 	if err := models.SetApplicationInterviewTime(aid, interviewType, req.Time); err != nil {
 		common.Error(c, error2.SaveDatabaseError.WithData(err.Error()))
 		return
@@ -277,7 +280,9 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	common.Success(c, "set interview time success", nil)
 }
 
-// GetInterviewsSlots get interviews time for candidate
+// GetInterviewsSlots get the interviews times candidates can select 
+// Follow the old HR code, this api will get all the interviews assigned by this group's member
+// the interviews selected by candidate can be get by GetApplicationById 
 // GET /:aid/slots/:type
 // candidate / member role
 func GetInterviewsSlots(c *gin.Context) {
@@ -549,5 +554,13 @@ func checkMemberGroup(c *gin.Context, aid string, uid string) bool {
 		return true
 	}
 	common.Error(c, error2.GroupNotMatch)
+	return false
+}
+
+func checkIsApplicationOwner(c *gin.Context, uid string, application *models.ApplicationEntity) bool {
+	if application.CandidateID == uid {
+		return true
+	}
+	common.Error(c, error2.CheckPermissionError.WithDetail("you are not the owner of this application"))
 	return false
 }

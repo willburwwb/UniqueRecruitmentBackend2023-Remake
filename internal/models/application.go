@@ -131,7 +131,7 @@ func GetApplicationByIdForCandidate(aid string) (*ApplicationForCandidate, error
 func GetApplicationById(aid string) (*ApplicationEntity, error) {
 	db := global.GetDB()
 	var a ApplicationEntity
-	if err := db.Preload("Comments").Where("uid = ?", aid).Find(&a).Error; err != nil {
+	if err := db.Preload("Comments").Preload("InterviewSelections").Where("uid = ?", aid).Find(&a).Error; err != nil {
 		return nil, err
 	}
 	return &a, nil

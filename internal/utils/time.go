@@ -19,3 +19,8 @@ func TimeParseBool(ti string) bool {
 	}
 	return true
 }
+func ComPareTimeHour(t1 time.Time, t2 time.Time) bool {
+	truncatedTime1 := t1.Truncate(time.Hour)
+	truncatedTime2 := t2.Truncate(time.Hour)
+	return truncatedTime1.Equal(truncatedTime2)
+}
