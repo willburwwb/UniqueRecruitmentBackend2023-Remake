@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // used for insert data without sso
@@ -217,6 +219,21 @@ func SetApplicationInterviewTime(aid, interviewType string, time time.Time) erro
 	}
 
 	return db.Updates(&application).Error
+}
+
+func UpdateInterviewSelection(application *ApplicationEntity, interviews []*InterviewEntity) error {
+	db := global.GetDB()
+	err := db.Transaction(func(tx *gorm.DB) error {
+		if errClear := db.Model(application).Association("InterviewSelections").Clear(); errClear != nil {
+			return errClear
+		}
+		application.InterviewSelections = interviews
+		if errUpdate := db.Save(application).Error; errUpdate != nil {
+			return errUpdate
+		}
+		return nil
+	})
+	return err
 }
 
 // TODO 上面的几个更新函数统一改调这个

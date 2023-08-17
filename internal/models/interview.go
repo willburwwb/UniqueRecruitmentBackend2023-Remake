@@ -30,6 +30,15 @@ func GetInterviewsByRidAndName(rid string, name string) (*[]InterviewEntity, err
 	}
 	return &res, nil
 }
+func GetInterviewById(iid string) (*InterviewEntity, error) {
+	db := global.GetDB()
+	var res InterviewEntity
+	if err := db.Where("uid = ?", iid).Find(&res).Error; err != nil {
+		return nil, err
+	}
+	return &res, nil
+
+}
 
 func UpdateInterview(interview *InterviewEntity) error {
 	db := global.GetDB()

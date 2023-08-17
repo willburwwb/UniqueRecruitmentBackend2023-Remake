@@ -280,9 +280,10 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	common.Success(c, "set interview time success", nil)
 }
 
-// GetInterviewsSlots get the interviews times candidates can select 
+// GetInterviewsSlots get the interviews times candidates can select
 // Follow the old HR code, this api will get all the interviews assigned by this group's member
-// the interviews selected by candidate can be get by GetApplicationById 
+// I think this api should get the interviews times candidate selected
+// And the interviews selected by candidate can be get by GetApplicationById
 // GET /:aid/slots/:type
 // candidate / member role
 func GetInterviewsSlots(c *gin.Context) {
@@ -324,6 +325,7 @@ func GetInterviewsSlots(c *gin.Context) {
 }
 
 // SelectInterviewSlots select group/team interview time for candidate
+// to save time, this api will not check Whether slotnum exceeds the limit
 // PUT /:aid/slots/:type
 // candidate role
 func SelectInterviewSlots(c *gin.Context) {
@@ -343,14 +345,16 @@ func SelectInterviewSlots(c *gin.Context) {
 		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
-
 	recruitmentById, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
 	if err != nil {
 		common.Error(c, error2.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
-	// TODO check candidate
+	// check if user is the application's owner
+	if !checkIsApplicationOwner(c, common.GetUID(c), application) {
+		return
+	}
 
 	if !checkApplyStatus(c, application) {
 		return
@@ -360,25 +364,48 @@ func SelectInterviewSlots(c *gin.Context) {
 		return
 	}
 
-	// if !checkStep(c, interviewType) {
-	// 	return
-	// }
+	if !checkStep(c, interviewType, application) {
+		return
+	}
 
 	var name constants.Group
 	if interviewType == string(constants.InGroup) {
-		name = constants.GroupMap[interviewType]
+		name = constants.GroupMap[application.Group]
 	} else {
 		name = "unique"
 	}
-	for _, interview := range application.InterviewSelections {
-		if interview.Name != name {
-			common.Error(c, error2.ReselectInterviewError.WithData("application"))
-			return
+
+	// 这啥意思？？？？?
+	// for _, interview := range application.InterviewSelections {
+	// 	if interview.Name != name {
+	// 		common.Error(c, error2.ReselectInterviewError.WithData("application"))
+	// 		return
+	// 	}
+	// }
+
+	var errors []string
+
+	var interviews []*models.InterviewEntity
+	for _, iid := range req.Iids {
+		// check the select interview is in the recruitment
+		interview, err := models.GetInterviewById(iid)
+		if err != nil {
+			errors = append(errors, error2.GetDatabaseError.WithData("interview").Msg()+err.Error())
+			continue
 		}
+		// check the select interview name == param name
+		if interview.Name != name {
+			errors = append(errors, error2.CheckPermissionError.Msg()+"the select interview name != group/team name")
+			continue
+		}
+		interviews = append(interviews, interview)
 	}
 
-	if err = models.UpdateApplicationInfo(application); err != nil {
-		common.Error(c, error2.SaveDatabaseError.WithData("application").WithDetail(err.Error()))
+	if err = models.UpdateInterviewSelection(application, interviews); err != nil {
+		errors = append(errors, error2.SaveDatabaseError.WithData("application").Msg()+err.Error())
+	}
+	if len(errors) != 0 {
+		common.Error(c, error2.SaveDatabaseError.WithData("application").WithDetail(errors...))
 		return
 	}
 	common.Success(c, "Success select interview time", nil)
@@ -529,12 +556,17 @@ func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) boo
 	return true
 }
 
-func checkStep(c *gin.Context, applicationInterviewType string, interviewType constants.Step) bool {
-	// TODO The steps haven't been decided yet
-	if applicationInterviewType == string(interviewType) {
-		return true
+// check if application step is in interview select status
+func checkStep(c *gin.Context, interviewType string, application *models.ApplicationEntity) bool {
+	if interviewType == "group" && application.Step != string(constants.GroupTimeSelection) {
+		common.Error(c, error2.CheckPermissionError.WithDetail("you can't set group interview time"))
+		return false
 	}
-	return false
+	if interviewType == "team" && application.Step != string(constants.TeamTimeSelection) {
+		common.Error(c, error2.CheckPermissionError.WithDetail("you can't set team interview time"))
+		return false
+	}
+	return true
 }
 
 // check if the user is a member of group the application applied

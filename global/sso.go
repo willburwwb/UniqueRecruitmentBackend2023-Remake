@@ -61,7 +61,7 @@ func makeUidCookie(uid string) *http.Cookie {
 func makeSSOCookie() *http.Cookie {
 	return &http.Cookie{
 		Name:    "SSO_SESSION",
-		Value:   "MTY5MjI0MTk3NnxOd3dBTkVoVlRVWkxTa1UyTlRNM1MwSlNUMEUzUjFaU05GTkxTazlQUVZoTFJWTkdTRTVLV0U0MlNWaEdTa3czVVRkYVJ6YzNTVUU9fI1VilEKdEmoTOSlnDLapl3UolAL2RvSj6AGXx3Nyz1q",
+		Value:   "MTY5MjI2MzY5OXxOd3dBTkRKQk4xZFFWVXMzVTFaV1Mwc3lRVE5FUTFoV1ZFRXpXakpSVWtwT1JGSk1OVlpVUjBaSVRFeFRVbEJKTkZZMldFUlRSMUU9fKJXKux74-w4AqtKURKvD_yx11ppIe6_MGdkWbWhmvCM",
 		Expires: time.Now().Add(1 * time.Hour),
 		Path:    "/api/v1",
 	}
