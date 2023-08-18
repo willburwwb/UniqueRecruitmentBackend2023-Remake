@@ -37,6 +37,10 @@ var (
 	CheckPermissionError = NewError(10021, "Check permission error", 0, nil)
 
 	RemoveDatabaseError = NewError(10022, "Remove %s error", 1, nil)
+
+	SMSSendError = NewError(10023, "Send sms to %s error", 1, nil)
+
+	NoInterviewScheduled = NewError(10024, "No interviews are scheduled for %s", 1, nil)
 )
 
 type Error struct {

@@ -51,9 +51,7 @@ func NewRouter() *gin.Engine {
 		// member role
 		recruitmentRouter.GET("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllRecruitment)
 
-		//recruitmentRouter.POST("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.CreateRecruitmentInterviews)
 		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetRecruitmentInterviews)
-		//recruitmentRouter.DELETE("/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.DeleteRecruitmentInterviews)
 
 		// admin role
 		recruitmentRouter.POST("/", middlewares.CheckAdminRoleMiddleWare, controllers.CreateRecruitment)
@@ -103,6 +101,11 @@ func NewRouter() *gin.Engine {
 	{
 		commentRouter.POST("/", controllers.CreateComment)
 		commentRouter.DELETE("/:cid", controllers.DeleteComment)
+	}
+
+	smsRouter := r.Group("/sms")
+	{
+		smsRouter.POST("/", controllers.SendSMS)
 	}
 	return r
 }

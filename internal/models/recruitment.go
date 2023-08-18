@@ -25,7 +25,15 @@ type RecruitmentEntity struct {
 func (c RecruitmentEntity) TableName() string {
 	return "recruitments"
 }
-
+func (r *RecruitmentEntity) FindInterviews(name string) []InterviewEntity {
+	reInterviews := make([]InterviewEntity, 0)
+	for _, interview := range r.Interviews {
+		if string(interview.Name) == name {
+			reInterviews = append(reInterviews, interview)
+		}
+	}
+	return reInterviews
+}
 func CreateRecruitment(req *request.CreateRecruitment) (string, error) {
 	db := global.GetDB()
 	r := &RecruitmentEntity{
