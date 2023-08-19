@@ -47,8 +47,8 @@ type sso struct {
 
 type sms struct {
 	Token                       string `mapstructure:"token" json:"token" yaml:"token"`
-	RegisterCodeTemplateId      string `mapstructure:"register_code_template_id" yaml:"register_code_template_id"`
-	ResetPasswordCodeTemplateId string `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
+	RegisterCodeTemplateId      uint   `mapstructure:"register_code_template_id" yaml:"register_code_template_id"`
+	ResetPasswordCodeTemplateId uint   `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
 }
 
 type cos struct {

@@ -78,6 +78,30 @@ var StepMap = map[Step]string{
 	"OnlineTeamInterview":  "OnlineTeamInterview",
 	"Pass":                 "Pass",
 }
+var EnToZhStepMap = map[string]string{
+	"SignUp":               "报名",
+	"WrittenTest":          "笔试",
+	"GroupTimeSelection":   "组面时间选择",
+	"GroupInterview":       "组面",
+	"OnlineGroupInterview": "在线组面",
+	"StressTest":           "熬测",
+	"TeamTimeSelection":    "群面时间选择",
+	"TeamInterview":        "群面",
+	"OnlineTeamInterview":  "在线群面",
+	"Pass":                 "通过",
+}
+var ZhToEnStepMap = map[string]string{
+	"报名":     "SignUp",
+	"笔试":     "WrittenTest",
+	"组面时间选择": "GroupTimeSelection",
+	"组面":     "GroupInterview",
+	"在线组面":   "OnlineGroupInterview",
+	"熬测":     "StressTest",
+	"群面时间选择": "TeamTimeSelection",
+	"群面":     "TeamInterview",
+	"在线群面":   "OnlineTeamInterview",
+	"通过":     "Pass",
+}
 
 type GroupOrTeam string
 
@@ -104,21 +128,21 @@ const (
 type SMSTemplateType string
 
 const (
-	StateChange          SMSTemplateType = "stateChange"
-	VerificationCode     SMSTemplateType = "verificationCode"
-	Interview            SMSTemplateType = "interview"
-	PassSMS              SMSTemplateType = "pass"
-	Delay                SMSTemplateType = "delay"
-	OnLineGroupInterview SMSTemplateType = "onlineGroupInterview"
-	OnLineTeamInterview  SMSTemplateType = "onlineTeamInterview"
+	StateChange             SMSTemplateType = "stateChange"
+	VerificationCode        SMSTemplateType = "verificationCode"
+	Interview               SMSTemplateType = "interview"
+	PassSMS                 SMSTemplateType = "pass"
+	Delay                   SMSTemplateType = "delay"
+	OnLineGroupInterviewSMS SMSTemplateType = "onlineGroupInterview"
+	OnLineTeamInterviewSMS  SMSTemplateType = "onlineTeamInterview"
 )
 
-var SMSTemplateMap = map[SMSTemplateType]string{
-	StateChange:          "1092770",
-	VerificationCode:     "1092824",
-	Interview:            "1113517",
-	PassSMS:              "1092767",
-	Delay:                "1092765",
-	OnLineGroupInterview: "1533304",
-	OnLineTeamInterview:  "1533302",
+var SMSTemplateMap = map[SMSTemplateType]uint{
+	StateChange:             1092770,
+	VerificationCode:        1092824,
+	Interview:               1113517,
+	PassSMS:                 1092767,
+	Delay:                   1092765,
+	OnLineGroupInterviewSMS: 1533304,
+	OnLineTeamInterviewSMS:  1533302,
 }

@@ -4,9 +4,9 @@ var name = map[string]string{
 	"S": "春季招新",
 	"C": "夏令营招新",
 	"A": "秋季招新",
-	"春": "S",
-	"夏": "C",
-	"秋": "A",
+	"春": "春季招新",
+	"夏": "夏令营招新",
+	"秋": "秋季招新",
 }
 
 func ConvertRecruitmentName(title string) string {

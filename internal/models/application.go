@@ -246,21 +246,6 @@ func UpdateApplicationInfo(application *ApplicationEntity) error {
 	return db.Updates(&application).Error
 }
 
-func SaveApplicationForCandidate(application *ApplicationForCandidate) error {
-	bytes, err := json.Marshal(application)
-	if err != nil {
-		return err
-	}
-
-	var a ApplicationEntity
-	if err := json.Unmarshal(bytes, &a); err != nil {
-		return err
-	}
-
-	db := global.GetDB()
-	return db.Save(&a).Error
-}
-
 /*
 
  */

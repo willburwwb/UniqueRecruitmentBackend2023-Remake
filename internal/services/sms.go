@@ -17,7 +17,7 @@ const (
 
 type SMSBody struct {
 	Phone      string   `json:"phone_number"`
-	TemplateID string   `json:"template_id"`
+	TemplateID uint     `json:"template_id"`
 	Params     []string `json:"template_param_set"`
 }
 
@@ -38,7 +38,6 @@ func SendSMS(smsBody SMSBody) (*http.Response, error) {
 	}
 
 	req.Header.Set("AccessKey", configs.Config.SMS.Token)
-
 	cli := http.Client{}
 	resp, err := cli.Do(req)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 	"UniqueRecruitmentBackend/internal/utils"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -25,9 +26,16 @@ func SendSMS(c *gin.Context) {
 		return
 	}
 
+	req.Next = constants.ZhToEnStepMap[req.Next]
+	req.Current = constants.ZhToEnStepMap[req.Current]
+	if req.Next == "" || req.Current == "" {
+		common.Error(c, error2.RequestBodyError.WithDetail("next or current is invalid"))
+		return
+	}
+
 	var errors []string
 	for _, aid := range req.Aids {
-		application, err := models.GetApplicationByIdForCandidate(aid)
+		application, err := models.GetApplicationById(aid)
 		if err != nil {
 			errors = append(errors, error2.GetDatabaseError.WithData("application").Msg()+err.Error())
 			continue
@@ -68,24 +76,26 @@ func SendSMS(c *gin.Context) {
 
 		if req.Type == constants.Accept {
 			// check the interview time has been allocated
-			if req.Next == constants.GroupInterview && len(recruitment.FindInterviews(string(application.Group))) == 0 {
+			if req.Next == string(constants.GroupInterview) && len(recruitment.FindInterviews(string(application.Group))) == 0 {
 				errors = append(errors, error2.NoInterviewScheduled.WithData(string(application.Group)).Msg())
 				continue
 			}
-			if req.Next == constants.TeamInterview && len(recruitment.FindInterviews("unique")) == 0 {
+			if req.Next == string(constants.TeamInterview) && len(recruitment.FindInterviews("unique")) == 0 {
 				errors = append(errors, error2.NoInterviewScheduled.WithData("unique").Msg())
 				continue
 			}
-		} else {
+		} else if req.Type == constants.Reject {
 			application.Rejected = true
 			// save application
-			if err := models.SaveApplicationForCandidate(application); err != nil {
+			if err := models.UpdateApplicationInfo(application); err != nil {
 				errors = append(errors, error2.SaveDatabaseError.WithData("application").Msg())
-				continue
 			}
+			continue
+		} else {
+			errors = append(errors, "sms type is invalid")
+			continue
 		}
-		// if err := services.SendSMS(services.SMSBody{
-		// })
+
 		smsBody, err := ApplySMSTemplate(&req, userInfo, application, recruitment)
 		if err != nil {
 			errors = append(errors, err.Error())
@@ -100,7 +110,7 @@ func SendSMS(c *gin.Context) {
 		}
 
 	}
-	if len(errors) == 0 {
+	if len(errors) != 0 {
 		common.Error(c, error2.SendSMSError.WithDetail(errors...))
 		return
 	}
@@ -145,7 +155,7 @@ func SendCode(c *gin.Context) {
 }
 
 func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
-	application *models.ApplicationForCandidate, recruitment *models.RecruitmentEntity) (*services.SMSBody, error) {
+	application *models.ApplicationEntity, recruitment *models.RecruitmentEntity) (*services.SMSBody, error) {
 
 	var smsBody services.SMSBody
 
@@ -157,101 +167,99 @@ func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
 		{
 
 			var defaultRest = ""
-			switch smsRequest.Next {
+			switch constants.Step(smsRequest.Next) {
 			//組面
 			case constants.GroupInterview:
+				fallthrough
 			//群面
 			case constants.TeamInterview:
-				{
-					var allocationTime time.Time
-					if smsRequest.Next == constants.GroupInterview {
-						allocationTime = application.InterviewAllocationsGroup
-					} else if smsRequest.Next == constants.TeamInterview {
-						allocationTime = application.InterviewAllocationsTeam
-					}
-					if smsRequest.Place == "" {
-						return nil, errors.New("Place is not provided for " + userInfo.Name)
-					}
-					if allocationTime == (time.Time{}) {
-						return nil, errors.New("Interview time is not allocated for " + userInfo.Name)
-					}
-
-					// set interview time format
-					// interview time get from application instead of smsRequest
-					// 2006年1月2日 星期一 15时04分05秒
-					formatTime := utils.ConverToLocationTime(allocationTime)
-
-					// FIXME
-					// {1}你好，请于{2}在启明学院亮胜楼{3}参加{4}，请准时到场。
-					smsBody = services.SMSBody{
-						TemplateID: constants.SMSTemplateMap[constants.PassSMS],
-						Params:     []string{userInfo.Name, formatTime, smsRequest.Place, string(constants.StepMap[smsRequest.Next])},
-					}
-					return &smsBody, nil
+				var allocationTime time.Time
+				if smsRequest.Next == string(constants.GroupInterview) {
+					allocationTime = application.InterviewAllocationsGroup
+				} else if smsRequest.Next == string(constants.TeamInterview) {
+					allocationTime = application.InterviewAllocationsTeam
 				}
+				if smsRequest.Place == "" {
+					return nil, errors.New("Place is not provided for " + userInfo.Name)
+				}
+				if allocationTime == (time.Time{}) {
+					return nil, errors.New("Interview time is not allocated for " + userInfo.Name)
+				}
+
+				// set interview time format
+				// interview time get from application instead of smsRequest
+				// 2006年1月2日 星期一 15时04分05秒
+				formatTime := utils.ConverToLocationTime(allocationTime)
+				log.Println("组面", formatTime, allocationTime)
+				// FIXME
+				// {1}你好，请于{2}在启明学院亮胜楼{3}参加{4}，请准时到场。
+				smsBody = services.SMSBody{
+					TemplateID: constants.SMSTemplateMap[constants.PassSMS],
+					Params:     []string{userInfo.Name, formatTime, smsRequest.Place, string(constants.EnToZhStepMap[smsRequest.Next])},
+				}
+				return &smsBody, nil
 			//在线组面
 			case constants.OnlineGroupInterview:
+				fallthrough
 			//在线群面
 			case constants.OnlineTeamInterview:
-				{
-					var allocationTime time.Time
-					var smsTemplate constants.SMSTemplateType
-					// 为什么golang没有三目运算符orz
-					if smsRequest.Next == constants.GroupInterview {
-						allocationTime = application.InterviewAllocationsGroup
-						smsTemplate = constants.OnLineGroupInterview
-					} else if smsRequest.Next == constants.TeamInterview {
-						allocationTime = application.InterviewAllocationsTeam
-						smsTemplate = constants.OnLineTeamInterview
-					}
-					if allocationTime == (time.Time{}) {
-						return nil, errors.New("interview time is not allocated for " + userInfo.Name)
-					}
-					if smsRequest.MeetingId == "" {
-						return nil, errors.New("meetingId is not provided for " + userInfo.Name)
-					}
 
-					// set interview time format
-					// interview time get from application instead of smsRequest
-					// 2006年1月2日 星期一 15时04分05秒
-					formatTime := utils.ConverToLocationTime(allocationTime)
-
-					// {1}你好，欢迎参加{2}{3}组在线群面，面试将于{4}进行，请在PC端点击腾讯会议参加面试，会议号{5}，并提前调试好摄像头和麦克风，祝你面试顺利。
-					smsBody = services.SMSBody{
-						TemplateID: constants.SMSTemplateMap[smsTemplate],
-						Params:     []string{userInfo.Name, recruitmentName, application.Group, formatTime, smsRequest.MeetingId},
-					}
-					return &smsBody, nil
+				var allocationTime time.Time
+				var smsTemplate constants.SMSTemplateType
+				// 为什么golang没有三目运算符orz
+				if smsRequest.Next == string(constants.OnlineGroupInterview) {
+					allocationTime = application.InterviewAllocationsGroup
+					smsTemplate = constants.OnLineGroupInterviewSMS
+				} else if smsRequest.Next == string(constants.OnlineTeamInterview) {
+					allocationTime = application.InterviewAllocationsTeam
+					smsTemplate = constants.OnLineTeamInterviewSMS
 				}
+				if allocationTime == (time.Time{}) {
+					return nil, errors.New("interview time is not allocated for " + userInfo.Name)
+				}
+				if smsRequest.MeetingId == "" {
+					return nil, errors.New("meetingId is not provided for " + userInfo.Name)
+				}
+
+				// set interview time format
+				// interview time get from application instead of smsRequest
+				// 2006年1月2日 星期一 15时04分05秒
+				formatTime := utils.ConverToLocationTime(allocationTime)
+
+				// {1}你好，欢迎参加{2}{3}组在线群面，面试将于{4}进行，请在PC端点击腾讯会议参加面试，会议号{5}，并提前调试好摄像头和麦克风，祝你面试顺利。
+				smsBody = services.SMSBody{
+					TemplateID: constants.SMSTemplateMap[smsTemplate],
+					Params:     []string{userInfo.Name, recruitmentName, application.Group, formatTime, smsRequest.MeetingId},
+				}
+				return &smsBody, nil
+
 			//笔试
 			case constants.WrittenTest:
+				fallthrough
 			//熬测
 			case constants.StressTest:
-				{
-					if smsRequest.Place == "" {
-						return nil, errors.New("place is not provided for " + userInfo.Name)
-					}
-					if smsRequest.Time == "" {
-						return nil, errors.New("time is not provided for " + userInfo.Name)
-					}
-					defaultRest = fmt.Sprintf("，请于%s在%s参加%s，请务必准时到场",
-						smsRequest.Time, smsRequest.Place, constants.StepMap[smsRequest.Next])
-					break
+				if smsRequest.Place == "" {
+					return nil, errors.New("place is not provided for " + userInfo.Name)
 				}
+				if smsRequest.Time == "" {
+					return nil, errors.New("time is not provided for " + userInfo.Name)
+				}
+
+				defaultRest = fmt.Sprintf("，请于%s在%s参加%s，请务必准时到场",
+					smsRequest.Time, smsRequest.Place, constants.EnToZhStepMap[smsRequest.Next])
+
 			//通过
 			case constants.Pass:
-				{
-					defaultRest = fmt.Sprintf("，你已成功加入%s组", application.Group)
-					break
-				}
+				defaultRest = fmt.Sprintf("，你已成功加入%s组", application.Group)
+
 			//组面时间选择
 			case constants.GroupTimeSelection:
+				fallthrough
 			//群面时间选择
 			case constants.TeamTimeSelection:
-				{
-					defaultRest = "，请进入选手dashboard系统选择面试时间"
-					break
-				}
+
+				defaultRest = "，请进入选手dashboard系统选择面试时间"
+
 			default:
 				return nil, fmt.Errorf("next step %s is invalid", smsRequest.Next)
 			}
@@ -269,29 +277,27 @@ func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
 			// {1}你好，你通过了{2}{3}组{4}审核{5}
 			smsBody = services.SMSBody{
 				TemplateID: constants.SMSTemplateMap[constants.PassSMS],
-				Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.StepMap[smsRequest.Current], smsResMessage},
+				Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.EnToZhStepMap[smsRequest.Current], smsResMessage},
 			}
 			return &smsBody, nil
 		}
 	case constants.Reject:
-		{
-			defaultRest := "不要灰心，继续学习。期待与更强大的你的相遇！"
-			if smsRequest.Current == "" {
-				return nil, errors.New("current step is not provided")
-			}
-			var smsResMessage string
-			if smsRequest.Rest == "" {
-				smsResMessage = defaultRest + suffix
-			} else {
-				smsResMessage = smsRequest.Rest + suffix
-			}
-			// {1}你好，你没有通过{2}{3}组{4}审核，请你{5}
-			smsBody = services.SMSBody{
-				TemplateID: constants.SMSTemplateMap[constants.Delay],
-				Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.StepMap[smsRequest.Current], smsResMessage},
-			}
-			return &smsBody, nil
+		defaultRest := "不要灰心，继续学习。期待与更强大的你的相遇！"
+		if smsRequest.Current == "" {
+			return nil, errors.New("current step is not provided")
 		}
+		var smsResMessage string
+		if smsRequest.Rest == "" {
+			smsResMessage = defaultRest + suffix
+		} else {
+			smsResMessage = smsRequest.Rest + suffix
+		}
+		// {1}你好，你没有通过{2}{3}组{4}审核，请你{5}
+		smsBody = services.SMSBody{
+			TemplateID: constants.SMSTemplateMap[constants.Delay],
+			Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.EnToZhStepMap[smsRequest.Current], smsResMessage},
+		}
+		return &smsBody, nil
 	}
 	return nil, errors.New("sms step is invalid")
 }
