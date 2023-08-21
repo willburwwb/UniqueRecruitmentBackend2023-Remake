@@ -5,6 +5,8 @@
 # ingore local config files
 data
 Docker-compose.yml
+docker-compose.yaml
+docker-compose.yml
 config.yaml
 main
 

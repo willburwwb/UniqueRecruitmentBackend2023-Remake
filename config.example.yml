@@ -18,7 +18,7 @@ sso:
   addr: "https://dev.back.sso.hustunique.com/api/v1"
 
 redis:
-  dsn: ""
+  dsn: "redis://default:{password}@db_redis:6379/{database}"
 
 sms:
   token:

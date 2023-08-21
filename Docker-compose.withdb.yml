@@ -9,7 +9,7 @@ services:
       - "D:\\service\\db_postgres:/var/lib/postgresql/data"
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=""
+      - POSTGRES_PASSWORD={password} #if it doesn't work, you can try to change the password by sql
       - POSTGRES_DB=recruitment_dev
     networks:
       - db
@@ -38,8 +38,7 @@ services:
       - "./data/resumes:/app/data/resumes" #简历
     networks:
       - db
-    depends_on:
-      - db_postgres
+      
 networks:
   db:
     external: true
