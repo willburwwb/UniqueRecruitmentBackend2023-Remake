@@ -99,13 +99,13 @@ func NewRouter() *gin.Engine {
 	// }
 	commentRouter := r.Group("/comments")
 	{
-		commentRouter.POST("/", controllers.CreateComment)
-		commentRouter.DELETE("/:cid", controllers.DeleteComment)
+		commentRouter.POST("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.CreateComment)
+		commentRouter.DELETE("/:cid", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.DeleteComment)
 	}
 
 	smsRouter := r.Group("/sms")
 	{
-		smsRouter.POST("/", controllers.SendSMS)
+		smsRouter.POST("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SendSMS)
 	}
 	return r
 }
