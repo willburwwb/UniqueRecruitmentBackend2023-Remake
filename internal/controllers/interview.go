@@ -6,6 +6,7 @@ import (
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
+	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/rerror"
 	"time"
 
@@ -81,12 +82,12 @@ import (
 func checkGroupName(c *gin.Context, name string) bool {
 	if name != "unique" {
 		uid := common.GetUID(c)
-		userInfo, err := getUserInfoByUID(c, uid)
+		userInfo, err := grpc.GetUserInfoByUID(uid)
 		if err != nil {
 			common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
 			return false
 		}
-		if !utils.CheckInArrary(name, userInfo.Groups) {
+		if !utils.CheckInGroups(userInfo.Groups, name) {
 			common.Error(c, rerror.CheckPermissionError.WithDetail("you are not in this group"))
 			return false
 		}

@@ -6,7 +6,8 @@ import (
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
-	rerror "UniqueRecruitmentBackend/pkg/rerror"
+	"UniqueRecruitmentBackend/pkg/grpc"
+	"UniqueRecruitmentBackend/pkg/rerror"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -70,20 +71,21 @@ func GetRecruitmentById(c *gin.Context) {
 		common.Error(c, rerror.RequestBodyError.WithDetail("lost http query params [rid]"))
 		return
 	}
-	userInfo, err := getUserInfoByUID(c, common.GetUID(c))
+
+	userRoles, err := grpc.GetRolesByUID(common.GetUID(c))
 	if err != nil {
 		common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
 		return
 	}
 
-	if utils.CheckRoleByUserDetail(userInfo, constants.Admin) {
+	if utils.CheckRoles(userRoles, constants.Admin) {
 		resp, err := models.GetRecruitmentById(recruitmentId, constants.Admin)
 		if err != nil {
 			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 			return
 		}
 		common.Success(c, "Success get recruitment by admin role", resp)
-	} else if utils.CheckRoleByUserDetail(userInfo, constants.MemberRole) {
+	} else if utils.CheckRoles(userRoles, constants.MemberRole) {
 		resp, err := models.GetRecruitmentById(recruitmentId, constants.MemberRole)
 		if err != nil {
 			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
@@ -125,11 +127,13 @@ func GetAllRecruitment(c *gin.Context) {
 
 // GetPendingRecruitment get pending recruitment details
 func GetPendingRecruitment(c *gin.Context) {
-	role, err := getUserRoleByUID(c, common.GetUID(c))
+	roles, err := grpc.GetRolesByUID(common.GetUID(c))
 	if err != nil {
 		common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
 		return
 	}
+
+	role := utils.GetMaxRole(roles)
 	resp, err := models.GetPendingRecruitment(role)
 	if err != nil {
 		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
