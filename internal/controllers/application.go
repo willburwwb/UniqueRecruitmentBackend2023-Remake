@@ -6,6 +6,7 @@ import (
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
+	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/rerror"
 	"fmt"
 	"log"
@@ -577,12 +578,12 @@ func checkMemberGroup(c *gin.Context, aid string, uid string) bool {
 		return false
 	}
 
-	userInfo, err := getUserInfoByUID(c, uid)
+	userInfo, err := grpc.GetUserInfoByUID(uid)
 	if err != nil {
 		common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
 		return false
 	}
-	if utils.CheckInArrary(application.Group, userInfo.Groups) {
+	if utils.CheckInGroups(userInfo.Groups, application.Group) {
 		return true
 	}
 	common.Error(c, rerror.GroupNotMatch)

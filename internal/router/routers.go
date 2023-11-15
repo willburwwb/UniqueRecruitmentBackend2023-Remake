@@ -40,7 +40,7 @@ func NewRouter() *gin.Engine {
 		})
 	}
 
-	r.Use(middlewares.LocalAuthMiddleware)
+	r.Use(middlewares.AuthMiddleware)
 	r.Use(middlewares.GlobalRoleMiddleWare)
 	recruitmentRouter := r.Group("/recruitments")
 	{

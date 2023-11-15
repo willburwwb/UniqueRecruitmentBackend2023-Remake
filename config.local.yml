@@ -15,7 +15,10 @@ pgsql:
   max_life_seconds: 86400
 
 sso:
-  addr: "https://dev.back.sso.hustunique.com/api/v1"
+  addr: "localhost:5000/api/v1"
+
+grpc:
+  addr: "localhost:50000"
 
 redis:
   dsn: "redis://:JroLJxEEc%257Fb*ZoVa@81.70.253.156:6379/2"

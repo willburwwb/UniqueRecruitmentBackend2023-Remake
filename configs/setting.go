@@ -6,7 +6,7 @@ import (
 
 const (
 	configName string = "config.local"
-	configType string = "yaml"
+	configType string = "yml"
 )
 
 type server struct {
@@ -42,10 +42,12 @@ type sso struct {
 	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
 }
 
+type grpc struct {
+	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
+}
+
 type sms struct {
-	Token                       string `mapstructure:"token" json:"token" yaml:"token"`
-	RegisterCodeTemplateId      uint   `mapstructure:"register_code_template_id" yaml:"register_code_template_id"`
-	ResetPasswordCodeTemplateId uint   `mapstructure:"reset_password_code_template_id" yaml:"reset_password_code_template_id"`
+	Token string `mapstructure:"token" json:"token" yaml:"token"`
 }
 
 type cos struct {
@@ -65,6 +67,7 @@ type settings struct {
 	Redis  redis  `mapstructure:"redis" yaml:"redis"`
 	Sess   sess   `mapstructure:"sess" yaml:"sess"`
 	SSO    sso    `mapstructure:"sso" yaml:"sso"`
+	Grpc   grpc   `mapstructure:"grpc" yaml:"grpc"`
 	SMS    sms    `mapstructure:"sms" yaml:"sms"`
 	COS    cos    `mapstructure:"COS" yaml:"COS"`
 	Apm    apm    `mapstructure:"apm" yaml:"apm"`
