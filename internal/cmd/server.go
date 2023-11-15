@@ -61,7 +61,7 @@ func runServer() {
 	defer cancel()
 	defer shutdown(ctx)
 	if err := s.Shutdown(ctx); err != nil {
-		zapx.With(zap.Error(err)).Error("Server Shutdown error")
+		zapx.With(zap.Error(err)).Error("Server Shutdown rerror")
 	}
 	zapx.Info("Server exiting")
 }

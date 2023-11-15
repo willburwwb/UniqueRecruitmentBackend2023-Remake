@@ -32,7 +32,7 @@ func setupCOS() {
 			SecretKey: configs.Config.COS.CosSecretKey,
 			Transport: &debug.DebugRequestTransport{
 				RequestHeader: true,
-				// Notice when put a large file and set need the request body, might happend out of memory error.
+				// Notice when put a large file and set need the request body, might happend out of memory rerror.
 				RequestBody:    false,
 				ResponseHeader: true,
 				ResponseBody:   false,

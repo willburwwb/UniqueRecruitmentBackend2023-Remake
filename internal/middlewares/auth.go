@@ -4,8 +4,8 @@ import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/constants"
-	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/tracer"
+	"UniqueRecruitmentBackend/pkg/rerror"
 	"context"
 	"errors"
 	"net/http"
@@ -36,20 +36,20 @@ func AuthMiddleware(c *gin.Context) {
 
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
-		common.Error(c, error2.UnauthorizedError)
+		common.Error(c, rerror.UnauthorizedError)
 		return
 	}
 	s := sessions.Default(c)
 	u := s.Get(cookie)
 	if u == nil {
 		c.Abort()
-		common.Error(c, error2.UnauthorizedError)
+		common.Error(c, rerror.UnauthorizedError)
 		return
 	}
 	uid, ok := u.(string)
 	if !ok {
 		c.Abort()
-		common.Error(c, error2.UnauthorizedError)
+		common.Error(c, rerror.UnauthorizedError)
 		return
 	}
 	c.Request = c.Request.WithContext(ctxWithUID(apmCtx, uid))
@@ -71,7 +71,7 @@ func LocalAuthMiddleware(c *gin.Context) {
 	cookie, err := c.Cookie("uid")
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
-		common.Error(c, error2.UnauthorizedError)
+		common.Error(c, rerror.UnauthorizedError)
 		return
 	}
 
@@ -109,7 +109,7 @@ func SetUpUserRole(c *gin.Context) {
 	role, err := getUserRoleByUID(c)
 	if err != nil {
 		c.Abort()
-		common.Error(c, error2.CheckPermissionError)
+		common.Error(c, rerror.CheckPermissionError)
 		return
 	}
 	c.Request = c.Request.WithContext(ctxWithRole(apmCtx, role))
@@ -137,7 +137,7 @@ var GlobalRoleMiddleWare gin.HandlerFunc = SetUpUserRole
 //				}
 //			}
 //			c.Abort()
-//			common.Error(c, error2.CheckPermissionError)
+//			common.Error(c, rerror.CheckPermissionError)
 //		}
 //	}
 func CheckRoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
@@ -159,7 +159,7 @@ func CheckRoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
 			}
 		}
 		c.Abort()
-		common.Error(c, error2.CheckPermissionError)
+		common.Error(c, rerror.CheckPermissionError)
 	}
 }
 

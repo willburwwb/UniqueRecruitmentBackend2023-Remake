@@ -1,4 +1,4 @@
-package services
+package sms
 
 import (
 	"UniqueRecruitmentBackend/configs"
@@ -21,6 +21,7 @@ type SMSBody struct {
 	Params     []string `json:"template_param_set"`
 }
 
+// SendSMS sends sms request to unique open-platform
 func SendSMS(smsBody SMSBody) (*http.Response, error) {
 	body, err := json.Marshal(smsBody)
 	if err != nil {

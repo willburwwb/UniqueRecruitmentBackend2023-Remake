@@ -3,10 +3,10 @@ package controllers
 import (
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/constants"
-	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
+	"UniqueRecruitmentBackend/pkg/rerror"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ import (
 // 	name := c.Param("name")
 // 	var interviews []request.CreateInterview
 // 	if err := c.ShouldBind(&interviews); err != nil {
-// 		common.Error(c, error2.RequestBodyError.WithData(err.Error()))
+// 		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
 // 		return
 // 	}
 
@@ -29,7 +29,7 @@ import (
 // 	}
 
 // 	if err := models.CreateAndSaveInterview(rid, name, interviews); err != nil {
-// 		common.Error(c, error2.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
+// 		common.Error(c, rerror.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
 // 		return
 // 	}
 // 	common.Success(c, "Success save interviews database", nil)
@@ -44,7 +44,7 @@ import (
 // 	name := c.Param("name")
 // 	var interviews []request.UpdateInterview
 // 	if err := c.ShouldBind(&interviews); err != nil {
-// 		common.Error(c, error2.RequestBodyError.WithData(err.Error()))
+// 		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
 // 		return
 // 	}
 
@@ -54,7 +54,7 @@ import (
 // 	}
 
 // 	if err := models.UpdateInterviews(rid, name, interviews); err != nil {
-// 		common.Error(c, error2.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
+// 		common.Error(c, rerror.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
 // 		return
 // 	}
 // 	common.Success(c, "Success update interviews database", nil)
@@ -63,7 +63,7 @@ import (
 // 	name := c.Param("name")
 // 	var interviews []request.DeleteInterviewUID
 // 	if err := c.ShouldBind(&interviews); err != nil {
-// 		common.Error(c, error2.RequestBodyError.WithData(err.Error()))
+// 		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
 // 		return
 // 	}
 // 	// check user's group == name
@@ -71,7 +71,7 @@ import (
 // 		return
 // 	}
 // 	if err := models.DeleteInterviews(name, interviews); err != nil {
-// 		common.Error(c, error2.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
+// 		common.Error(c, rerror.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
 // 		return
 // 	}
 // 	common.Success(c, "Success delete interviews database", nil)
@@ -83,11 +83,11 @@ func checkGroupName(c *gin.Context, name string) bool {
 		uid := common.GetUID(c)
 		userInfo, err := getUserInfoByUID(c, uid)
 		if err != nil {
-			common.Error(c, error2.CheckPermissionError.WithDetail(err.Error()))
+			common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
 			return false
 		}
 		if !utils.CheckInArrary(name, userInfo.Groups) {
-			common.Error(c, error2.CheckPermissionError.WithDetail("you are not in this group"))
+			common.Error(c, rerror.CheckPermissionError.WithDetail("you are not in this group"))
 			return false
 		}
 	}
@@ -104,25 +104,25 @@ func SetRecruitmentInterviews(c *gin.Context) {
 
 	var interviews []request.UpdateInterview
 	if err := c.ShouldBind(&interviews); err != nil {
-		common.Error(c, error2.RequestBodyError.WithData(err.Error()))
+		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
 		return
 	}
 
 	// judge whether the recruitment has expired
 	resp, err := models.GetRecruitmentById(rid, constants.CandidateRole)
 	if err != nil {
-		common.Error(c, error2.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
+		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 		return
 	}
 	if resp.End.Before(time.Now()) {
-		common.Error(c, error2.RecruitmentEnd.WithData(resp.Name))
+		common.Error(c, rerror.RecruitmentEnd.WithData(resp.Name))
 		return
 	}
 
 	// member can only update his group's interview or team interview (组面/群面
 	// todo (get member' group
 	if !checkGroupName(c, name) {
-		common.Error(c, error2.CheckPermissionError.WithDetail("you are not in this group"))
+		common.Error(c, rerror.CheckPermissionError.WithDetail("you are not in this group"))
 		return
 	}
 
@@ -149,7 +149,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 
 	originInterviews, err := models.GetInterviewsByRidAndName(rid, name)
 	if err != nil {
-		common.Error(c, error2.GetDatabaseError.WithData("interviews").WithDetail("when you update interviews"))
+		common.Error(c, rerror.GetDatabaseError.WithData("interviews").WithDetail("when you update interviews"))
 		return
 	}
 
@@ -161,30 +161,30 @@ func SetRecruitmentInterviews(c *gin.Context) {
 			// check whether the interview time has been selected by candidates
 
 			if len(origin.Applications) != 0 && (!utils.ComPareTimeHour(origin.Date, value.Date) || origin.Period != value.Period) {
-				//	common.Error(c, error2.InterviewUpdateError.WithData("the interview time has been selected"))
+				//	common.Error(c, rerror.InterviewUpdateError.WithData("the interview time has been selected"))
 				//	return
-				errors = append(errors, error2.InterviewHasBeenSelected.WithData(origin.Uid).Msg())
+				errors = append(errors, rerror.InterviewHasBeenSelected.WithData(origin.Uid).Msg())
 			} else {
 				origin.Date = value.Date
 				origin.SlotNumber = value.SlotNumber
 				origin.Period = value.Period
 				if err := models.UpdateInterview(&origin); err != nil {
-					//	common.Error(c, error2.UpdateDatabaseError.WithData("interview").WithDetail(err.Error()))
+					//	common.Error(c, rerror.UpdateDatabaseError.WithData("interview").WithDetail(err.Error()))
 					//	return
-					errors = append(errors, error2.UpdateDatabaseError.WithData("interview").Msg()+err.Error())
+					errors = append(errors, rerror.UpdateDatabaseError.WithData("interview").Msg()+err.Error())
 				}
 			}
 		} else {
 			if len(origin.Applications) != 0 {
 				// when some candidates have selected this interview time, abort delete
-				//	common.Error(c, error2.InterviewHasBeenSelected.WithData("interview"))
+				//	common.Error(c, rerror.InterviewHasBeenSelected.WithData("interview"))
 				//	return
-				errors = append(errors, error2.InterviewHasBeenSelected.WithData(origin.Uid).Msg())
+				errors = append(errors, rerror.InterviewHasBeenSelected.WithData(origin.Uid).Msg())
 			} else {
 				if err := models.RemoveInterviewByID(origin.Uid); err != nil {
-					//		common.Error(c, error2.UpdateDatabaseError.WithData("interview").WithDetail(err.Error()))
+					//		common.Error(c, rerror.UpdateDatabaseError.WithData("interview").WithDetail(err.Error()))
 					//		return
-					errors = append(errors, error2.RemoveDatabaseError.WithData("interview").Msg()+err.Error())
+					errors = append(errors, rerror.RemoveDatabaseError.WithData("interview").Msg()+err.Error())
 				}
 			}
 		}
@@ -192,14 +192,14 @@ func SetRecruitmentInterviews(c *gin.Context) {
 
 	for _, interview := range interviewsToAdd {
 		if err := models.CreateAndSaveInterview(interview); err != nil {
-			//	common.Error(c, error2.SaveDatabaseError.WithData("interview"))
+			//	common.Error(c, rerror.SaveDatabaseError.WithData("interview"))
 			//	return
-			errors = append(errors, error2.SaveDatabaseError.WithData("interview").Msg())
+			errors = append(errors, rerror.SaveDatabaseError.WithData("interview").Msg())
 
 		}
 	}
 	if len(errors) != 0 {
-		common.Error(c, error2.UpdateDatabaseError.WithData("interview").WithDetail(errors...))
+		common.Error(c, rerror.UpdateDatabaseError.WithData("interview").WithDetail(errors...))
 		return
 	}
 	common.Success(c, "Update interviews success", nil)

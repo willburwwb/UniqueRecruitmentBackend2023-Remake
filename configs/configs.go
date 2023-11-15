@@ -13,10 +13,10 @@ func Setup() {
 	v.SetConfigName(configName)
 	v.SetConfigType(configType)
 	if err := v.ReadInConfig(); err != nil {
-		panic(fmt.Sprintf("read config error, %v", err))
+		panic(fmt.Sprintf("read config rerror, %v", err))
 	}
 	if err := v.Unmarshal(&Config); err != nil {
-		panic(fmt.Sprintf("reload config error, %v", err))
+		panic(fmt.Sprintf("reload config rerror, %v", err))
 	}
 }
 

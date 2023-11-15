@@ -3,7 +3,7 @@ package global
 import (
 	"UniqueRecruitmentBackend/configs"
 	"UniqueRecruitmentBackend/internal/constants"
-	pb "UniqueRecruitmentBackend/internal/proto/sso"
+	pb "UniqueRecruitmentBackend/pkg/proto/sso"
 	"context"
 	"crypto/tls"
 
@@ -58,7 +58,7 @@ func (client *GrpcSSOClient) GetUserInfoByUID(uid string) (*UserDetail, error) {
 
 // TODO:
 // Add grpc permission check
-// func (client *GrpcSSOClient) CheckPermissionByRole(uid, role string) (bool, error) {
+// func (client *GrpcSSOClient) CheckPermissionByRole(uid, role string) (bool, rerror) {
 // 	req := &pb.CheckPermissionRequest{
 // 		Uid:  uid,
 // 		Object: ,

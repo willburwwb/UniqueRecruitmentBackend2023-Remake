@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	configName string = "config"
+	configName string = "config.local"
 	configType string = "yaml"
 )
 
@@ -30,9 +30,6 @@ type pgsql struct {
 }
 
 type redis struct {
-	//Addr     string `mapstructure:"addr" json:"addr" yaml:"addr"`
-	//Password string `mapstructure:"password" json:"password" yaml:"password"`
-	//DB       int    `mapstructure:"db" json:"db" yaml:"db"`
 	Dsn string `mapstructure:"dsn" json:"dsn" yaml:"dsn"`
 }
 

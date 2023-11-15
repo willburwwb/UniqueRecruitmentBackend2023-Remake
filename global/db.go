@@ -23,11 +23,11 @@ func setupPgsql() {
 	//}
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic(fmt.Sprintf("connect to db error, %v", err))
+		panic(fmt.Sprintf("connect to db rerror, %v", err))
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		panic(fmt.Sprintf("get db error, %v", err))
+		panic(fmt.Sprintf("get db rerror, %v", err))
 	}
 	sqlDB.SetMaxIdleConns(configs.Config.Pgsql.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(configs.Config.Pgsql.MaxOpenConns)

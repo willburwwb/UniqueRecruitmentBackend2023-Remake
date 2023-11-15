@@ -1,4 +1,4 @@
-package error
+package rerror
 
 import (
 	"fmt"
@@ -16,29 +16,29 @@ var (
 	RecruitmentStopped       = NewError(10011, "The application deadline of recruitment %s has already passed", 1, nil)
 
 	SendSMSError        = NewError(10006, "Send sms failed", 0, nil)
-	RequestBodyError    = NewError(10007, "Request body error", 0, nil)
-	RequestParamError   = NewError(10015, "Request param error", 0, nil)
-	SaveDatabaseError   = NewError(10008, "Save %s error", 1, nil)
-	UpdateDatabaseError = NewError(10009, "Update %s error", 1, nil)
-	GetDatabaseError    = NewError(10010, "Get %s error", 1, nil)
+	RequestBodyError    = NewError(10007, "Request body rerror", 0, nil)
+	RequestParamError   = NewError(10015, "Request param rerror", 0, nil)
+	SaveDatabaseError   = NewError(10008, "Save %s rerror", 1, nil)
+	UpdateDatabaseError = NewError(10009, "Update %s rerror", 1, nil)
+	GetDatabaseError    = NewError(10010, "Get %s rerror", 1, nil)
 
-	UpLoadFileError   = NewError(10012, "%s upload file error", 1, nil)
-	DownloadFileError = NewError(10013, "%s download fail error", 1, nil)
+	UpLoadFileError   = NewError(10012, "%s upload file rerror", 1, nil)
+	DownloadFileError = NewError(10013, "%s download fail rerror", 1, nil)
 
 	RoleError = NewError(10014, "%s don`t has role to %s", 2, nil)
 
 	Abandoned                = NewError(10015, "Application of %s has already been abandoned ", 1, nil)
 	Rejected                 = NewError(10016, "Application of %s has already been rejected", 1, nil)
 	GroupNotMatch            = NewError(10017, "Member' group does not match", 0, nil)
-	InterviewUpdateError     = NewError(10018, "Update interview error, %s", 1, nil)
+	InterviewUpdateError     = NewError(10018, "Update interview rerror, %s", 1, nil)
 	InterviewHasBeenSelected = NewError(10019, "Interview %s have been selected", 1, nil)
 	ReselectInterviewError   = NewError(10020, "You don't have the perssion to re-select this application", 0, nil)
 
-	CheckPermissionError = NewError(10021, "Check permission error", 0, nil)
+	CheckPermissionError = NewError(10021, "Check permission rerror", 0, nil)
 
-	RemoveDatabaseError = NewError(10022, "Remove %s error", 1, nil)
+	RemoveDatabaseError = NewError(10022, "Remove %s rerror", 1, nil)
 
-	SMSSendError = NewError(10023, "Send sms to %s error", 1, nil)
+	SMSSendError = NewError(10023, "Send sms to %s rerror", 1, nil)
 
 	NoInterviewScheduled = NewError(10024, "No interviews are scheduled for %s", 1, nil)
 )

@@ -1,12 +1,12 @@
 package common
 
 import (
-	error2 "UniqueRecruitmentBackend/internal/error"
+	"UniqueRecruitmentBackend/pkg/rerror"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func Error(c *gin.Context, err *error2.Error) {
+func Error(c *gin.Context, err *rerror.Error) {
 	c.JSON(err.StatusCode(), gin.H{
 		"msg":     err.Msg(),
 		"details": err.Details(),

@@ -56,7 +56,7 @@ func CreateAndSaveInterview(interview *request.UpdateInterview) error {
 	return db.Create(&interviewEntity).Error
 }
 
-// func CreateAndSaveInterview(interviews []request.UpdateInterview) error {
+// func CreateAndSaveInterview(interviews []request.UpdateInterview) rerror {
 // 	var interviewEntitys []InterviewEntity
 // 	for _, interview := range interviews {
 // 		var interviewEntity InterviewEntity
@@ -71,7 +71,7 @@ func CreateAndSaveInterview(interview *request.UpdateInterview) error {
 // 	return db.Create(&interviewEntitys).Error
 // }
 
-//	func UpdateInterviews(rid string, name string, interviews []request.UpdateInterview) error {
+//	func UpdateInterviews(rid string, name string, interviews []request.UpdateInterview) rerror {
 //		var interviewEntitys []InterviewEntity
 //		for _, interview := range interviews {
 //			var interviewEntity InterviewEntity
@@ -85,7 +85,7 @@ func CreateAndSaveInterview(interview *request.UpdateInterview) error {
 //			interviewEntitys = append(interviewEntitys, interviewEntity)
 //		}
 //		db := global.GetDB()
-//		err := db.Transaction(func(tx *gorm.DB) error {
+//		err := db.Transaction(func(tx *gorm.DB) rerror {
 //			for _, interviewEntity := range interviewEntitys {
 //				errUpdate := tx.Updates(interviewEntity).Error
 //				if errUpdate != nil {
@@ -97,9 +97,9 @@ func CreateAndSaveInterview(interview *request.UpdateInterview) error {
 //		return err
 //	}
 //
-//	func DeleteInterviews(name string, interviews []request.DeleteInterviewUID) error {
+//	func DeleteInterviews(name string, interviews []request.DeleteInterviewUID) rerror {
 //		db := global.GetDB()
-//		err := db.Transaction(func(tx *gorm.DB) error {
+//		err := db.Transaction(func(tx *gorm.DB) rerror {
 //			for _, interview := range interviews {
 //				if errDelete := tx.Delete(&InterviewEntity{}, interview).Error; errDelete != nil {
 //					return errDelete

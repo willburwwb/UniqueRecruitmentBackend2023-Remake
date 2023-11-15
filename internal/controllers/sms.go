@@ -5,11 +5,11 @@ import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/constants"
-	error2 "UniqueRecruitmentBackend/internal/error"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/request"
-	"UniqueRecruitmentBackend/internal/services"
 	"UniqueRecruitmentBackend/internal/utils"
+	"UniqueRecruitmentBackend/pkg/rerror"
+	"UniqueRecruitmentBackend/pkg/sms"
 	"errors"
 	"fmt"
 	"log"
@@ -22,14 +22,14 @@ import (
 func SendSMS(c *gin.Context) {
 	var req request.SendSMS
 	if err := c.ShouldBind(&req); err != nil {
-		common.Error(c, error2.RequestBodyError.WithDetail(err.Error()))
+		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 
 	req.Next = constants.ZhToEnStepMap[req.Next]
 	req.Current = constants.ZhToEnStepMap[req.Current]
 	if req.Next == "" || req.Current == "" {
-		common.Error(c, error2.RequestBodyError.WithDetail("next or current is invalid"))
+		common.Error(c, rerror.RequestBodyError.WithDetail("next or current is invalid"))
 		return
 	}
 
@@ -37,58 +37,58 @@ func SendSMS(c *gin.Context) {
 	for _, aid := range req.Aids {
 		application, err := models.GetApplicationById(aid)
 		if err != nil {
-			errors = append(errors, error2.GetDatabaseError.WithData("application").Msg()+err.Error())
+			errors = append(errors, rerror.GetDatabaseError.WithData("application").Msg()+err.Error())
 			continue
 		}
 
 		// check recuritment time
 		recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.MemberRole)
 		if err != nil {
-			errors = append(errors, error2.GetDatabaseError.WithData("recruitment").Msg()+err.Error())
+			errors = append(errors, rerror.GetDatabaseError.WithData("recruitment").Msg()+err.Error())
 			continue
 		}
 		if recruitment.End.Before(time.Now()) {
-			errors = append(errors, error2.CheckPermissionError.Msg()+err.Error())
+			errors = append(errors, rerror.CheckPermissionError.Msg()+err.Error())
 			continue
 		}
 
 		uid := common.GetUID(c)
 		userInfo, err := getUserInfoByUID(c, uid)
 		if err != nil {
-			errors = append(errors, error2.CheckPermissionError.Msg()+err.Error())
+			errors = append(errors, rerror.CheckPermissionError.Msg()+err.Error())
 			continue
 		}
 		// check applicaiton group == member group
 		if !utils.CheckInArrary(application.Group, userInfo.Groups) {
-			errors = append(errors, error2.CheckPermissionError.Msg()+"member's group != application group")
+			errors = append(errors, rerror.CheckPermissionError.Msg()+"member's group != application group")
 			continue
 		}
 
 		if application.Abandoned {
-			errors = append(errors, error2.Abandoned.WithData(application.Uid).Msg())
+			errors = append(errors, rerror.Abandoned.WithData(application.Uid).Msg())
 			continue
 		}
 
 		if application.Rejected {
-			errors = append(errors, error2.Rejected.WithData(application.Uid).Msg())
+			errors = append(errors, rerror.Rejected.WithData(application.Uid).Msg())
 			continue
 		}
 
 		if req.Type == constants.Accept {
 			// check the interview time has been allocated
 			if req.Next == string(constants.GroupInterview) && len(recruitment.FindInterviews(string(application.Group))) == 0 {
-				errors = append(errors, error2.NoInterviewScheduled.WithData(string(application.Group)).Msg())
+				errors = append(errors, rerror.NoInterviewScheduled.WithData(string(application.Group)).Msg())
 				continue
 			}
 			if req.Next == string(constants.TeamInterview) && len(recruitment.FindInterviews("unique")) == 0 {
-				errors = append(errors, error2.NoInterviewScheduled.WithData("unique").Msg())
+				errors = append(errors, rerror.NoInterviewScheduled.WithData("unique").Msg())
 				continue
 			}
 		} else if req.Type == constants.Reject {
 			application.Rejected = true
 			// save application
 			if err := models.UpdateApplicationInfo(application); err != nil {
-				errors = append(errors, error2.SaveDatabaseError.WithData("application").Msg())
+				errors = append(errors, rerror.SaveDatabaseError.WithData("application").Msg())
 			}
 			continue
 		} else {
@@ -104,50 +104,50 @@ func SendSMS(c *gin.Context) {
 
 		// send sms to candidate
 		smsBody.Phone = userInfo.Phone
-		if _, err := services.SendSMS(*smsBody); err != nil {
+		if _, err := sms.SendSMS(*smsBody); err != nil {
 			errors = append(errors, err.Error()+"send sms failed for "+userInfo.Name)
 			continue
 		}
 
 	}
 	if len(errors) != 0 {
-		common.Error(c, error2.SendSMSError.WithDetail(errors...))
+		common.Error(c, rerror.SendSMSError.WithDetail(errors...))
 		return
 	}
 	common.Success(c, "Success send sms", nil)
 }
 func SendCode(c *gin.Context) {
 	req := struct {
-		Phone string           `json:"phone"`
-		Type  services.SMSType `json:"type"`
+		Phone string      `json:"phone"`
+		Type  sms.SMSType `json:"type"`
 	}{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Error(c, error2.RequestBodyError)
+		common.Error(c, rerror.RequestBodyError)
 		return
 	}
 
 	switch req.Type {
-	case services.RegisterCode:
+	case sms.RegisterCode:
 		code := utils.GenerateCode()
-		sms, err := services.SendSMS(services.SMSBody{
+		sms, err := sms.SendSMS(sms.SMSBody{
 			Phone:      req.Phone,
 			TemplateID: configs.Config.SMS.RegisterCodeTemplateId,
 			Params:     []string{code},
 		})
 		if err != nil || sms.StatusCode != http.StatusOK {
-			common.Error(c, error2.SendSMSError)
+			common.Error(c, rerror.SendSMSError)
 			return
 		}
-	case services.ResetPasswordCode:
+	case sms.ResetPasswordCode:
 		code := utils.GenerateCode()
-		sms, err := services.SendSMS(services.SMSBody{
+		sms, err := sms.SendSMS(sms.SMSBody{
 			Phone:      req.Phone,
 			TemplateID: configs.Config.SMS.ResetPasswordCodeTemplateId,
 			Params:     []string{code},
 		})
 		if err != nil || sms.StatusCode != http.StatusOK {
-			common.Error(c, error2.SendSMSError)
+			common.Error(c, rerror.SendSMSError)
 			return
 		}
 		// TODO
@@ -155,9 +155,9 @@ func SendCode(c *gin.Context) {
 }
 
 func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
-	application *models.ApplicationEntity, recruitment *models.RecruitmentEntity) (*services.SMSBody, error) {
+	application *models.ApplicationEntity, recruitment *models.RecruitmentEntity) (*sms.SMSBody, error) {
 
-	var smsBody services.SMSBody
+	var smsBody sms.SMSBody
 
 	suffix := " (请勿回复本短信)"
 	recruitmentName := utils.ConvertRecruitmentName(recruitment.Name)
@@ -193,7 +193,7 @@ func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
 				log.Println("组面", formatTime, allocationTime)
 				// FIXME
 				// {1}你好，请于{2}在启明学院亮胜楼{3}参加{4}，请准时到场。
-				smsBody = services.SMSBody{
+				smsBody = sms.SMSBody{
 					TemplateID: constants.SMSTemplateMap[constants.PassSMS],
 					Params:     []string{userInfo.Name, formatTime, smsRequest.Place, string(constants.EnToZhStepMap[smsRequest.Next])},
 				}
@@ -227,7 +227,7 @@ func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
 				formatTime := utils.ConverToLocationTime(allocationTime)
 
 				// {1}你好，欢迎参加{2}{3}组在线群面，面试将于{4}进行，请在PC端点击腾讯会议参加面试，会议号{5}，并提前调试好摄像头和麦克风，祝你面试顺利。
-				smsBody = services.SMSBody{
+				smsBody = sms.SMSBody{
 					TemplateID: constants.SMSTemplateMap[smsTemplate],
 					Params:     []string{userInfo.Name, recruitmentName, application.Group, formatTime, smsRequest.MeetingId},
 				}
@@ -275,7 +275,7 @@ func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
 				smsResMessage = smsRequest.Rest + suffix
 			}
 			// {1}你好，你通过了{2}{3}组{4}审核{5}
-			smsBody = services.SMSBody{
+			smsBody = sms.SMSBody{
 				TemplateID: constants.SMSTemplateMap[constants.PassSMS],
 				Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.EnToZhStepMap[smsRequest.Current], smsResMessage},
 			}
@@ -293,7 +293,7 @@ func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *global.UserDetail,
 			smsResMessage = smsRequest.Rest + suffix
 		}
 		// {1}你好，你没有通过{2}{3}组{4}审核，请你{5}
-		smsBody = services.SMSBody{
+		smsBody = sms.SMSBody{
 			TemplateID: constants.SMSTemplateMap[constants.Delay],
 			Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.EnToZhStepMap[smsRequest.Current], smsResMessage},
 		}

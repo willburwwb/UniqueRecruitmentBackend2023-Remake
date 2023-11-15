@@ -1,0 +1,29 @@
+server:
+  run_mode: "debug"
+  addr: ":3333"
+  read_timeout: 2 #minute
+  write_timeout: 2 #minute
+
+pgsql:
+  host: "81.70.253.156"
+  port: 5432
+  dbname: "recruitment_dev"
+  user: "postgres"
+  password: "g49pftzdpwdtbba9r3mqb2"
+  max_idle_conns: 100
+  max_open_conns: 100
+  max_life_seconds: 86400
+
+sso:
+  addr: "https://dev.back.sso.hustunique.com/api/v1"
+
+redis:
+  dsn: "redis://:JroLJxEEc%257Fb*ZoVa@81.70.253.156:6379/2"
+
+sms:
+  token: "jjKDspgJCyimiN7biS_QZnA3evp7lMMZ3l5Bj-DAzWTxFvVUNkhY70tU6rvKFG7MuEPElQIuqBNyH3wj_w59HQ"
+
+cos:
+  cos_url:
+  cos_secret_id:
+  cos_secret_key:
