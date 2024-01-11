@@ -15,13 +15,13 @@ var (
 				//models.ApplicationEntity{},
 				//models.CandidateEntity{},
 				//models.CommentEntity{},
-				//models.InterviewEntity{},
+				//models.Interview{},
 				//models.MemberEntity{},
 				//models.RecruitmentEntity{},
-				models.RecruitmentEntity{},
-				models.ApplicationEntity{},
-				models.InterviewEntity{},
-				models.CommentEntity{},
+				models.Recruitment{},
+				models.Application{},
+				models.Interview{},
+				models.Comment{},
 			)
 			if err != nil {
 				panic(err)

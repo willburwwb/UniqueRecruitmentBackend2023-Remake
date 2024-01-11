@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
-type RecruitmentEntity struct {
+type Recruitment struct {
 	Common
 	Name       string       `gorm:"not null;unique" json:"name"`
 	Beginning  time.Time    `gorm:"not null" json:"beginning"`
@@ -18,15 +18,15 @@ type RecruitmentEntity struct {
 	End        time.Time    `gorm:"not null" json:"end"`
 	Statistics pgtype.JSONB `gorm:"type:jsonb"`
 
-	Applications []ApplicationEntity `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->简历 ;级联删除
-	Interviews   []InterviewEntity   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->面试 ;级联删除
+	Applications []Application `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->简历 ;级联删除
+	Interviews   []Interview   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->面试 ;级联删除
 }
 
-func (c RecruitmentEntity) TableName() string {
+func (c Recruitment) TableName() string {
 	return "recruitments"
 }
-func (r *RecruitmentEntity) FindInterviews(name string) []InterviewEntity {
-	reInterviews := make([]InterviewEntity, 0)
+func (r *Recruitment) GetInterviews(name string) []Interview {
+	reInterviews := make([]Interview, 0)
 	for _, interview := range r.Interviews {
 		if string(interview.Name) == name {
 			reInterviews = append(reInterviews, interview)
@@ -36,23 +36,22 @@ func (r *RecruitmentEntity) FindInterviews(name string) []InterviewEntity {
 }
 func CreateRecruitment(req *request.CreateRecruitment) (string, error) {
 	db := global.GetDB()
-	r := &RecruitmentEntity{
+	r := &Recruitment{
 		Name:      req.Name,
 		Beginning: req.Beginning,
 		Deadline:  req.Deadline,
 		End:       req.End,
 	}
-	err := db.Model(&RecruitmentEntity{}).Create(r).Error
+	err := db.Model(&Recruitment{}).Create(r).Error
 	return r.Uid, err
 }
 
 func UpdateRecruitment(rid string, req *request.UpdateRecruitment) error {
-
 	bytes, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}
-	var r RecruitmentEntity
+	var r Recruitment
 	if err := json.Unmarshal(bytes, &r); err != nil {
 		return err
 	}
@@ -61,38 +60,59 @@ func UpdateRecruitment(rid string, req *request.UpdateRecruitment) error {
 	db := global.GetDB()
 	return db.Updates(&r).Error
 }
-
-func GetRecruitmentById(rid string, role constants.Role) (*RecruitmentEntity, error) {
+func GetRecruitmentById(rid string) (*Recruitment, error) {
 	db := global.GetDB()
-	var r RecruitmentEntity
+	var r Recruitment
+	if err := db.Model(&Recruitment{}).Where("uid = ?", rid).Find(&r).Error; err != nil {
+		return nil, err
+	}
+	return &r, nil
+}
+func GetFullRecruitmentById(rid string) (*Recruitment, error) {
+	db := global.GetDB()
+	var r Recruitment
 	//remember preload need the struct filed name
 	var err error
-	if role == constants.MemberRole || role == constants.Admin {
-		err = db.Model(&RecruitmentEntity{}).Preload("Applications").Preload("Interviews").
-			Where("uid = ?", rid).Find(&r).Error
-	} else {
-		err = db.Model(&RecruitmentEntity{}).Where("uid = ?", rid).Find(&r).Error
+	if err = db.Model(&Recruitment{}).
+		Preload("Applications").
+		Preload("Interviews").
+		Where("uid = ?", rid).Find(&r).Error; err != nil {
+		err = db.Model(&Recruitment{}).Where("uid = ?", rid).Find(&r).Error
 	}
 	return &r, err
 }
 
-func GetAllRecruitment() ([]RecruitmentEntity, error) {
+//func GetRecruitmentById(rid string, role constants.Role) (*RecruitmentEntity, error) {
+//	db := global.GetDB()
+//	var r RecruitmentEntity
+//	//remember preload need the struct filed name
+//	var err error
+//	if role == constants.MemberRole || role == constants.Admin {
+//		err = db.Model(&RecruitmentEntity{}).Preload("Applications").Preload("Interviews").
+//			Where("uid = ?", rid).Find(&r).Error
+//	} else {
+//		err = db.Model(&RecruitmentEntity{}).Where("uid = ?", rid).Find(&r).Error
+//	}
+//	return &r, err
+//}
+
+func GetAllRecruitment() ([]Recruitment, error) {
 	db := global.GetDB()
-	var r []RecruitmentEntity
-	err := db.Model(&RecruitmentEntity{}).Order("beginning DESC").Find(&r).Error
+	var r []Recruitment
+	err := db.Model(&Recruitment{}).Order("beginning DESC").Find(&r).Error
 	return r, err
 }
 
-func GetPendingRecruitment(role constants.Role) (*RecruitmentEntity, error) {
+func GetPendingRecruitment(role constants.Role) (*Recruitment, error) {
 	db := global.GetDB()
-	var r RecruitmentEntity
+	var r Recruitment
 	var err error
 	if role == constants.MemberRole || role == constants.Admin {
-		err = db.Model(&RecruitmentEntity{}).Preload("Applications").Preload("Interviews").
+		err = db.Model(&Recruitment{}).Preload("Applications").Preload("Interviews").
 			Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).Find(&r).Error
 	} else {
 
-		err = db.Model(&RecruitmentEntity{}).Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).Find(&r).Error
+		err = db.Model(&Recruitment{}).Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).Find(&r).Error
 	}
 	return &r, err
 }

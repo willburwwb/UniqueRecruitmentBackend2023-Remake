@@ -14,10 +14,10 @@ import (
 // used for insert data without sso
 // const fakeCandidateId = "b234d3f4-1e74-11ee-8b78-b69bc9af8fe4"
 
-// ApplicationEntity records the detail of application for candidate
+// Application records the detail of application for candidate
 // and the model has been modified to fit sso
 // uniqueIndex(CandidateID,RecruitmentID)
-type ApplicationEntity struct {
+type Application struct {
 	Common
 	Grade     string `gorm:"not null"` //constants.Grade
 	Institute string `gorm:"not null"`
@@ -30,18 +30,18 @@ type ApplicationEntity struct {
 
 	Resume string
 
-	Abandoned                 bool               `gorm:"not null; default false" `
-	Rejected                  bool               `gorm:"not null; default false"`
-	Step                      string             `gorm:"not null"`                                                                //constants.Step
-	CandidateID               string             `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"`   //manytoone
-	RecruitmentID             string             `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"` //manytoone
-	InterviewAllocationsGroup time.Time          `gorm:"column:interviewAllocationsGroup;"`
-	InterviewAllocationsTeam  time.Time          `gorm:"column:interviewAllocationsTeam;"`
-	InterviewSelections       []*InterviewEntity `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`          //manytomany
-	Comments                  []CommentEntity    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //onetomany
+	Abandoned                 bool         `gorm:"not null; default false" `
+	Rejected                  bool         `gorm:"not null; default false"`
+	Step                      string       `gorm:"not null"`                                                                //constants.Step
+	CandidateID               string       `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"`   //manytoone
+	RecruitmentID             string       `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"` //manytoone
+	InterviewAllocationsGroup time.Time    `gorm:"column:interviewAllocationsGroup;"`
+	InterviewAllocationsTeam  time.Time    `gorm:"column:interviewAllocationsTeam;"`
+	InterviewSelections       []*Interview `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`          //manytomany
+	Comments                  []Comment    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //onetomany
 }
 
-func (a ApplicationEntity) TableName() string {
+func (a Application) TableName() string {
 	return "applications"
 }
 
@@ -63,15 +63,15 @@ type ApplicationForCandidate struct {
 	InterviewAllocationsTeam  time.Time
 }
 
-func CreateAndSaveApplication(req *request.CreateApplication, uid string, filePath string) (*ApplicationEntity, error) {
+func CreateAndSaveApplication(req *request.CreateApplication, uid string, filePath string) (*Application, error) {
 	db := global.GetDB()
-	row := db.Where("'recruitmentId' = ?", req.RecruitmentID).Find(&ApplicationEntity{}).RowsAffected
+	row := db.Where("'recruitmentId' = ?", req.RecruitmentID).Find(&Application{}).RowsAffected
 
 	//check now user's recruitment application >1
 	if row != 0 {
 		return nil, errors.New("A candidate can only apply once at the same recruitment")
 	}
-	a := ApplicationEntity{
+	a := Application{
 		Grade:         req.Grade,
 		Institute:     req.Institute,
 		Major:         req.Major,
@@ -91,7 +91,7 @@ func CreateAndSaveApplication(req *request.CreateApplication, uid string, filePa
 
 func GetApplicationByIdForCandidate(aid string) (*ApplicationForCandidate, error) {
 	db := global.GetDB()
-	var a ApplicationEntity
+	var a Application
 
 	if err := db.Where("uid = ?", aid).Find(&a).Error; err != nil {
 		return nil, err
@@ -110,9 +110,9 @@ func GetApplicationByIdForCandidate(aid string) (*ApplicationForCandidate, error
 }
 
 // GetApplicationById For member
-func GetApplicationById(aid string) (*ApplicationEntity, error) {
+func GetApplicationById(aid string) (*Application, error) {
 	db := global.GetDB()
-	var a ApplicationEntity
+	var a Application
 	if err := db.Preload("Comments").Preload("InterviewSelections").Where("uid = ?", aid).Find(&a).Error; err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func UpdateApplication(aid string, filename string, req *request.UpdateApplicati
 		return err
 	}
 
-	var a ApplicationEntity
+	var a Application
 	if err := json.Unmarshal(bytes, &a); err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func UpdateApplication(aid string, filename string, req *request.UpdateApplicati
 
 func UpdateApplicationStep(aid string, step string) error {
 	db := global.GetDB()
-	if err := db.Model(&ApplicationEntity{}).Where("uid = ?", aid).Update("step", step).Error; err != nil {
+	if err := db.Model(&Application{}).Where("uid = ?", aid).Update("step", step).Error; err != nil {
 		return err
 	}
 	return nil
@@ -149,7 +149,7 @@ func UpdateApplicationStep(aid string, step string) error {
 
 func DeleteApplication(aid string) error {
 	db := global.GetDB()
-	return db.Where("uid = ?", aid).Delete(&ApplicationEntity{}).Error
+	return db.Where("uid = ?", aid).Delete(&Application{}).Error
 }
 
 func AbandonApplication(aid string) error {
@@ -162,13 +162,13 @@ func AbandonApplication(aid string) error {
 	return db.Updates(&applicationEntity).Error
 }
 
-func GetApplicationByRecruitmentId(rid string) ([]ApplicationEntity, error) {
-	recruitmentById, err := GetRecruitmentById(rid, constants.MemberRole)
+func GetApplicationByRecruitmentId(rid string) ([]Application, error) {
+	recruitment, err := GetFullRecruitmentById(rid)
 	if err != nil {
 		return nil, err
 	}
 
-	return recruitmentById.Applications, nil
+	return recruitment.Applications, nil
 }
 
 func SetApplicationStepById(aid string, req *request.SetApplicationStep) error {
@@ -201,7 +201,7 @@ func SetApplicationInterviewTime(aid, interviewType string, time time.Time) erro
 	return db.Updates(&application).Error
 }
 
-func UpdateInterviewSelection(application *ApplicationEntity, interviews []*InterviewEntity) error {
+func UpdateInterviewSelection(application *Application, interviews []*Interview) error {
 	db := global.GetDB()
 	err := db.Transaction(func(tx *gorm.DB) error {
 		if errClear := tx.Model(application).Association("InterviewSelections").Clear(); errClear != nil {
@@ -217,7 +217,7 @@ func UpdateInterviewSelection(application *ApplicationEntity, interviews []*Inte
 }
 
 // TODO 上面的几个更新函数统一改调这个
-func UpdateApplicationInfo(application *ApplicationEntity) error {
+func UpdateApplicationInfo(application *Application) error {
 	db := global.GetDB()
 	return db.Updates(&application).Error
 }

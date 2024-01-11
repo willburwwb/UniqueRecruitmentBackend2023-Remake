@@ -8,6 +8,8 @@ import (
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/rerror"
+	"github.com/xylonx/zapx"
+	"go.uber.org/zap"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,17 +23,21 @@ func CreateRecruitment(c *gin.Context) {
 	var req request.CreateRecruitment
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
+		zapx.Error("request body error", zap.Error(err), zap.String("UID", common.GetUID(c)))
 		return
 	}
 	if time.Now().After(req.Beginning) || req.Beginning.After(req.Deadline) || req.Deadline.After(req.End) {
 		common.Error(c, rerror.RequestBodyError.WithDetail("time set up wrong"))
+		zapx.Error("time set up wrong", zap.String("UID", common.GetUID(c)))
 		return
 	}
 	recruitmentId, err := models.CreateRecruitment(&req)
 	if err != nil {
 		common.Error(c, rerror.SaveDatabaseError.WithData("recruitment"))
+		zapx.Error("save recruitment wrong", zap.Error(err))
 		return
 	}
+	zapx.Info("success create recruitment")
 	common.Success(c, "Success create recruitment", map[string]interface{}{
 		"rid": recruitmentId,
 	})
@@ -79,14 +85,14 @@ func GetRecruitmentById(c *gin.Context) {
 	}
 
 	if utils.CheckRoles(userRoles, constants.Admin) {
-		resp, err := models.GetRecruitmentById(recruitmentId, constants.Admin)
+		resp, err := models.GetFullRecruitmentById(recruitmentId)
 		if err != nil {
 			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 			return
 		}
 		common.Success(c, "Success get recruitment by admin role", resp)
 	} else if utils.CheckRoles(userRoles, constants.MemberRole) {
-		resp, err := models.GetRecruitmentById(recruitmentId, constants.MemberRole)
+		resp, err := models.GetFullRecruitmentById(recruitmentId)
 		if err != nil {
 			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 			return
@@ -100,7 +106,7 @@ func GetRecruitmentById(c *gin.Context) {
 
 		common.Success(c, "Success get recruitment by member role", resp)
 	} else {
-		resp, err := models.GetRecruitmentById(recruitmentId, constants.CandidateRole)
+		resp, err := models.GetRecruitmentById(recruitmentId)
 		if err != nil {
 			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 			return

@@ -13,7 +13,7 @@ func TestGetUserInfoByUID(t *testing.T) {
 }
 
 func TestGetRolesByUID(t *testing.T) {
-	userRoles, err := GetRolesByUID("555f3016-3b01-4dcd-bbac-cb033d19caf6")
+	userRoles, err := GetRolesByUID("c4fb1c23-e9de-40a6-b1d4-b4bc2df0a625")
 	if err != nil {
 		t.Error(err.Error())
 		return

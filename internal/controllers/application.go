@@ -29,7 +29,7 @@ func CreateApplication(c *gin.Context) {
 		common.Error(c, rerror.RequestBodyError.WithDetail("group wrong"))
 		return
 	}
-	recruitment, err := models.GetRecruitmentById(req.RecruitmentID, constants.CandidateRole)
+	recruitment, err := models.GetRecruitmentById(req.RecruitmentID)
 	if err != nil || recruitment.Uid == "" {
 		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail("when you submit the application"))
 		return
@@ -93,7 +93,7 @@ func UpdateApplicationById(c *gin.Context) {
 		return
 	}
 
-	recruitment, err := models.GetRecruitmentById(req.RecruitmentID, constants.CandidateRole)
+	recruitment, err := models.GetRecruitmentById(req.RecruitmentID)
 	if err != nil {
 		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail("when you update the application"))
 		return
@@ -265,7 +265,7 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	}
 
 	// check update application time is between the start and the end
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
 		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -301,7 +301,7 @@ func GetInterviewsSlots(c *gin.Context) {
 	// 		return
 	// 	}
 
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.MemberRole)
+	recruitment, err := models.GetFullRecruitmentById(application.RecruitmentID)
 	if err != nil {
 		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -315,7 +315,7 @@ func GetInterviewsSlots(c *gin.Context) {
 		name = "unique"
 	}
 
-	var res []models.InterviewEntity
+	var res []models.Interview
 	for _, interview := range recruitment.Interviews {
 		if string(interview.Name) == name {
 			res = append(res, interview)
@@ -346,7 +346,7 @@ func SelectInterviewSlots(c *gin.Context) {
 		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
-	recruitmentById, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
+	recruitmentById, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
 		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -386,7 +386,7 @@ func SelectInterviewSlots(c *gin.Context) {
 
 	var errors []string
 
-	var interviews []*models.InterviewEntity
+	var interviews []*models.Interview
 	for _, iid := range req.Iids {
 		// check the select interview is in the recruitment
 		interview, err := models.GetInterviewById(iid)
@@ -434,7 +434,7 @@ func MoveApplication(c *gin.Context) {
 		common.Error(c, rerror.GetDatabaseError.WithDetail("failed to get application for member"))
 		return
 	}
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
 		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail("when you move application"))
 		return
@@ -482,7 +482,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 		return
 	}
 
-	recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.CandidateRole)
+	recruitment, err := models.GetRecruitmentById(application.RecruitmentID)
 	if err != nil {
 		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
@@ -513,7 +513,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 
 // checkRecruitmentInBtoD check whether the recruitment is between the start and the deadline
 // such as summit the application/update the application
-func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntity, now time.Time) bool {
+func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.Recruitment, now time.Time) bool {
 	if recruitment.Beginning.After(now) {
 		// submit too early
 		common.Error(c, rerror.RecruitmentNotReady.WithData(recruitment.Name))
@@ -531,7 +531,7 @@ func checkRecruitmentInBtoD(c *gin.Context, recruitment *models.RecruitmentEntit
 
 // checkRecruitmentInBtoE check whether the recruitment is between the start and the end
 // such as move the application's step
-func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentEntity) bool {
+func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.Recruitment) bool {
 	now := time.Now()
 	if recruitment.Beginning.After(now) {
 		common.Error(c, rerror.RecruitmentNotReady.WithData(recruitment.Name))
@@ -545,7 +545,7 @@ func checkRecruitmentTimeInBtoE(c *gin.Context, recruitment *models.RecruitmentE
 
 // check application's status
 // If the resume has already been rejected or abandoned return false
-func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) bool {
+func checkApplyStatus(c *gin.Context, application *models.Application) bool {
 	if application.Rejected {
 		common.Error(c, rerror.Rejected.WithData(application.CandidateID))
 		return false
@@ -558,7 +558,7 @@ func checkApplyStatus(c *gin.Context, application *models.ApplicationEntity) boo
 }
 
 // check if application step is in interview select status
-func checkStep(c *gin.Context, interviewType string, application *models.ApplicationEntity) bool {
+func checkStep(c *gin.Context, interviewType string, application *models.Application) bool {
 	if interviewType == "group" && application.Step != string(constants.GroupTimeSelection) {
 		common.Error(c, rerror.CheckPermissionError.WithDetail("you can't set group interview time"))
 		return false
@@ -590,7 +590,7 @@ func checkMemberGroup(c *gin.Context, aid string, uid string) bool {
 	return false
 }
 
-func checkIsApplicationOwner(c *gin.Context, uid string, application *models.ApplicationEntity) bool {
+func checkIsApplicationOwner(c *gin.Context, uid string, application *models.Application) bool {
 	if application.CandidateID == uid {
 		return true
 	}

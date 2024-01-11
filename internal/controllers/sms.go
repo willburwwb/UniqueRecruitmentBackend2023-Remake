@@ -40,7 +40,7 @@ func SendSMS(c *gin.Context) {
 		}
 
 		// check recuritment time
-		recruitment, err := models.GetRecruitmentById(application.RecruitmentID, constants.MemberRole)
+		recruitment, err := models.GetFullRecruitmentById(application.RecruitmentID)
 		if err != nil {
 			errors = append(errors, rerror.GetDatabaseError.WithData("recruitment").Msg()+err.Error())
 			continue
@@ -74,11 +74,11 @@ func SendSMS(c *gin.Context) {
 
 		if req.Type == constants.Accept {
 			// check the interview time has been allocated
-			if req.Next == string(constants.GroupInterview) && len(recruitment.FindInterviews(string(application.Group))) == 0 {
+			if req.Next == string(constants.GroupInterview) && len(recruitment.GetInterviews(string(application.Group))) == 0 {
 				errors = append(errors, rerror.NoInterviewScheduled.WithData(string(application.Group)).Msg())
 				continue
 			}
-			if req.Next == string(constants.TeamInterview) && len(recruitment.FindInterviews("unique")) == 0 {
+			if req.Next == string(constants.TeamInterview) && len(recruitment.GetInterviews("unique")) == 0 {
 				errors = append(errors, rerror.NoInterviewScheduled.WithData("unique").Msg())
 				continue
 			}
@@ -116,7 +116,7 @@ func SendSMS(c *gin.Context) {
 }
 
 func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *grpc.UserDetail,
-	application *models.ApplicationEntity, recruitment *models.RecruitmentEntity) (*sms.SMSBody, error) {
+	application *models.Application, recruitment *models.Recruitment) (*sms.SMSBody, error) {
 
 	var smsBody sms.SMSBody
 

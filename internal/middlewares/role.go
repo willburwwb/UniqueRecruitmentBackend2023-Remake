@@ -9,24 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getUserRoleByUID(c *gin.Context) (constants.Role, error) {
-	uid := common.GetUID(c)
-	userRoles, err := grpc.GetRolesByUID(uid)
-	if err != nil {
-		return "", err
-	}
-	for _, v := range userRoles {
-		if v == "admin" {
-			return constants.Admin, nil
-		}
-	}
-	for _, v := range userRoles {
-		if v == "member" {
-			return constants.MemberRole, nil
-		}
-	}
-	return constants.CandidateRole, nil
-}
+var GlobalRoleMiddleWare gin.HandlerFunc = SetUpUserRole
+
 func SetUpUserRole(c *gin.Context) {
 	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Role")
 	defer span.End()
@@ -41,7 +25,9 @@ func SetUpUserRole(c *gin.Context) {
 	c.Next()
 }
 
-var GlobalRoleMiddleWare gin.HandlerFunc = SetUpUserRole
+// admin is also member
+var CheckMemberRoleOrAdminMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.MemberRole, constants.Admin)
+var CheckAdminRoleMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.Admin)
 
 func CheckRoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -65,8 +51,21 @@ func CheckRoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
 	}
 }
 
-var CheckAdminRoleMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.Admin)
-
-// admin is also member
-
-var CheckMemberRoleOrAdminMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.MemberRole, constants.Admin)
+func getUserRoleByUID(c *gin.Context) (constants.Role, error) {
+	uid := common.GetUID(c)
+	userRoles, err := grpc.GetRolesByUID(uid)
+	if err != nil {
+		return "", err
+	}
+	for _, v := range userRoles {
+		if v == "admin" {
+			return constants.Admin, nil
+		}
+	}
+	for _, v := range userRoles {
+		if v == "member" {
+			return constants.MemberRole, nil
+		}
+	}
+	return constants.CandidateRole, nil
+}

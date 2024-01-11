@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"UniqueRecruitmentBackend/internal/common"
+	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/tracer"
 	"UniqueRecruitmentBackend/pkg/rerror"
 	"errors"
@@ -16,15 +17,14 @@ func AuthMiddleware(c *gin.Context) {
 	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Authentication")
 	defer span.End()
 
-	cookie, err := c.Cookie("uid")
-
+	_, err := c.Cookie("SSO_SESSION") // only for check
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
 		common.Error(c, rerror.UnauthorizedError)
 		return
 	}
 	s := sessions.Default(c)
-	u := s.Get(cookie)
+	u := s.Get(constants.SessionNameUID)
 	if u == nil {
 		c.Abort()
 		common.Error(c, rerror.UnauthorizedError)
@@ -37,7 +37,7 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 	c.Request = c.Request.WithContext(common.CtxWithUID(apmCtx, uid))
-
+	c.Set("X-UID", uid)
 	span.SetAttributes(attribute.String("UID", uid))
 	c.Next()
 }

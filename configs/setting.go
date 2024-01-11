@@ -33,11 +33,6 @@ type redis struct {
 	Dsn string `mapstructure:"dsn" json:"dsn" yaml:"dsn"`
 }
 
-type sess struct {
-	Secret string `mapstructure:"secret" json:"secret" yaml:"secret"`
-	Domain string `mapstructure:"domain" json:"domain" yaml:"domain"`
-}
-
 type sso struct {
 	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
 }
@@ -65,7 +60,6 @@ type settings struct {
 	Server server `mapstructure:"server" yaml:"server"`
 	Pgsql  pgsql  `mapstructure:"pgsql" yaml:"pgsql"`
 	Redis  redis  `mapstructure:"redis" yaml:"redis"`
-	Sess   sess   `mapstructure:"sess" yaml:"sess"`
 	SSO    sso    `mapstructure:"sso" yaml:"sso"`
 	Grpc   grpc   `mapstructure:"grpc" yaml:"grpc"`
 	SMS    sms    `mapstructure:"sms" yaml:"sms"`

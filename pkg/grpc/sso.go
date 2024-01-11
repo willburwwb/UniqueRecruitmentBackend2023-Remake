@@ -71,8 +71,8 @@ func init() {
 
 func setupSSOGrpc() (*GrpcSSOClient, error) {
 	ssoConn, err := grpc.Dial(
-		//configs.Config.SSO.Addr,
-		"localhost:50000",
+		//configs.Config.Grpc.Addr,
+		"dev.back.sso.hustunique.com:50000",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	grpcClient := pb.NewSSOServiceClient(ssoConn)

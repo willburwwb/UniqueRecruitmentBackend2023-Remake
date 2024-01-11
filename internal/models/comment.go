@@ -13,7 +13,7 @@ const (
 	Bad
 )
 
-type CommentEntity struct {
+type Comment struct {
 	Common
 	ApplicationID string     `gorm:"column:applicationId;type:uuid;"` //manytoone
 	MemberID      string     `gorm:"column:memberId;type:uuid;"`      //manytoone
@@ -21,13 +21,13 @@ type CommentEntity struct {
 	Evaluation    Evaluation `gorm:"column:evaluation;type:int;not null"`
 }
 
-func (c CommentEntity) TableName() string {
+func (c Comment) TableName() string {
 	return "comments"
 }
 
 func CreateComment(req *request.CreateCommentRequest) (string, error) {
 	db := global.GetDB()
-	c := CommentEntity{
+	c := Comment{
 		ApplicationID: req.ApplicationID,
 		MemberID:      req.MemberID,
 		Content:       req.Content,
@@ -39,5 +39,5 @@ func CreateComment(req *request.CreateCommentRequest) (string, error) {
 
 func DeleteCommentById(cid string) error {
 	db := global.GetDB()
-	return db.Delete(&CommentEntity{}, cid).Error
+	return db.Delete(&Comment{}, cid).Error
 }
