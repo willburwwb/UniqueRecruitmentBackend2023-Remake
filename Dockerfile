@@ -1,4 +1,4 @@
-FROM golang:1.20 AS builder
+FROM golang:1.21 AS builder
 
 ENV GO111MODULE=on 
 ENV GOPROXY=http://goproxy.cn,direct
@@ -18,11 +18,11 @@ WORKDIR /app
 ARG PROJECT_NAME=uniquehr
 
 COPY --from=builder /app/main ./${PROJECT_NAME}
-COPY --from=builder /app/config.yaml ./config.yaml
+COPY --from=builder /app/config.local.yml ./config.local.yml
 
 EXPOSE 3333
 
-RUN echo "./${PROJECT_NAME} migrate && ./${PROJECT_NAME} server" > ./run.sh &&\
+RUN echo "./${PROJECT_NAME} server" > ./run.sh &&\
     chmod u+x ./run.sh
 
 CMD ./run.sh
