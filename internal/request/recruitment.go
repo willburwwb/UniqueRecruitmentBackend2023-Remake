@@ -13,6 +13,7 @@ type CreateRecruitment struct {
 }
 
 type UpdateRecruitment struct {
+	Rid       string    `json:"rid"`
 	Beginning time.Time `json:"beginning"`
 	Deadline  time.Time `json:"deadline"`
 	End       time.Time `json:"end"`

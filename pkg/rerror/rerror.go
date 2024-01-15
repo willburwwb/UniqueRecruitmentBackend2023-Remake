@@ -8,7 +8,7 @@ import (
 var (
 	UnauthorizedError = NewError(10001, "Authentication failed could not get uid", 0, nil)
 
-	SSOError = NewError(10005, "SSO get UserInfo failed ", 0, nil)
+	SSOError = NewError(10005, "SSO get UserInfo/Roles failed ", 0, nil)
 
 	RecruitmentNotReady      = NewError(10002, "Recruitment %s has not started yet", 1, nil)
 	RecruitmentEnd           = NewError(10003, "Recruitment %s has already ended", 1, nil)

@@ -2,7 +2,6 @@ package models
 
 import (
 	"UniqueRecruitmentBackend/global"
-	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/request"
 	"encoding/json"
 	"time"
@@ -22,9 +21,10 @@ type Recruitment struct {
 	Interviews   []Interview   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->面试 ;级联删除
 }
 
-func (c Recruitment) TableName() string {
+func (r Recruitment) TableName() string {
 	return "recruitments"
 }
+
 func (r *Recruitment) GetInterviews(name string) []Interview {
 	reInterviews := make([]Interview, 0)
 	for _, interview := range r.Interviews {
@@ -34,6 +34,7 @@ func (r *Recruitment) GetInterviews(name string) []Interview {
 	}
 	return reInterviews
 }
+
 func CreateRecruitment(req *request.CreateRecruitment) (string, error) {
 	db := global.GetDB()
 	r := &Recruitment{
@@ -46,7 +47,7 @@ func CreateRecruitment(req *request.CreateRecruitment) (string, error) {
 	return r.Uid, err
 }
 
-func UpdateRecruitment(rid string, req *request.UpdateRecruitment) error {
+func UpdateRecruitment(req *request.UpdateRecruitment) error {
 	bytes, err := json.Marshal(req)
 	if err != nil {
 		return err
@@ -55,11 +56,12 @@ func UpdateRecruitment(rid string, req *request.UpdateRecruitment) error {
 	if err := json.Unmarshal(bytes, &r); err != nil {
 		return err
 	}
-	r.Uid = rid
+	r.Uid = req.Rid
 
 	db := global.GetDB()
 	return db.Updates(&r).Error
 }
+
 func GetRecruitmentById(rid string) (*Recruitment, error) {
 	db := global.GetDB()
 	var r Recruitment
@@ -68,6 +70,7 @@ func GetRecruitmentById(rid string) (*Recruitment, error) {
 	}
 	return &r, nil
 }
+
 func GetFullRecruitmentById(rid string) (*Recruitment, error) {
 	db := global.GetDB()
 	var r Recruitment
@@ -82,20 +85,6 @@ func GetFullRecruitmentById(rid string) (*Recruitment, error) {
 	return &r, err
 }
 
-//func GetRecruitmentById(rid string, role constants.Role) (*RecruitmentEntity, error) {
-//	db := global.GetDB()
-//	var r RecruitmentEntity
-//	//remember preload need the struct filed name
-//	var err error
-//	if role == constants.MemberRole || role == constants.Admin {
-//		err = db.Model(&RecruitmentEntity{}).Preload("Applications").Preload("Interviews").
-//			Where("uid = ?", rid).Find(&r).Error
-//	} else {
-//		err = db.Model(&RecruitmentEntity{}).Where("uid = ?", rid).Find(&r).Error
-//	}
-//	return &r, err
-//}
-
 func GetAllRecruitment() ([]Recruitment, error) {
 	db := global.GetDB()
 	var r []Recruitment
@@ -103,16 +92,22 @@ func GetAllRecruitment() ([]Recruitment, error) {
 	return r, err
 }
 
-func GetPendingRecruitment(role constants.Role) (*Recruitment, error) {
+// GetPendingRecruitment get the latest recruitment
+func GetPendingRecruitment() (*Recruitment, error) {
 	db := global.GetDB()
 	var r Recruitment
-	var err error
-	if role == constants.MemberRole || role == constants.Admin {
-		err = db.Model(&Recruitment{}).Preload("Applications").Preload("Interviews").
-			Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).Find(&r).Error
-	} else {
-
-		err = db.Model(&Recruitment{}).Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).Find(&r).Error
+	//if err := db.Model(&Recruitment{}).
+	//	Select("uid").
+	//	Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).
+	//	First(&r).Error; err != nil {
+	//	return nil, err
+	//}
+	if err := db.Model(&Recruitment{}).
+		Select("uid").
+		Order("beginning DESC").
+		Limit(1).
+		Find(&r).Error; err != nil {
+		return nil, err
 	}
-	return &r, err
+	return &r, nil
 }

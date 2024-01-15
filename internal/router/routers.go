@@ -19,10 +19,6 @@ func NewRouter() *gin.Engine {
 	r.Use(gin.Recovery())
 	r.Use(tracer.TracingMiddleware)
 
-	//TODO(wwb)
-	//Add access control middleware here
-	//r.Use(middlewares.MemberMiddleware)
-
 	if gin.Mode() == gin.DebugMode {
 		r.Use(cors.Default())
 	} else if gin.Mode() == gin.ReleaseMode {
@@ -30,6 +26,7 @@ func NewRouter() *gin.Engine {
 		config.AllowOrigins = []string{"https://join.hustunique.com", "https://hr.hustunique.com"}
 		r.Use(cors.New(config))
 	}
+
 	r.Use(sessions.Sessions("SSO_SESSION", global.SessStore))
 	ping := r.Group("/ping")
 	{
@@ -42,6 +39,7 @@ func NewRouter() *gin.Engine {
 
 	r.Use(middlewares.AuthMiddleware)
 	r.Use(middlewares.GlobalRoleMiddleWare)
+
 	recruitmentRouter := r.Group("/recruitments")
 	{
 		// public
@@ -50,7 +48,6 @@ func NewRouter() *gin.Engine {
 
 		// member role
 		recruitmentRouter.GET("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllRecruitment)
-
 		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetRecruitmentInterviews)
 
 		// admin role

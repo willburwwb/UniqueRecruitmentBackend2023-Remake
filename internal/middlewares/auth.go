@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"UniqueRecruitmentBackend/configs"
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/tracer"
@@ -17,7 +18,24 @@ func AuthMiddleware(c *gin.Context) {
 	apmCtx, span := tracer.Tracer.Start(c.Request.Context(), "Authentication")
 	defer span.End()
 
-	_, err := c.Cookie("SSO_SESSION") // only for check
+	cookie, err := c.Cookie("SSO_SESSION") // only for check
+	if configs.Config.Server.RunMode == "debug" {
+		if cookie == "unique_web_admin" {
+			c.Request = c.Request.WithContext(common.CtxWithUID(apmCtx, "ffb6e834-3615-4ebb-9d9d-825af333a3ca"))
+			span.SetAttributes(attribute.String("UID", "ffb6e834-3615-4ebb-9d9d-825af333a3ca"))
+			c.Set("X-UID", "ffb6e834-3615-4ebb-9d9d-825af333a3ca")
+			c.Next()
+			return
+		}
+		if cookie == "unique_web_candidate" {
+			c.Request = c.Request.WithContext(common.CtxWithUID(apmCtx, "afb6e834-3615-4ebb-9d9d-825af333a3ca"))
+			span.SetAttributes(attribute.String("UID", "afb6e834-3615-4ebb-9d9d-825af333a3ca"))
+			c.Set("X-UID", "afb6e834-3615-4ebb-9d9d-825af333a3ca")
+			c.Next()
+			return
+		}
+	}
+
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
 		common.Error(c, rerror.UnauthorizedError)

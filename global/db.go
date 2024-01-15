@@ -11,12 +11,16 @@ import (
 var db *gorm.DB
 
 func GetDB() *gorm.DB {
-	return db
+	return db.Session(&gorm.Session{
+		NowFunc: func() time.Time {
+			return time.Now().Local()
+		},
+	})
 }
 
 func setupPgsql() {
 	var err error
-	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s password=%s sslmode=disable TimeZone=Asia/Shanghai ",
+	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s password=%s sslmode=disable TimeZone=Asia/Shanghai",
 		configs.Config.Pgsql.Host, configs.Config.Pgsql.User, configs.Config.Pgsql.Dbname, configs.Config.Pgsql.Port, configs.Config.Pgsql.Password)
 	//if configs.Config.Pgsql.Password != "" {
 	//	dsn = dsn + fmt.Sprintf("password=%s", configs.Config.Pgsql.Password)
@@ -32,5 +36,4 @@ func setupPgsql() {
 	sqlDB.SetMaxIdleConns(configs.Config.Pgsql.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(configs.Config.Pgsql.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(configs.Config.Pgsql.MaxLifeSeconds) * time.Second)
-
 }
