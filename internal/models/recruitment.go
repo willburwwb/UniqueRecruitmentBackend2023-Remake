@@ -2,25 +2,34 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
 
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/pkg"
 )
 
-func CreateRecruitment(req *pkg.CreateRecOpts) (string, error) {
+func CreateRecruitment(opts *pkg.CreateRecOpts) (r *pkg.Recruitment, err error) {
 	db := global.GetDB()
-	r := &pkg.Recruitment{
-		Name:      req.Name,
-		Beginning: req.Beginning,
-		Deadline:  req.Deadline,
-		End:       req.End,
+	if db.Model(&pkg.Recruitment{}).
+		Where("name = ?", opts.Name).
+		Find(r).RowsAffected > 0 {
+		return nil, errors.New("recruitment with the same name cannot be created")
 	}
-	err := db.Model(&pkg.Recruitment{}).Create(r).Error
-	return r.Uid, err
+
+	r = &pkg.Recruitment{
+		Name:      opts.Name,
+		Beginning: opts.Beginning,
+		Deadline:  opts.Deadline,
+		End:       opts.End,
+	}
+	log.Println("create ", r)
+	err = db.Model(&pkg.Recruitment{}).Create(r).Error
+	return
 }
 
-func UpdateRecruitment(req *pkg.UpdateRecOpts) error {
-	bytes, err := json.Marshal(req)
+func UpdateRecruitment(opts *pkg.UpdateRecOpts) error {
+	bytes, err := json.Marshal(opts)
 	if err != nil {
 		return err
 	}
@@ -28,7 +37,7 @@ func UpdateRecruitment(req *pkg.UpdateRecOpts) error {
 	if err := json.Unmarshal(bytes, &r); err != nil {
 		return err
 	}
-	r.Uid = req.Rid
+	r.Uid = opts.Rid
 
 	db := global.GetDB()
 	return db.Updates(&r).Error

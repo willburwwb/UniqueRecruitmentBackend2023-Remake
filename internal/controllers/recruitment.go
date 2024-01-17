@@ -18,29 +18,29 @@ import (
 
 // CreateRecruitment create new recruitment
 func CreateRecruitment(c *gin.Context) {
-	var req pkg.CreateRecOpts
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
+	var (
+		r   *pkg.Recruitment
+		err error
+	)
+	defer func() { common.Resp(c, r, err) }()
+
+	opts := &pkg.CreateRecOpts{}
+	if err = c.ShouldBind(opts); err != nil {
 		return
 	}
 
-	if time.Now().After(req.Beginning) || req.Beginning.After(req.Deadline) || req.Deadline.After(req.End) {
-		zapx.Error("time set up wrong", zap.String("uid", common.GetUID(c)))
-		common.Error(c, rerror.RequestBodyError.WithDetail("set up time failed"))
+	if err = opts.Validate(); err != nil {
 		return
 	}
 
-	recruitmentId, err := models.CreateRecruitment(&req)
+	r, err = models.CreateRecruitment(opts)
 	if err != nil {
 		zapx.Error("save recruitment wrong", zap.Error(err))
-		common.Error(c, rerror.SaveDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 		return
 	}
 
 	zapx.Info("success create recruitment")
-	common.Success(c, "Success create recruitment", map[string]interface{}{
-		"rid": recruitmentId,
-	})
+	return
 }
 
 // Post recruitment/:rid/schedule
@@ -48,27 +48,27 @@ func CreateRecruitment(c *gin.Context) {
 
 // UpdateRecruitment update recruitment details
 func UpdateRecruitment(c *gin.Context) {
-	var req pkg.UpdateRecOpts
-	req.Rid = c.Param("rid")
-	if req.Rid == "" {
-		common.Error(c, rerror.RequestBodyError.WithDetail("recruitment id is null"))
-		return
-	}
+	var (
+		err error
+	)
+	defer func() { common.Resp(c, nil, err) }()
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	opts := &pkg.UpdateRecOpts{}
+	opts.Rid = c.Param("rid")
+	if err = c.ShouldBindJSON(opts); err != nil {
 		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
+	if err = opts.Validate(); err != nil {
+		return
+	}
 
-	if err := models.UpdateRecruitment(&req); err != nil {
+	if err := models.UpdateRecruitment(opts); err != nil {
 		zapx.Error("update recruitment failed", zap.Error(err))
-		common.Error(c, rerror.UpdateDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 		return
 	}
 	zapx.Info("success update recruitment")
-	common.Success(c, "Success update recruitment", map[string]interface{}{
-		"rid": req.Rid,
-	})
+	return
 }
 
 // Get recruitment/:rid
@@ -76,9 +76,14 @@ func UpdateRecruitment(c *gin.Context) {
 // GetRecruitmentById get recruitment details by id
 // member can only get the recruitments' detail after join in
 func GetRecruitmentById(c *gin.Context) {
-	recruitmentId := c.Param("rid")
-	if recruitmentId == "" {
-		common.Error(c, rerror.RequestBodyError.WithDetail("lost http query params [rid]"))
+	var (
+		r   *pkg.Recruitment
+		err error
+	)
+	defer func() { common.Resp(c, r, err) }()
+
+	opts := &pkg.GetRecOpts{}
+	if err = c.BindUri(opts); err != nil {
 		return
 	}
 
@@ -86,73 +91,58 @@ func GetRecruitmentById(c *gin.Context) {
 	if common.IsMember(c) {
 		user, err := grpc.GetUserInfoByUID(common.GetUID(c))
 		if err != nil {
-			zapx.Error("get recruitment failed", zap.Error(err))
-			common.Error(c, rerror.SSOError.WithData("recruitment").WithDetail(err.Error()))
 			return
 		}
 
-		resp, err := models.GetRecruitmentById(recruitmentId)
-		if !checkJoinTime(user.JoinTime, resp.Beginning) {
-			zapx.Warn("get old recruitment detail failed", zap.Error(err))
-			common.Success(c, "Success get recruitment, but don't have role to get old recruitment detail", resp)
-			return
+		r, err = models.GetRecruitmentById(opts.Rid)
+		// todo(wwb) member join in after recruitment
+		if !checkJoinTime(user.JoinTime, r.Beginning) {
+			zapx.Warn("get old recruitment detail failed....")
+		} else {
+			r, err = models.GetFullRecruitmentById(opts.Rid)
 		}
-
-		respfull, err := models.GetFullRecruitmentById(recruitmentId)
-		if err != nil {
-			zapx.Error("get recruitment failed", zap.Error(err))
-			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
-			return
-		}
-		common.Success(c, "Success get recruitment by member role", respfull)
 	} else {
-		resp, err := models.GetRecruitmentById(recruitmentId)
-		if err != nil {
-			zapx.Error("get recruitment failed", zap.Error(err))
-			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
-			return
-		}
-		common.Success(c, "Success get recruitment by candidate role", resp)
+		r, err = models.GetRecruitmentById(opts.Rid)
 	}
+
+	return
 }
 
 // Get recruitment/
 
 // GetAllRecruitment get all recruitment details
 func GetAllRecruitment(c *gin.Context) {
-	resp, err := models.GetAllRecruitment()
-	if err != nil {
-		zapx.Error("get all recruitment error", zap.Error(err))
-		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
-		return
-	}
-	common.Success(c, "Success get all recruitment", resp)
+	var (
+		r   []pkg.Recruitment
+		err error
+	)
+	defer func() { common.Resp(c, r, err) }()
+
+	r, err = models.GetAllRecruitment()
+	return
 }
 
 // Get recruitment/:rid/pending
 
 // GetPendingRecruitment get pending recruitment details
 func GetPendingRecruitment(c *gin.Context) {
-	var err error
-	resp, err := models.GetPendingRecruitment()
+	var (
+		r   *pkg.Recruitment
+		err error
+	)
+	defer func() { common.Resp(c, r, err) }()
+
+	r, err = models.GetPendingRecruitment()
 	if err != nil {
-		zapx.Error("get pending recruitment id error", zap.Error(err))
-		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 		return
 	}
 
 	if common.IsMember(c) {
-		resp, err = models.GetFullRecruitmentById(resp.Uid)
+		r, err = models.GetFullRecruitmentById(r.Uid)
 	} else {
-		resp, err = models.GetRecruitmentById(resp.Uid)
+		r, err = models.GetRecruitmentById(r.Uid)
 	}
-
-	if err != nil {
-		zapx.Error("get pending recruitment error", zap.Error(err))
-		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
-		return
-	}
-	common.Success(c, "Success get pending recruitment", resp)
+	return
 }
 
 func checkJoinTime(joinTime string, recruitmentTime time.Time) bool {

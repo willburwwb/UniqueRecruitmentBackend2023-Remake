@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"UniqueRecruitmentBackend/internal/constants"
+	"errors"
 	"github.com/jackc/pgx/pgtype"
 	"mime/multipart"
 	"time"
@@ -59,11 +60,30 @@ type CreateRecOpts struct {
 	End       time.Time `json:"end" binding:"required"`
 }
 
+func (r *CreateRecOpts) Validate() error {
+	if r.Beginning.After(r.Deadline) || r.Deadline.After(r.End) {
+		return errors.New("time set up wrong")
+	}
+	return nil
+}
+
 type UpdateRecOpts struct {
 	Rid       string    `json:"rid"`
+	Name      string    `json:"name"`
 	Beginning time.Time `json:"beginning"`
 	Deadline  time.Time `json:"deadline"`
 	End       time.Time `json:"end"`
+}
+
+func (r *UpdateRecOpts) Validate() error {
+	if r.Rid == "" {
+		return errors.New("recruitment id is null")
+	}
+	return nil
+}
+
+type GetRecOpts struct {
+	Rid string `uri:"rid" binding:"required"`
 }
 
 type InterviewInfo struct {
