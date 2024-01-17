@@ -40,7 +40,7 @@ func Resp(c *gin.Context, data interface{}, err error) {
 func successResp(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, JSONResult{
 		Code: 0,
-		Msg:  "",
+		Msg:  "success",
 		Data: data,
 	})
 }

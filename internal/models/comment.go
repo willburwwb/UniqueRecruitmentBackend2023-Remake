@@ -5,16 +5,16 @@ import (
 	"UniqueRecruitmentBackend/pkg"
 )
 
-func CreateComment(req *pkg.CreateCommentOpts) (string, error) {
+func CreateComment(req *pkg.CreateCommentOpts) (*pkg.Comment, error) {
 	db := global.GetDB()
-	c := pkg.Comment{
+	c := &pkg.Comment{
 		ApplicationID: req.ApplicationID,
 		MemberID:      req.MemberID,
 		Content:       req.Content,
 		Evaluation:    pkg.Evaluation(req.Evaluation),
 	}
-	err := db.Create(&c).Error
-	return c.Uid, err
+	err := db.Create(c).Error
+	return c, err
 }
 
 func DeleteCommentById(cid string) error {

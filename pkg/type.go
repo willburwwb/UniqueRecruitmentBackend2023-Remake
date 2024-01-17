@@ -3,6 +3,7 @@ package pkg
 import (
 	"UniqueRecruitmentBackend/internal/constants"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/pgtype"
 	"mime/multipart"
 	"time"
@@ -141,7 +142,16 @@ type CreateAppOpts struct {
 	Resume *multipart.FileHeader `form:"resume" json:"resume"` //简历
 }
 
+func (opts *CreateAppOpts) Validate() (err error) {
+	if GroupMap[opts.Group] == "" {
+		return errors.New("request body error, group set wrong")
+	}
+	return
+}
+
 type UpdateAppOpts struct {
+	Aid string
+
 	Grade         string                `form:"grade" json:"grade,omitempty"`
 	Institute     string                `form:"institute" json:"institute,omitempty"`
 	Major         string                `form:"major" json:"major,omitempty"`
@@ -153,23 +163,89 @@ type UpdateAppOpts struct {
 	Resume        *multipart.FileHeader `form:"resume" json:"resume,omitempty"` //简历
 }
 
+func (opts *UpdateAppOpts) Validate() (err error) {
+	if GroupMap[opts.Group] == "" {
+		return errors.New("request body error, group set wrong")
+	}
+	if opts.Aid == "" {
+		return errors.New("request body error, application id is nil")
+	}
+	return
+}
+
 type SetAppStepOpts struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+	Aid string
+
+	From string `json:"from" binding:"required"`
+	To   string `json:"to" binding:"required"`
+}
+
+func (opts *SetAppStepOpts) Validate() (err error) {
+	fromRank, ok := StepMap[Step(opts.From)]
+	if !ok {
+		return fmt.Errorf("request body error, from step %s set wrong", opts.From)
+	}
+
+	toRank, ok := StepMap[Step(opts.To)]
+	if !ok {
+		return fmt.Errorf("request body error, to step %s set wrong", opts.To)
+	}
+
+	if fromRank >= toRank {
+		return fmt.Errorf("request body error, %s should be set after %s", opts.From, opts.To)
+	}
+
+	if opts.Aid == "" {
+		return errors.New("request body error, application id is nil")
+	}
+	return
 }
 
 type SetAppInterviewTimeOpts struct {
-	Time time.Time `json:"time"`
+	Aid           string
+	InterviewType string
+
+	Time time.Time `json:"time" binding:"required"`
+}
+
+func (opts *SetAppInterviewTimeOpts) Validate() (err error) {
+	if opts.InterviewType != "group" && opts.InterviewType != "team" {
+		return fmt.Errorf("request param rerror, type should be group/team")
+	}
+	if opts.Aid == "" {
+		return errors.New("request param error, application id is nil")
+	}
+	return
+}
+
+type SelectInterviewSlotsOpts struct {
+	Aid           string
+	InterviewType string
+
+	Iids []string `json:"iids" binding:"required"`
+}
+
+func (opts *SelectInterviewSlotsOpts) Validate() (err error) {
+	if opts.InterviewType != "group" && opts.InterviewType != "team" {
+		return fmt.Errorf("request param rerror, type should be group/team")
+	}
+	if opts.Aid == "" {
+		return errors.New("request param error, application id is nil")
+	}
+	if len(opts.Iids) == 0 {
+		return errors.New("request body error, len of interview ids is 0")
+	}
+	return
 }
 
 type Interview struct {
 	Common
-	Date          time.Time        `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
-	Period        constants.Period `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
-	Name          constants.Group  `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //constants.Group
-	SlotNumber    int              `json:"slotNumber" gorm:"column:slotNumber;not null"`
-	RecruitmentID string           `json:"recruitmentID" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
-	Applications  []*Application   `json:"applications,omitempty" gorm:"many2many:interview_selections"`                   //manytomany
+	Date          time.Time      `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
+	Period        Period         `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
+	Name          Group          `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //constants.Group
+	SlotNumber    int            `json:"slotNumber" gorm:"column:slotNumber;not null"`
+	RecruitmentID string         `json:"recruitmentID" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
+	Applications  []*Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                   //manytomany
 }
 
 func (c Interview) TableName() string {
@@ -183,10 +259,10 @@ type CreateInterviewOpts struct {
 }
 
 type UpdateInterviewOpts struct {
-	Uid        string           `json:"uid" form:"uid" binding:"required"`
-	Date       time.Time        `json:"date" form:"date"`
-	Period     constants.Period `json:"period" form:"period"`
-	SlotNumber int              `json:"slotNumber" form:"slotNumber"`
+	Uid        string    `json:"uid" form:"uid" binding:"required"`
+	Date       time.Time `json:"date" form:"date"`
+	Period     Period    `json:"period" form:"period"`
+	SlotNumber int       `json:"slotNumber" form:"slotNumber"`
 }
 
 type DeleteInterviewUID string

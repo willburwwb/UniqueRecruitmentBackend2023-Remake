@@ -1,7 +1,7 @@
 package common
 
 import (
-	"UniqueRecruitmentBackend/internal/constants"
+	"UniqueRecruitmentBackend/pkg"
 	"context"
 	"github.com/gin-gonic/gin"
 )
@@ -15,20 +15,20 @@ func CtxWithUID(ctx context.Context, uid string) context.Context {
 	return context.WithValue(ctx, XUID, uid)
 }
 
-func CtxWithRole(ctx context.Context, role constants.Role) context.Context {
+func CtxWithRole(ctx context.Context, role pkg.Role) context.Context {
 	return context.WithValue(ctx, Role, role)
 }
 
 func IsCandidate(c *gin.Context) bool {
-	return getValue(c, "role") == string(constants.CandidateRole)
+	return getValue(c, "role") == string(pkg.CandidateRole)
 }
 
 func IsMember(c *gin.Context) bool {
-	return getValue(c, "role") == string(constants.MemberRole) || getValue(c, "role") == string(constants.Admin)
+	return getValue(c, "role") == string(pkg.MemberRole) || getValue(c, "role") == string(pkg.Admin)
 }
 
 func IsAdmin(c *gin.Context) bool {
-	return getValue(c, "role") == string(constants.Admin)
+	return getValue(c, "role") == string(pkg.Admin)
 }
 
 func GetUID(c *gin.Context) string {

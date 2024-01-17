@@ -3,8 +3,6 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"time"
-
 	"gorm.io/gorm"
 
 	"UniqueRecruitmentBackend/global"
@@ -12,9 +10,9 @@ import (
 	"UniqueRecruitmentBackend/pkg"
 )
 
-func CreateApplication(req *pkg.CreateAppOpts, uid string, filePath string) error {
+func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) error {
 	db := global.GetDB()
-	row := db.Where("'recruitmentId' = ?", req.RecruitmentID).
+	row := db.Where("'recruitmentId' = ?", opts.RecruitmentID).
 		Find(&pkg.Application{}).RowsAffected
 
 	//check if user recruitment application's num >1
@@ -23,15 +21,15 @@ func CreateApplication(req *pkg.CreateAppOpts, uid string, filePath string) erro
 	}
 
 	return db.Create(&pkg.Application{
-		Grade:         req.Grade,
-		Institute:     req.Institute,
-		Major:         req.Major,
-		Rank:          req.Rank,
-		Group:         req.Group,
-		Intro:         req.Intro,
-		RecruitmentID: req.RecruitmentID,
-		Referrer:      req.Referrer,
-		IsQuick:       req.IsQuick,
+		Grade:         opts.Grade,
+		Institute:     opts.Institute,
+		Major:         opts.Major,
+		Rank:          opts.Rank,
+		Group:         opts.Group,
+		Intro:         opts.Intro,
+		RecruitmentID: opts.RecruitmentID,
+		Referrer:      opts.Referrer,
+		IsQuick:       opts.IsQuick,
 		Resume:        filePath,
 		CandidateID:   uid,
 		Step:          string(constants.SignUp),
@@ -57,16 +55,17 @@ func GetApplicationById(aid string) (*pkg.Application, error) {
 	var a pkg.Application
 	if err := db.Preload("Comments").
 		Preload("InterviewSelections").
-		Where("uid = ?", aid).Find(&a).Error; err != nil {
+		Where("uid = ?", aid).
+		Find(&a).Error; err != nil {
 		return nil, err
 	}
 
 	return &a, nil
 }
 
-func UpdateApplication(aid string, filename string, req *pkg.UpdateAppOpts) error {
-	req.Resume = nil
-	bytes, err := json.Marshal(req)
+func UpdateApplication(opts *pkg.UpdateAppOpts, filename string) error {
+	opts.Resume = nil
+	bytes, err := json.Marshal(opts)
 	if err != nil {
 		return err
 	}
@@ -75,7 +74,7 @@ func UpdateApplication(aid string, filename string, req *pkg.UpdateAppOpts) erro
 	if err := json.Unmarshal(bytes, &a); err != nil {
 		return err
 	}
-	a.Uid = aid
+	//a.Uid = aid
 	if filename != "" {
 		a.Resume = filename
 	}
@@ -99,7 +98,7 @@ func DeleteApplication(aid string) error {
 
 func AbandonApplication(aid string) error {
 	db := global.GetDB()
-	application, err := GetApplicationById(aid)
+	application, err := GetApplicationByIdForCandidate(aid)
 	if err != nil {
 		return err
 	}
@@ -107,7 +106,7 @@ func AbandonApplication(aid string) error {
 	return db.Updates(&application).Error
 }
 
-func GetApplicationByRecruitmentId(rid string) ([]pkg.Application, error) {
+func GetApplicationsByRid(rid string) ([]pkg.Application, error) {
 	recruitment, err := GetFullRecruitmentById(rid)
 	if err != nil {
 		return nil, err
@@ -116,31 +115,33 @@ func GetApplicationByRecruitmentId(rid string) ([]pkg.Application, error) {
 	return recruitment.Applications, nil
 }
 
-func SetApplicationStepById(aid string, req *pkg.SetAppStepOpts) error {
+func SetApplicationStepById(opts *pkg.SetAppStepOpts) error {
 	db := global.GetDB()
-	application, err := GetApplicationById(aid)
+	application, err := GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return err
 	}
-	if application.Step != req.From {
+
+	if application.Step != opts.From {
 		return errors.New("the step doesn't match")
 	}
-	application.Step = req.To
+
+	application.Step = opts.To
 	return db.Updates(&application).Error
 }
 
-func SetApplicationInterviewTime(aid, interviewType string, time time.Time) error {
+func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {
 	db := global.GetDB()
-	application, err := GetApplicationById(aid)
+	application, err := GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return err
 	}
 
-	switch interviewType {
+	switch opts.InterviewType {
 	case "group":
-		application.InterviewAllocationsGroup = time
+		application.InterviewAllocationsGroup = opts.Time
 	case "team":
-		application.InterviewAllocationsTeam = time
+		application.InterviewAllocationsTeam = opts.Time
 	}
 
 	return db.Updates(&application).Error

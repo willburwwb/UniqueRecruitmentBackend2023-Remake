@@ -12,88 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Create recruitment interviews for candidate to select
-// POST /recruitment/:rid/interviews/:name
-// member group
-// func CreateRecruitmentInterviews(c *gin.Context) {
-// 	rid := c.Param("rid")
-// 	name := c.Param("name")
-// 	var interviews []request.CreateInterview
-// 	if err := c.ShouldBind(&interviews); err != nil {
-// 		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
-// 		return
-// 	}
-
-// 	if !checkGroupName(c, name) {
-// 		return
-// 	}
-
-// 	if err := models.CreateAndSaveInterview(rid, name, interviews); err != nil {
-// 		common.Error(c, rerror.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
-// 		return
-// 	}
-// 	common.Success(c, "Success save interviews database", nil)
-
-// }
-
-// Update recruitment interviews
-// PUT /recruitment/:rid/interviews/:name
-// member group
-// func UpdateRecruitmentInterviews(c *gin.Context) {
-// 	rid := c.Param("rid")
-// 	name := c.Param("name")
-// 	var interviews []request.UpdateInterview
-// 	if err := c.ShouldBind(&interviews); err != nil {
-// 		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
-// 		return
-// 	}
-
-// 	// check user's group == name
-// 	if !checkGroupName(c, name) {
-// 		return
-// 	}
-
-// 	if err := models.UpdateInterviews(rid, name, interviews); err != nil {
-// 		common.Error(c, rerror.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
-// 		return
-// 	}
-// 	common.Success(c, "Success update interviews database", nil)
-// }
-// func DeleteRecruitmentInterviews(c *gin.Context) {
-// 	name := c.Param("name")
-// 	var interviews []request.DeleteInterviewUID
-// 	if err := c.ShouldBind(&interviews); err != nil {
-// 		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
-// 		return
-// 	}
-// 	// check user's group == name
-// 	if !checkGroupName(c, name) {
-// 		return
-// 	}
-// 	if err := models.DeleteInterviews(name, interviews); err != nil {
-// 		common.Error(c, rerror.SaveDatabaseError.WithData("interview").WithDetail(err.Error()))
-// 		return
-// 	}
-// 	common.Success(c, "Success delete interviews database", nil)
-// }
-
-// check user's group == name
-func checkGroupName(c *gin.Context, name string) bool {
-	if name != "unique" {
-		uid := common.GetUID(c)
-		userInfo, err := grpc.GetUserInfoByUID(uid)
-		if err != nil {
-			common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
-			return false
-		}
-		if !utils.CheckInGroups(userInfo.Groups, name) {
-			common.Error(c, rerror.CheckPermissionError.WithDetail("you are not in this group"))
-			return false
-		}
-	}
-	return true
-}
-
 // SetRecruitmentInterviews set group/team all interview times
 // PUT /recruitment/:rid/interviews/:name
 // Use put to prevent resource are duplicated
@@ -203,4 +121,21 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		return
 	}
 	common.Success(c, "Update interviews success", nil)
+}
+
+// check user's group == name
+func checkGroupName(c *gin.Context, name string) bool {
+	if name != "unique" {
+		uid := common.GetUID(c)
+		userInfo, err := grpc.GetUserInfoByUID(uid)
+		if err != nil {
+			common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
+			return false
+		}
+		if !utils.CheckInGroups(userInfo.Groups, name) {
+			common.Error(c, rerror.CheckPermissionError.WithDetail("you are not in this group"))
+			return false
+		}
+	}
+	return true
 }
