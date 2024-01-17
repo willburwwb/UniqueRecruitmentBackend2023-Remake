@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"UniqueRecruitmentBackend/internal/constants"
+	"UniqueRecruitmentBackend/pkg"
 	pb "UniqueRecruitmentBackend/pkg/proto/sso"
 	"context"
 	"google.golang.org/grpc"
@@ -14,20 +15,7 @@ type GrpcSSOClient struct {
 
 var defaultGrpcClient *GrpcSSOClient
 
-type UserDetail struct {
-	UID         string           `json:"uid"`
-	Phone       string           `json:"phone"`
-	Email       string           `json:"email"`
-	Password    string           `json:"password,omitempty"`
-	Name        string           `json:"name"`
-	AvatarURL   string           `json:"avatar_url"`
-	Gender      constants.Gender `json:"gender"`
-	JoinTime    string           `json:"join_time"`
-	Groups      []string         `json:"groups"`
-	LarkUnionID string           `json:"lark_union_id"`
-}
-
-func GetUserInfoByUID(uid string) (*UserDetail, error) {
+func GetUserInfoByUID(uid string) (*pkg.UserDetail, error) {
 	req := &pb.GetUserByUIDRequest{
 		Uid: uid,
 	}
@@ -36,7 +24,7 @@ func GetUserInfoByUID(uid string) (*UserDetail, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &UserDetail{
+	return &pkg.UserDetail{
 		UID:         resp.Uid,
 		Name:        resp.Name,
 		Email:       resp.Email,
@@ -78,18 +66,3 @@ func setupSSOGrpc() (*GrpcSSOClient, error) {
 	grpcClient := pb.NewSSOServiceClient(ssoConn)
 	return &GrpcSSOClient{grpcClient}, err
 }
-
-// TODO:
-// Add grpc permission check
-// func (client *GrpcSSOClient) CheckPermissionByRole(uid, role string) (bool, rerror) {
-// 	req := &pb.CheckPermissionRequest{
-// 		Uid:  uid,
-// 		Object: ,
-// 	}
-// 	ctx := context.Background()
-// 	resp, err := client.CheckPermissionByRole(ctx, req)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	return resp.Ok, nil
-// }

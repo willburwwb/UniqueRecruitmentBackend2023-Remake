@@ -1,52 +1,41 @@
 package models
 
 import (
-	"UniqueRecruitmentBackend/global"
-	"UniqueRecruitmentBackend/internal/constants"
-	"UniqueRecruitmentBackend/internal/request"
 	"encoding/json"
-	"time"
+
+	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/pkg"
 )
 
-type Interview struct {
-	Common
-	Date          time.Time        `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
-	Period        constants.Period `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
-	Name          constants.Group  `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //constants.Group
-	SlotNumber    int              `json:"slotNumber" gorm:"column:slotNumber;not null"`
-	RecruitmentID string           `json:"recruitmentID" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
-	Applications  []*Application   `json:"applications,omitempty" gorm:"many2many:interview_selections"`                   //manytomany
-}
-
-func (c Interview) TableName() string {
-	return "interviews"
-}
-
-func GetInterviewsByRidAndName(rid string, name string) (*[]Interview, error) {
+func GetInterviewsByRidAndName(rid string, name string) (*[]pkg.Interview, error) {
 	db := global.GetDB()
-	var res []Interview
-	if err := db.Model(&Interview{}).Preload("Applications").Where("\"recruitmentId\" = ? AND name = ?", rid, name).Find(&res).Error; err != nil {
+	var res []pkg.Interview
+	if err := db.Model(&pkg.Interview{}).
+		Preload("Applications").
+		Where("\"recruitmentId\" = ? AND name = ?", rid, name).
+		Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
-func GetInterviewById(iid string) (*Interview, error) {
+func GetInterviewById(iid string) (*pkg.Interview, error) {
 	db := global.GetDB()
-	var res Interview
-	if err := db.Where("uid = ?", iid).Find(&res).Error; err != nil {
+	var res pkg.Interview
+	if err := db.Where("uid = ?", iid).
+		Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return &res, nil
 
 }
 
-func UpdateInterview(interview *Interview) error {
+func UpdateInterview(interview *pkg.Interview) error {
 	db := global.GetDB()
 
 	return db.Updates(interview).Error
 }
-func CreateAndSaveInterview(interview *request.UpdateInterview) error {
-	var interviewEntity Interview
+func CreateAndSaveInterview(interview *pkg.UpdateInterviewOpts) error {
+	var interviewEntity pkg.Interview
 	bytes, err := json.Marshal(interview)
 	if err != nil {
 		return err
@@ -109,12 +98,12 @@ func CreateAndSaveInterview(interview *request.UpdateInterview) error {
 //		})
 //		return err
 //	}
-func CreateInterviewsInBatches(interviews []Interview) error {
+func CreateInterviewsInBatches(interviews []pkg.Interview) error {
 	db := global.GetDB()
 	return db.Create(&interviews).Error
 }
 
 func RemoveInterviewByID(iid string) error {
 	db := global.GetDB()
-	return db.Where("uid = ?", iid).Delete(&Interview{}).Error
+	return db.Where("uid = ?", iid).Delete(&pkg.Interview{}).Error
 }

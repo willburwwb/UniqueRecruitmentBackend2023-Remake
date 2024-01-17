@@ -1,24 +1,25 @@
 package controllers
 
 import (
-	"UniqueRecruitmentBackend/internal/common"
-	"UniqueRecruitmentBackend/internal/constants"
-	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
-	"UniqueRecruitmentBackend/internal/utils"
-	"UniqueRecruitmentBackend/pkg/grpc"
-	"UniqueRecruitmentBackend/pkg/rerror"
-	"UniqueRecruitmentBackend/pkg/sms"
 	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"UniqueRecruitmentBackend/internal/common"
+	"UniqueRecruitmentBackend/internal/constants"
+	"UniqueRecruitmentBackend/internal/models"
+	"UniqueRecruitmentBackend/internal/utils"
+	"UniqueRecruitmentBackend/pkg"
+	"UniqueRecruitmentBackend/pkg/grpc"
+	"UniqueRecruitmentBackend/pkg/rerror"
+	"UniqueRecruitmentBackend/pkg/sms"
 )
 
 func SendSMS(c *gin.Context) {
-	var req request.SendSMS
+	var req pkg.SendSMSOpts
 	if err := c.ShouldBind(&req); err != nil {
 		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -115,8 +116,8 @@ func SendSMS(c *gin.Context) {
 	common.Success(c, "Success send sms", nil)
 }
 
-func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *grpc.UserDetail,
-	application *models.Application, recruitment *models.Recruitment) (*sms.SMSBody, error) {
+func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
+	application *pkg.Application, recruitment *pkg.Recruitment) (*sms.SMSBody, error) {
 
 	var smsBody sms.SMSBody
 
@@ -262,41 +263,3 @@ func ApplySMSTemplate(smsRequest *request.SendSMS, userInfo *grpc.UserDetail,
 	}
 	return nil, errors.New("sms step is invalid")
 }
-
-//func SendCode(c *gin.Context) {
-//	req := struct {
-//		Phone string      `json:"phone"`
-//		Type  sms.SMSType `json:"type"`
-//	}{}
-//
-//	if err := c.ShouldBindJSON(&req); err != nil {
-//		common.Error(c, rerror.RequestBodyError)
-//		return
-//	}
-//
-//	switch req.Type {
-//	case sms.RegisterCode:
-//		code := utils.GenerateCode()
-//		sms, err := sms.SendSMS(sms.SMSBody{
-//			Phone:      req.Phone,
-//			TemplateID: configs.Config.SMS.RegisterCodeTemplateId,
-//			Params:     []string{code},
-//		})
-//		if err != nil || sms.StatusCode != http.StatusOK {
-//			common.Error(c, rerror.SendSMSError)
-//			return
-//		}
-//	case sms.ResetPasswordCode:
-//		code := utils.GenerateCode()
-//		sms, err := sms.SendSMS(sms.SMSBody{
-//			Phone:      req.Phone,
-//			TemplateID: configs.Config.SMS.ResetPasswordCodeTemplateId,
-//			Params:     []string{code},
-//		})
-//		if err != nil || sms.StatusCode != http.StatusOK {
-//			common.Error(c, rerror.SendSMSError)
-//			return
-//		}
-//		// TODO
-//	}
-//}

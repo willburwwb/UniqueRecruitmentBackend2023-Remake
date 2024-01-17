@@ -3,8 +3,8 @@ package controllers
 import (
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
 	"UniqueRecruitmentBackend/internal/utils"
+	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/rerror"
 	"time"
@@ -102,7 +102,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	rid := c.Param("rid")
 	name := c.Param("name")
 
-	var interviews []request.UpdateInterview
+	var interviews []pkg.UpdateInterviewOpts
 	if err := c.ShouldBind(&interviews); err != nil {
 		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
 		return
@@ -126,12 +126,12 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		return
 	}
 
-	var interviewsToAdd []*request.UpdateInterview
-	interviewsToUpdate := make(map[string]*request.UpdateInterview)
+	var interviewsToAdd []*pkg.UpdateInterviewOpts
+	interviewsToUpdate := make(map[string]*pkg.UpdateInterviewOpts)
 	for _, interview := range interviews {
 		if interview.Uid != "" {
 			// update
-			interviewsToUpdate[interview.Uid] = &request.UpdateInterview{
+			interviewsToUpdate[interview.Uid] = &pkg.UpdateInterviewOpts{
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,
@@ -139,7 +139,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 			}
 		} else {
 			// add
-			interviewsToAdd = append(interviewsToAdd, &request.UpdateInterview{
+			interviewsToAdd = append(interviewsToAdd, &pkg.UpdateInterviewOpts{
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,

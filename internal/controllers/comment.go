@@ -1,24 +1,27 @@
 package controllers
 
 import (
+	"github.com/gin-gonic/gin"
+
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
+	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/rerror"
-	"github.com/gin-gonic/gin"
 )
 
 func CreateComment(c *gin.Context) {
-	var req request.CreateCommentRequest
+	var req pkg.CreateCommentOpts
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
+
 	commentId, err := models.CreateComment(&req)
 	if err != nil {
 		common.Error(c, rerror.SaveDatabaseError.WithData("comment"))
 		return
 	}
+
 	common.Success(c, "create comment success", gin.H{
 		"commentId": commentId,
 	})

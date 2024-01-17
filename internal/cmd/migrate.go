@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"UniqueRecruitmentBackend/global"
-	"UniqueRecruitmentBackend/internal/models"
+	"UniqueRecruitmentBackend/pkg"
 
 	"github.com/spf13/cobra"
 )
@@ -18,10 +18,10 @@ var (
 				//models.Interview{},
 				//models.MemberEntity{},
 				//models.RecruitmentEntity{},
-				models.Recruitment{},
-				models.Application{},
-				models.Interview{},
-				models.Comment{},
+				pkg.Recruitment{},
+				pkg.Application{},
+				pkg.Interview{},
+				pkg.Comment{},
 			)
 			if err != nil {
 				panic(err)

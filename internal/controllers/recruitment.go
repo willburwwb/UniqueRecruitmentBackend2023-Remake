@@ -3,12 +3,11 @@ package controllers
 import (
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
-	"UniqueRecruitmentBackend/internal/request"
+	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/rerror"
 	"github.com/xylonx/zapx"
 	"go.uber.org/zap"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +18,7 @@ import (
 
 // CreateRecruitment create new recruitment
 func CreateRecruitment(c *gin.Context) {
-	var req request.CreateRecruitment
+	var req pkg.CreateRecOpts
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
 		return
@@ -49,7 +48,7 @@ func CreateRecruitment(c *gin.Context) {
 
 // UpdateRecruitment update recruitment details
 func UpdateRecruitment(c *gin.Context) {
-	var req request.UpdateRecruitment
+	var req pkg.UpdateRecOpts
 	req.Rid = c.Param("rid")
 	if req.Rid == "" {
 		common.Error(c, rerror.RequestBodyError.WithDetail("recruitment id is null"))
@@ -105,7 +104,6 @@ func GetRecruitmentById(c *gin.Context) {
 			common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 			return
 		}
-		log.Println(respfull.Beginning, respfull.Deadline, respfull.End)
 		common.Success(c, "Success get recruitment by member role", respfull)
 	} else {
 		resp, err := models.GetRecruitmentById(recruitmentId)
