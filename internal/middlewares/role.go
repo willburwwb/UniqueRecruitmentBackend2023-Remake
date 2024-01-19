@@ -2,10 +2,11 @@ package middlewares
 
 import (
 	"UniqueRecruitmentBackend/internal/common"
-	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/tracer"
+	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/rerror"
+	"errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,19 +27,19 @@ func SetUpUserRole(c *gin.Context) {
 }
 
 // admin is also member
-var CheckMemberRoleOrAdminMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.MemberRole, constants.Admin)
-var CheckAdminRoleMiddleWare gin.HandlerFunc = CheckRoleMiddleware(constants.Admin)
+var CheckMemberRoleOrAdminMiddleWare gin.HandlerFunc = CheckRoleMiddleware(pkg.MemberRole, pkg.Admin)
+var CheckAdminRoleMiddleWare gin.HandlerFunc = CheckRoleMiddleware(pkg.Admin)
 
-func CheckRoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
+func CheckRoleMiddleware(roles ...pkg.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		for _, role := range roles {
 			var ok bool
 			switch role {
-			case constants.Admin:
+			case pkg.Admin:
 				ok = common.IsAdmin(c)
-			case constants.MemberRole:
+			case pkg.MemberRole:
 				ok = common.IsMember(c)
-			case constants.CandidateRole:
+			case pkg.CandidateRole:
 				ok = common.IsCandidate(c)
 			}
 			if ok {
@@ -47,11 +48,11 @@ func CheckRoleMiddleware(roles ...constants.Role) gin.HandlerFunc {
 			}
 		}
 		c.Abort()
-		common.Error(c, rerror.CheckPermissionError)
+		common.Resp(c, nil, errors.New("check permission error"))
 	}
 }
 
-func getUserRoleByUID(c *gin.Context) (constants.Role, error) {
+func getUserRoleByUID(c *gin.Context) (pkg.Role, error) {
 	uid := common.GetUID(c)
 	userRoles, err := grpc.GetRolesByUID(uid)
 	if err != nil {
@@ -59,13 +60,13 @@ func getUserRoleByUID(c *gin.Context) (constants.Role, error) {
 	}
 	for _, v := range userRoles {
 		if v == "admin" {
-			return constants.Admin, nil
+			return pkg.Admin, nil
 		}
 	}
 	for _, v := range userRoles {
 		if v == "member" {
-			return constants.MemberRole, nil
+			return pkg.MemberRole, nil
 		}
 	}
-	return constants.CandidateRole, nil
+	return pkg.CandidateRole, nil
 }

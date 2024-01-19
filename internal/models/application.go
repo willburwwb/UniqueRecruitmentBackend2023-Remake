@@ -1,26 +1,18 @@
 package models
 
 import (
-	"encoding/json"
-	"errors"
-	"gorm.io/gorm"
-
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/pkg"
+	"errors"
+	"github.com/xylonx/zapx"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
-func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) error {
+func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) (*pkg.Application, error) {
 	db := global.GetDB()
-	row := db.Where("'recruitmentId' = ?", opts.RecruitmentID).
-		Find(&pkg.Application{}).RowsAffected
-
-	//check if user recruitment application's num >1
-	if row != 0 {
-		return errors.New("A candidate can only apply once at the same recruitment")
-	}
-
-	return db.Create(&pkg.Application{
+	app := &pkg.Application{
 		Grade:         opts.Grade,
 		Institute:     opts.Institute,
 		Major:         opts.Major,
@@ -33,16 +25,34 @@ func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) err
 		Resume:        filePath,
 		CandidateID:   uid,
 		Step:          string(constants.SignUp),
-	}).Error
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if errdb := tx.Create(app).Error; errdb != nil {
+			return errdb
+		}
+		//upload resume to COS
+		if filePath != "" {
+			errfile := global.UpLoadAndSaveFileToCos(opts.Resume, filePath)
+			if errfile != nil {
+				zapx.Error("upload resume to tos failed", zap.String("filepath", filePath))
+				return errfile
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return app, nil
 }
 
 func GetApplicationByIdForCandidate(aid string) (*pkg.Application, error) {
 	db := global.GetDB()
 
 	var a pkg.Application
-	if err := db.Preload("interview_selections").
+	if err := db.Preload("InterviewSelections").
 		Where("uid = ?", aid).
-		Find(&a).Error; err != nil {
+		First(&a).Error; err != nil {
 		return nil, err
 	}
 
@@ -56,31 +66,68 @@ func GetApplicationById(aid string) (*pkg.Application, error) {
 	if err := db.Preload("Comments").
 		Preload("InterviewSelections").
 		Where("uid = ?", aid).
-		Find(&a).Error; err != nil {
+		First(&a).Error; err != nil {
 		return nil, err
 	}
 
 	return &a, nil
 }
 
-func UpdateApplication(opts *pkg.UpdateAppOpts, filename string) error {
-	opts.Resume = nil
-	bytes, err := json.Marshal(opts)
-	if err != nil {
-		return err
-	}
+func UpdateApplication(opts *pkg.UpdateAppOpts, filePath string) (*pkg.Application, error) {
+	db := global.GetDB()
 
 	var a pkg.Application
-	if err := json.Unmarshal(bytes, &a); err != nil {
-		return err
-	}
-	//a.Uid = aid
-	if filename != "" {
-		a.Resume = filename
+	if err := db.Model(&pkg.Application{}).
+		Where("uid = ?", opts.Aid).
+		First(&a).Error; err != nil {
+		return nil, err
 	}
 
-	db := global.GetDB()
-	return db.Updates(&a).Error
+	if opts.Grade != "" {
+		a.Grade = opts.Grade
+	}
+	if opts.Institute != "" {
+		a.Institute = opts.Institute
+	}
+	if opts.Major != "" {
+		a.Major = opts.Major
+	}
+	if opts.Rank != "" {
+		a.Rank = opts.Rank
+	}
+	if opts.Group != "" {
+		a.Group = opts.Group
+	}
+	if opts.Intro != "" {
+		a.Intro = opts.Intro
+	}
+	if opts.IsQuick != nil {
+		a.IsQuick = *opts.IsQuick
+	}
+	if opts.Referrer != "" {
+		a.Referrer = opts.Referrer
+	}
+	if opts.Resume != nil {
+		a.Resume = filePath
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if errdb := tx.Save(&a).Error; errdb != nil {
+			return errdb
+		}
+
+		//upload resume to COS
+		if opts.Resume != nil {
+			if errfile := global.UpLoadAndSaveFileToCos(opts.Resume, filePath); errfile != nil {
+				zapx.Error("upload resume to tos failed", zap.String("filepath", filePath))
+				return errfile
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return &a, nil
 }
 
 func UpdateApplicationStep(aid string, step string) error {
@@ -117,17 +164,20 @@ func GetApplicationsByRid(rid string) ([]pkg.Application, error) {
 
 func SetApplicationStepById(opts *pkg.SetAppStepOpts) error {
 	db := global.GetDB()
-	application, err := GetApplicationByIdForCandidate(opts.Aid)
+	app, err := GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return err
 	}
 
-	if application.Step != opts.From {
+	if app.Step != opts.From {
 		return errors.New("the step doesn't match")
 	}
 
-	application.Step = opts.To
-	return db.Updates(&application).Error
+	return db.Model(&pkg.Application{}).
+		Where("uid = ?", app.Uid).
+		Updates(map[string]interface{}{
+			"step": opts.To,
+		}).Error
 }
 
 func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {

@@ -2,8 +2,10 @@ package global
 
 import (
 	"UniqueRecruitmentBackend/configs"
+	"context"
 	"github.com/tencentyun/cos-go-sdk-v5"
 	"github.com/tencentyun/cos-go-sdk-v5/debug"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 )
@@ -30,4 +32,26 @@ func setupCOS() {
 			},
 		},
 	})
+}
+
+func UpLoadAndSaveFileToCos(file *multipart.FileHeader, fileName string) error {
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	_, err = cosClient.Object.Put(context.Background(), fileName, src, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetCOSObjectResp(filename string) (*cos.Response, error) {
+	response, err := cosClient.Object.Get(context.Background(), filename, nil)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }

@@ -3,10 +3,10 @@ package middlewares
 import (
 	"UniqueRecruitmentBackend/configs"
 	"UniqueRecruitmentBackend/internal/common"
-	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/tracer"
-	"UniqueRecruitmentBackend/pkg/rerror"
+	"UniqueRecruitmentBackend/pkg"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -38,20 +38,20 @@ func AuthMiddleware(c *gin.Context) {
 
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
-		common.Error(c, rerror.UnauthorizedError)
+		common.Resp(c, nil, fmt.Errorf("authentication failed could not get uid"))
 		return
 	}
 	s := sessions.Default(c)
-	u := s.Get(constants.SessionNameUID)
+	u := s.Get(pkg.SessionNameUID)
 	if u == nil {
 		c.Abort()
-		common.Error(c, rerror.UnauthorizedError)
+		common.Resp(c, nil, fmt.Errorf("authentication failed could not get uid"))
 		return
 	}
 	uid, ok := u.(string)
 	if !ok {
 		c.Abort()
-		common.Error(c, rerror.UnauthorizedError)
+		common.Resp(c, nil, fmt.Errorf("authentication failed could not get uid"))
 		return
 	}
 	c.Request = c.Request.WithContext(common.CtxWithUID(apmCtx, uid))
@@ -73,7 +73,7 @@ func LocalAuthMiddleware(c *gin.Context) {
 	cookie, err := c.Cookie("uid")
 	if errors.Is(err, http.ErrNoCookie) {
 		c.Abort()
-		common.Error(c, rerror.UnauthorizedError)
+		common.Resp(c, nil, fmt.Errorf("authentication failed could not get uid"))
 		return
 	}
 

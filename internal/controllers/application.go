@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/models"
@@ -10,8 +11,6 @@ import (
 	"UniqueRecruitmentBackend/pkg/rerror"
 	"errors"
 	"fmt"
-	"github.com/xylonx/zapx"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
 
@@ -52,24 +51,17 @@ func CreateApplication(c *gin.Context) {
 	if opts.Resume != nil {
 		// file path example: 2023秋(rname)/web(group)/wwb(uid)/filename
 		filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, opts.Group, uid, opts.Resume.Filename)
-
-		//resume upload to COS
-		err = upLoadAndSaveFileToCos(opts.Resume, filePath)
-		if err != nil {
-			return
-		}
-		zapx.Info("upload resume to tos", zap.String("filepath", filePath))
 	}
 
 	//save application to database
-	err = models.CreateApplication(opts, uid, filePath)
+	app, err = models.CreateApplication(opts, uid, filePath)
 	return
 }
 
-// GetApplicationById get candidate's application by applicationId
+// GetApplication get candidate's application by applicationId
 // GET applications/:aid
 // candidate and member will see two different views of application
-func GetApplicationById(c *gin.Context) {
+func GetApplication(c *gin.Context) {
 	var (
 		app  *pkg.Application
 		user *pkg.UserDetail
@@ -79,9 +71,17 @@ func GetApplicationById(c *gin.Context) {
 
 	aid := c.Param("aid")
 	uid := common.GetUID(c)
+	if aid == "" {
+		err = errors.New("request param error, application id is nil")
+		return
+	}
 
 	if common.IsCandidate(c) {
 		app, err = models.GetApplicationByIdForCandidate(aid)
+		if app.CandidateID != uid {
+			err = errors.New("for candidate,you can't see other's application")
+			return
+		}
 	} else {
 		app, err = models.GetApplicationById(aid)
 	}
@@ -99,16 +99,16 @@ func GetApplicationById(c *gin.Context) {
 	return
 }
 
-// UpdateApplicationById update candidate's application by applicationId
+// UpdateApplication update candidate's application by applicationId
 // PUT applications/:aid
 // only by application's candidate
-func UpdateApplicationById(c *gin.Context) {
+func UpdateApplication(c *gin.Context) {
 	var (
 		app *pkg.Application
 		r   *pkg.Recruitment
 		err error
 	)
-	defer func() { common.Resp(c, nil, err) }()
+	defer func() { common.Resp(c, app, err) }()
 
 	opts := &pkg.UpdateAppOpts{}
 	opts.Aid = c.Param("aid")
@@ -121,17 +121,22 @@ func UpdateApplicationById(c *gin.Context) {
 		return
 	}
 
-	r, err = models.GetRecruitmentById(opts.RecruitmentID)
+	app, err = models.GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return
 	}
-	// Compare the new recruitment time with application time
-	if err = checkRecruitmentInBtoD(r, time.Now()); err != nil {
+	if app.Abandoned || app.Rejected {
+		err = fmt.Errorf("you have been abandoned / rejected")
 		return
 	}
 
-	app, err = models.GetApplicationById(opts.Aid)
+	r, err = models.GetRecruitmentById(app.RecruitmentID)
 	if err != nil {
+		return
+	}
+
+	// Compare the new recruitment time with application time
+	if err = checkRecruitmentInBtoD(r, time.Now()); err != nil {
 		return
 	}
 
@@ -144,20 +149,16 @@ func UpdateApplicationById(c *gin.Context) {
 	filePath := ""
 	if opts.Resume != nil {
 		filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, opts.Group, uid, opts.Resume.Filename)
-		if err := upLoadAndSaveFileToCos(opts.Resume, filePath); err != nil {
-			common.Error(c, rerror.UpLoadFileError.WithData(uid).WithDetail(err.Error()))
-			return
-		}
 	}
 
-	err = models.UpdateApplication(opts, filePath)
+	app, err = models.UpdateApplication(opts, filePath)
 	return
 }
 
-// DeleteApplicationById delete candidate's application by applicationId
+// DeleteApplication delete candidate's application by applicationId
 // DELETE applications/:aid
 // only by application's candidate
-func DeleteApplicationById(c *gin.Context) {
+func DeleteApplication(c *gin.Context) {
 	var (
 		app *pkg.Application
 		err error
@@ -171,7 +172,7 @@ func DeleteApplicationById(c *gin.Context) {
 		return
 	}
 
-	app, err = models.GetApplicationById(aid)
+	app, err = models.GetApplicationByIdForCandidate(aid)
 	if err != nil {
 		return
 	}
@@ -185,16 +186,21 @@ func DeleteApplicationById(c *gin.Context) {
 	return
 }
 
-// AbandonApplicationById abandon candidate's application by applicationId
+// AbandonApplication abandon candidate's application by applicationId
 // DELETE applications/:aid/abandoned
 // only by the member of application's group
-func AbandonApplicationById(c *gin.Context) {
+func AbandonApplication(c *gin.Context) {
 	var (
 		err error
 	)
 	defer func() { common.Resp(c, nil, err) }()
 
 	aid := c.Param("aid")
+	if aid == "" {
+		err = fmt.Errorf("request param error, application id is nil")
+		return
+	}
+
 	uid := common.GetUID(c)
 
 	// check member's role to abandon application
@@ -206,22 +212,39 @@ func AbandonApplicationById(c *gin.Context) {
 	return
 }
 
-// GetResumeById Download resume by application's
+// GetResume Download resume by application's
 // GET applications/:aid/resume
-func GetResumeById(c *gin.Context) {
+func GetResume(c *gin.Context) {
 	var (
 		app *pkg.Application
 		err error
 	)
 
 	aid := c.Param("aid")
-	app, err = models.GetApplicationById(aid)
+	if aid == "" {
+		err = fmt.Errorf("request param error, application id is nil")
+		return
+	}
+
+	app, err = models.GetApplicationByIdForCandidate(aid)
 	if err != nil {
 		common.Resp(c, nil, err)
 		return
 	}
 
-	resp, err := utils.GetCOSObjectResp(app.Resume)
+	// don't have role to download file
+	if !common.IsMember(c) && !(app.CandidateID == common.GetUID(c)) {
+		err = fmt.Errorf("you don't have role to download file")
+		common.Resp(c, nil, err)
+		return
+	}
+	if app.Resume == "" {
+		err = fmt.Errorf("you don't upload resume")
+		common.Resp(c, nil, err)
+		return
+	}
+
+	resp, err := global.GetCOSObjectResp(app.Resume)
 	if err != nil {
 		common.Resp(c, nil, err)
 		return
@@ -234,10 +257,10 @@ func GetResumeById(c *gin.Context) {
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
 }
 
-// GetApplicationByRecruitmentId get all applications by recruitmentId
+// GetAllApplications get all applications by recruitmentId
 // GET applications/recruitment/:rid
 // member role
-func GetApplicationByRecruitmentId(c *gin.Context) {
+func GetAllApplications(c *gin.Context) {
 	var (
 		apps []pkg.Application
 		err  error
@@ -265,8 +288,8 @@ func GetApplicationByRecruitmentId(c *gin.Context) {
 	//for _, app := range apps {
 	//	userIds = append(userIds, app.CandidateID)
 	//}
-	for _, app := range apps {
-		app.UserDetail, err = grpc.GetUserInfoByUID(app.CandidateID)
+	for i, _ := range apps {
+		apps[i].UserDetail, err = grpc.GetUserInfoByUID(apps[i].CandidateID)
 		if err != nil {
 			return
 		}
@@ -276,7 +299,7 @@ func GetApplicationByRecruitmentId(c *gin.Context) {
 
 // PUT applications/:aid/step
 // only by the member of application's group
-func SetApplicationStepById(c *gin.Context) {
+func SetApplicationStep(c *gin.Context) {
 	var (
 		err error
 	)
@@ -559,12 +582,4 @@ func checkMemberGroup(aid string, uid string) (err error) {
 
 	return errors.New("you and the candidate are not in the same group, " +
 		"and you cannot manipulate other people’s application. ")
-}
-
-func checkIsApplicationOwner(c *gin.Context, uid string, application *pkg.Application) bool {
-	if application.CandidateID == uid {
-		return true
-	}
-	common.Error(c, rerror.CheckPermissionError.WithDetail("you are not the owner of this application"))
-	return false
 }

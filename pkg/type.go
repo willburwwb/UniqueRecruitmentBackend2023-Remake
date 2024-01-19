@@ -91,7 +91,7 @@ type InterviewInfo struct {
 	Id         string           `json:"id"`
 	Date       time.Time        `json:"date"`
 	Period     constants.Period `json:"period"`
-	SlotNumber int              `json:"slotNumber"`
+	SlotNumber int              `json:"slot_number"`
 }
 
 type SetRecInterviewTimeOpts struct {
@@ -135,9 +135,9 @@ type CreateAppOpts struct {
 	Rank          string `form:"rank" json:"rank" binding:"required"`
 	Group         string `form:"group" json:"group" binding:"required"`
 	Intro         string `form:"intro" json:"intro" binding:"required"` //自我介绍
-	RecruitmentID string `form:"recruitmentID" json:"recruitmentID" binding:"required"`
+	RecruitmentID string `form:"recruitment_id" json:"recruitment_id" binding:"required"`
 	Referrer      string `form:"referrer" json:"referrer"` //推荐人
-	IsQuick       bool   `form:"isQuick" json:"isQuick"`   //速通
+	IsQuick       bool   `form:"is_quick" json:"is_quick"` //速通
 
 	Resume *multipart.FileHeader `form:"resume" json:"resume"` //简历
 }
@@ -152,19 +152,20 @@ func (opts *CreateAppOpts) Validate() (err error) {
 type UpdateAppOpts struct {
 	Aid string
 
-	Grade         string                `form:"grade" json:"grade,omitempty"`
-	Institute     string                `form:"institute" json:"institute,omitempty"`
-	Major         string                `form:"major" json:"major,omitempty"`
-	Rank          string                `form:"rank" json:"rank,omitempty"`
-	Group         string                `form:"group" json:"group,omitempty"`
-	Intro         string                `form:"intro" json:"intro,omitempty"`       //自我介绍
-	Referrer      string                `form:"referrer" json:"referrer,omitempty"` //推荐人
-	RecruitmentID string                `form:"recruitmentID" json:"recruitmentID,omitempty"`
-	Resume        *multipart.FileHeader `form:"resume" json:"resume,omitempty"` //简历
+	Grade     string `form:"grade" json:"grade,omitempty"`
+	Institute string `form:"institute" json:"institute,omitempty"`
+	Major     string `form:"major" json:"major,omitempty"`
+	Rank      string `form:"rank" json:"rank,omitempty"`
+	Group     string `form:"group" json:"group,omitempty"`
+	Intro     string `form:"intro" json:"intro,omitempty"`       //自我介绍
+	Referrer  string `form:"referrer" json:"referrer,omitempty"` //推荐人
+	IsQuick   *bool  `form:"is_quick" json:"is_quick"`           //速通
+
+	Resume *multipart.FileHeader `form:"resume" json:"resume,omitempty"` //简历
 }
 
 func (opts *UpdateAppOpts) Validate() (err error) {
-	if GroupMap[opts.Group] == "" {
+	if opts.Group != "" && GroupMap[opts.Group] == "" {
 		return errors.New("request body error, group set wrong")
 	}
 	if opts.Aid == "" {
@@ -243,9 +244,9 @@ type Interview struct {
 	Date          time.Time      `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
 	Period        Period         `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
 	Name          Group          `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //constants.Group
-	SlotNumber    int            `json:"slotNumber" gorm:"column:slotNumber;not null"`
-	RecruitmentID string         `json:"recruitmentID" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
-	Applications  []*Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                   //manytomany
+	SlotNumber    int            `json:"slot_number" gorm:"column:slotNumber;not null"`
+	RecruitmentID string         `json:"recruitment_id" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
+	Applications  []*Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                    //manytomany
 }
 
 func (c Interview) TableName() string {
@@ -255,14 +256,14 @@ func (c Interview) TableName() string {
 type CreateInterviewOpts struct {
 	Date       time.Time        `json:"date" form:"date" binding:"required"`
 	Period     constants.Period `json:"period" form:"period" binding:"required"`
-	SlotNumber int              `json:"slotNumber" form:"slotNumber" binding:"required"`
+	SlotNumber int              `json:"slot_number" form:"slot_number" binding:"required"`
 }
 
 type UpdateInterviewOpts struct {
 	Uid        string    `json:"uid" form:"uid" binding:"required"`
 	Date       time.Time `json:"date" form:"date"`
 	Period     Period    `json:"period" form:"period"`
-	SlotNumber int       `json:"slotNumber" form:"slotNumber"`
+	SlotNumber int       `json:"slot_number" form:"slot_number"`
 }
 
 type DeleteInterviewUID string
@@ -288,8 +289,8 @@ func (c Comment) TableName() string {
 }
 
 type CreateCommentOpts struct {
-	ApplicationID string `json:"applicationId"`
-	MemberID      string `json:"memberId"`
+	ApplicationID string `json:"application_id"`
+	MemberID      string `json:"member_id"`
 	Content       string `json:"content"`
 	Evaluation    int    `json:"evaluation"`
 }
@@ -300,7 +301,7 @@ type SendSMSOpts struct {
 	Next      string            `json:"next" binding:"required"`    // the application next step
 	Time      string            `json:"time"`                       // the next step(interview/test) time
 	Place     string            `json:"place"`                      // the next step(interview/test) place
-	MeetingId string            `json:"meetingId"`
+	MeetingId string            `json:"meeting_id"`
 	Rest      string            `json:"rest"`
 	Aids      []string          `json:"aids"` // the applications will be sent sms
 }
