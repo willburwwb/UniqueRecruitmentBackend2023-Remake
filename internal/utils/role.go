@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"UniqueRecruitmentBackend/internal/constants"
+	"UniqueRecruitmentBackend/pkg"
 )
 
-func CheckRoles(userRoles []string, roles ...constants.Role) bool {
+func CheckRoles(userRoles []string, roles ...pkg.Role) bool {
 	for _, v := range userRoles {
 		for _, role := range roles {
 			if v == string(role) {
@@ -23,20 +23,20 @@ func CheckInGroups(arr []string, str string) bool {
 	return false
 }
 
-func GetMaxRole(roles []string) constants.Role {
+func GetMaxRole(roles []string) pkg.Role {
 	for _, v := range roles {
-		if constants.Role(v) == constants.Admin {
-			return constants.Admin
+		if pkg.Role(v) == pkg.Admin {
+			return pkg.Admin
 		}
 	}
 	for _, v := range roles {
-		if constants.Role(v) == constants.MemberRole {
-			return constants.MemberRole
+		if pkg.Role(v) == pkg.MemberRole {
+			return pkg.MemberRole
 		}
 	}
 	for _, v := range roles {
-		if constants.Role(v) == constants.CandidateRole {
-			return constants.CandidateRole
+		if pkg.Role(v) == pkg.CandidateRole {
+			return pkg.CandidateRole
 		}
 	}
 	return ""

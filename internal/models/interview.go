@@ -7,7 +7,7 @@ import (
 	"UniqueRecruitmentBackend/pkg"
 )
 
-func GetInterviewsByRidAndName(rid string, name string) (*[]pkg.Interview, error) {
+func GetInterviewsByRidAndName(rid string, name string) ([]pkg.Interview, error) {
 	db := global.GetDB()
 	var res []pkg.Interview
 	if err := db.Model(&pkg.Interview{}).
@@ -16,8 +16,9 @@ func GetInterviewsByRidAndName(rid string, name string) (*[]pkg.Interview, error
 		Find(&res).Error; err != nil {
 		return nil, err
 	}
-	return &res, nil
+	return res, nil
 }
+
 func GetInterviewById(iid string) (*pkg.Interview, error) {
 	db := global.GetDB()
 	var res pkg.Interview

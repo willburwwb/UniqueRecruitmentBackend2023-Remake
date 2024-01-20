@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"UniqueRecruitmentBackend/internal/constants"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/pgtype"
@@ -16,16 +15,16 @@ type Common struct {
 }
 
 type UserDetail struct {
-	UID         string           `json:"uid"`
-	Phone       string           `json:"phone"`
-	Email       string           `json:"email"`
-	Password    string           `json:"password,omitempty"`
-	Name        string           `json:"name"`
-	AvatarURL   string           `json:"avatar_url"`
-	Gender      constants.Gender `json:"gender"`
-	JoinTime    string           `json:"join_time"`
-	Groups      []string         `json:"groups"`
-	LarkUnionID string           `json:"lark_union_id"`
+	UID         string   `json:"uid"`
+	Phone       string   `json:"phone"`
+	Email       string   `json:"email"`
+	Password    string   `json:"password,omitempty"`
+	Name        string   `json:"name"`
+	AvatarURL   string   `json:"avatar_url"`
+	Gender      Gender   `json:"gender"`
+	JoinTime    string   `json:"join_time"`
+	Groups      []string `json:"groups"`
+	LarkUnionID string   `json:"lark_union_id"`
 }
 
 type Recruitment struct {
@@ -88,10 +87,10 @@ type GetRecOpts struct {
 }
 
 type InterviewInfo struct {
-	Id         string           `json:"id"`
-	Date       time.Time        `json:"date"`
-	Period     constants.Period `json:"period"`
-	SlotNumber int              `json:"slot_number"`
+	Id         string    `json:"id"`
+	Date       time.Time `json:"date"`
+	Period     Period    `json:"period"`
+	SlotNumber int       `json:"slot_number"`
 }
 
 type SetRecInterviewTimeOpts struct {
@@ -102,18 +101,18 @@ type SetRecInterviewTimeOpts struct {
 // uniqueIndex(CandidateID,RecruitmentID)
 type Application struct {
 	Common
-	Grade                     string `gorm:"not null"` //constants.Grade
+	Grade                     string `gorm:"not null"` //pkg.Grade
 	Institute                 string `gorm:"not null"`
 	Major                     string `gorm:"not null"`
-	Rank                      string `gorm:"not null"` //constants.Rank
-	Group                     string `gorm:"not null"` //constants.Group
+	Rank                      string `gorm:"not null"`
+	Group                     string `gorm:"not null"` //pkg.Group
 	Intro                     string `gorm:"not null"`
 	IsQuick                   bool   `gorm:"column:isQuick;not null"`
 	Referrer                  string
 	Resume                    string
 	Abandoned                 bool      `gorm:"not null; default false" `
 	Rejected                  bool      `gorm:"not null; default false"`
-	Step                      string    `gorm:"not null"`                                                                //constants.Step
+	Step                      string    `gorm:"not null"`                                                                //pkg.Step
 	CandidateID               string    `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"`   //manytoone
 	RecruitmentID             string    `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"` //manytoone
 	InterviewAllocationsGroup time.Time `gorm:"column:interviewAllocationsGroup;"`
@@ -242,8 +241,8 @@ func (opts *SelectInterviewSlotsOpts) Validate() (err error) {
 type Interview struct {
 	Common
 	Date          time.Time      `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
-	Period        Period         `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //constants.Period
-	Name          Group          `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //constants.Group
+	Period        Period         `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //pkg.Period
+	Name          Group          `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
 	SlotNumber    int            `json:"slot_number" gorm:"column:slotNumber;not null"`
 	RecruitmentID string         `json:"recruitment_id" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
 	Applications  []*Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                    //manytomany
@@ -254,9 +253,9 @@ func (c Interview) TableName() string {
 }
 
 type CreateInterviewOpts struct {
-	Date       time.Time        `json:"date" form:"date" binding:"required"`
-	Period     constants.Period `json:"period" form:"period" binding:"required"`
-	SlotNumber int              `json:"slot_number" form:"slot_number" binding:"required"`
+	Date       time.Time `json:"date" form:"date" binding:"required"`
+	Period     Period    `json:"period" form:"period" binding:"required"`
+	SlotNumber int       `json:"slot_number" form:"slot_number" binding:"required"`
 }
 
 type UpdateInterviewOpts struct {
@@ -296,12 +295,30 @@ type CreateCommentOpts struct {
 }
 
 type SendSMSOpts struct {
-	Type      constants.SMSType `json:"type" binding:"required"`    // the candidate status : Pass or Fail
-	Current   string            `json:"current" binding:"required"` // the application current step
-	Next      string            `json:"next" binding:"required"`    // the application next step
-	Time      string            `json:"time"`                       // the next step(interview/test) time
-	Place     string            `json:"place"`                      // the next step(interview/test) place
-	MeetingId string            `json:"meeting_id"`
-	Rest      string            `json:"rest"`
-	Aids      []string          `json:"aids"` // the applications will be sent sms
+	Type      SMSType  `json:"type" binding:"required"`    // the candidate status : Pass or Fail
+	Current   string   `json:"current" binding:"required"` // the application current step
+	Next      string   `json:"next" binding:"required"`    // the application next step
+	Time      string   `json:"time"`                       // the next step(interview/test) time
+	Place     string   `json:"place"`                      // the next step(interview/test) place
+	MeetingId string   `json:"meeting_id"`
+	Rest      string   `json:"rest"`
+	Aids      []string `json:"aids"` // the applications will be sent sms
+}
+
+func (opts *SendSMSOpts) Validate() (err error) {
+	if _, ok := ZhToEnStepMap[opts.Next]; !ok {
+		err = fmt.Errorf("request body error, next is invalid")
+		return
+	}
+	if _, ok := ZhToEnStepMap[opts.Current]; !ok {
+		err = fmt.Errorf("request body error, current is invalid")
+		return
+	}
+	if len(opts.Aids) == 0 {
+		err = fmt.Errorf("request body error, aids is nil")
+		return
+	}
+	opts.Next = ZhToEnStepMap[opts.Next]
+	opts.Current = ZhToEnStepMap[opts.Current]
+	return
 }

@@ -104,5 +104,11 @@ func NewRouter() *gin.Engine {
 	{
 		smsRouter.POST("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SendSMS)
 	}
+
+	userRouter := r.Group("/user")
+	{
+		userRouter.GET("/me", controllers.GetUserDetail)
+	}
+
 	return r
 }

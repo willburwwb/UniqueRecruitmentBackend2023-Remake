@@ -21,3 +21,14 @@ func DeleteCommentById(cid string) error {
 	db := global.GetDB()
 	return db.Delete(&pkg.Comment{}, cid).Error
 }
+
+func GetCommentById(cid string) (*pkg.Comment, error) {
+	db := global.GetDB()
+	var c pkg.Comment
+	if err := db.Model(&pkg.Comment{}).
+		Where("uid = ?", cid).
+		First(&c).Error; err != nil {
+		return nil, err
+	}
+	return &c, nil
+}

@@ -3,7 +3,6 @@ package controllers
 import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/common"
-	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
@@ -363,7 +362,6 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	// check update application time is between the start and the end
 	r, err = models.GetRecruitmentById(app.RecruitmentID)
 	if err != nil {
-		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 	if err = checkRecruitmentTimeInBtoE(r); err != nil {
@@ -470,7 +468,7 @@ func SelectInterviewSlots(c *gin.Context) {
 	}
 
 	var name pkg.Group
-	if opts.InterviewType == string(constants.InGroup) {
+	if opts.InterviewType == string(pkg.InGroup) {
 		name = pkg.GroupMap[app.Group]
 	} else {
 		name = "unique"
@@ -555,10 +553,10 @@ func checkApplyStatus(application *pkg.Application) error {
 
 // check if application step is in interview select status
 func checkStepInInterviewSelectStatus(interviewType string, app *pkg.Application) error {
-	if interviewType == "group" && app.Step != string(constants.GroupTimeSelection) {
+	if interviewType == "group" && app.Step != string(pkg.GroupTimeSelection) {
 		return fmt.Errorf("you can't set group interview time now")
 	}
-	if interviewType == "team" && app.Step != string(constants.TeamTimeSelection) {
+	if interviewType == "team" && app.Step != string(pkg.TeamTimeSelection) {
 		return fmt.Errorf("you can't set team interview time now")
 	}
 	return nil

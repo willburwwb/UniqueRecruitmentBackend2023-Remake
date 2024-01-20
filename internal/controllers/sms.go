@@ -9,85 +9,90 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"UniqueRecruitmentBackend/internal/common"
-	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
-	"UniqueRecruitmentBackend/pkg/rerror"
 	"UniqueRecruitmentBackend/pkg/sms"
 )
 
 func SendSMS(c *gin.Context) {
-	var req pkg.SendSMSOpts
-	if err := c.ShouldBind(&req); err != nil {
-		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
+	var (
+		app  *pkg.Application
+		r    *pkg.Recruitment
+		user *pkg.UserDetail
+		err  error
+	)
+	defer func() { common.Resp(c, nil, err) }()
+
+	opts := &pkg.SendSMSOpts{}
+	if err := c.ShouldBind(&opts); err != nil {
 		return
 	}
 
-	req.Next = constants.ZhToEnStepMap[req.Next]
-	req.Current = constants.ZhToEnStepMap[req.Current]
-	if req.Next == "" || req.Current == "" {
-		common.Error(c, rerror.RequestBodyError.WithDetail("next or current is invalid"))
+	if err = opts.Validate(); err != nil {
+		return
+	}
+
+	uid := common.GetUID(c)
+	user, err = grpc.GetUserInfoByUID(uid)
+	if err != nil {
+		return
+	}
+
+	app, err = models.GetApplicationByIdForCandidate(opts.Aids[0])
+	if err != nil {
+		return
+	}
+
+	// judge whether the recruitment has expired
+	r, err = models.GetRecruitmentById(app.RecruitmentID)
+	if err != nil {
+		return
+	}
+	if r.End.Before(time.Now()) {
 		return
 	}
 
 	var errors []string
-	for _, aid := range req.Aids {
-		application, err := models.GetApplicationById(aid)
+	for _, aid := range opts.Aids {
+		app, err = models.GetApplicationByIdForCandidate(aid)
 		if err != nil {
-			errors = append(errors, rerror.GetDatabaseError.WithData("application").Msg()+err.Error())
+			errors = append(errors, fmt.Sprintf("get application %s failed, error: %s", aid, err.Error()))
 			continue
 		}
 
-		// check recuritment time
-		recruitment, err := models.GetFullRecruitmentById(application.RecruitmentID)
-		if err != nil {
-			errors = append(errors, rerror.GetDatabaseError.WithData("recruitment").Msg()+err.Error())
-			continue
-		}
-		if recruitment.End.Before(time.Now()) {
-			errors = append(errors, rerror.CheckPermissionError.Msg()+err.Error())
-			continue
-		}
-
-		uid := common.GetUID(c)
-		userInfo, err := grpc.GetUserInfoByUID(uid)
-		if err != nil {
-			errors = append(errors, rerror.CheckPermissionError.Msg()+err.Error())
-			continue
-		}
 		// check applicaiton group == member group
-		if !utils.CheckInGroups(userInfo.Groups, application.Group) {
-			errors = append(errors, rerror.CheckPermissionError.Msg()+"member's group != application group")
+		if !utils.CheckInGroups(user.Groups, app.Group) {
+			errors = append(errors, fmt.Sprintf("send application %s sms failed, error: you are not in the same group", aid))
 			continue
 		}
 
-		if application.Abandoned {
-			errors = append(errors, rerror.Abandoned.WithData(application.Uid).Msg())
+		if app.Abandoned {
+			errors = append(errors, fmt.Sprintf("application of %s has already been abandoned", aid))
 			continue
 		}
 
-		if application.Rejected {
-			errors = append(errors, rerror.Rejected.WithData(application.Uid).Msg())
+		if app.Rejected {
+			errors = append(errors, fmt.Sprintf("application of %s has already been rejected", aid))
 			continue
 		}
 
-		if req.Type == constants.Accept {
+		if opts.Type == pkg.Accept {
 			// check the interview time has been allocated
-			if req.Next == string(constants.GroupInterview) && len(recruitment.GetInterviews(string(application.Group))) == 0 {
-				errors = append(errors, rerror.NoInterviewScheduled.WithData(string(application.Group)).Msg())
+			if opts.Next == string(pkg.GroupInterview) && len(r.GetInterviews(string(app.Group))) == 0 {
+				errors = append(errors, fmt.Sprintf("no interviews are scheduled for %s", app.Group))
 				continue
 			}
-			if req.Next == string(constants.TeamInterview) && len(recruitment.GetInterviews("unique")) == 0 {
-				errors = append(errors, rerror.NoInterviewScheduled.WithData("unique").Msg())
+			if opts.Next == string(pkg.TeamInterview) && len(r.GetInterviews("unique")) == 0 {
+				errors = append(errors, fmt.Sprintf("no interviews are scheduled for unique"))
 				continue
 			}
-		} else if req.Type == constants.Reject {
-			application.Rejected = true
+		} else if opts.Type == pkg.Reject {
+			app.Rejected = true
 			// save application
-			if err := models.UpdateApplicationInfo(application); err != nil {
-				errors = append(errors, rerror.SaveDatabaseError.WithData("application").Msg())
+			if err := models.UpdateApplicationInfo(app); err != nil {
+				errors = append(errors, fmt.Sprintf("update application %s failed, error: %s", aid, err.Error()))
 			}
 			continue
 		} else {
@@ -95,25 +100,26 @@ func SendSMS(c *gin.Context) {
 			continue
 		}
 
-		smsBody, err := ApplySMSTemplate(&req, userInfo, application, recruitment)
+		var smsBody *sms.SMSBody
+		smsBody, err = ApplySMSTemplate(opts, user, app, r)
 		if err != nil {
-			errors = append(errors, err.Error())
+			errors = append(errors, fmt.Sprintf("set smsbody for user %s failed, error: %s", user.Name, err.Error()))
 			continue
 		}
 
 		// send sms to candidate
-		smsBody.Phone = userInfo.Phone
+		smsBody.Phone = user.Phone
 		if _, err := sms.SendSMS(*smsBody); err != nil {
-			errors = append(errors, err.Error()+"send sms failed for "+userInfo.Name)
+			errors = append(errors, fmt.Sprintf("send sms for user %s failed, error: %s", user.Name, err.Error()))
 			continue
 		}
 
 	}
 	if len(errors) != 0 {
-		common.Error(c, rerror.SendSMSError.WithDetail(errors...))
+		err = fmt.Errorf("%v", errors)
 		return
 	}
-	common.Success(c, "Success send sms", nil)
+	return
 }
 
 func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
@@ -125,20 +131,20 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 	recruitmentName := utils.ConvertRecruitmentName(recruitment.Name)
 
 	switch smsRequest.Type {
-	case constants.Accept:
+	case pkg.Accept:
 		{
 
 			var defaultRest = ""
-			switch constants.Step(smsRequest.Next) {
+			switch pkg.Step(smsRequest.Next) {
 			//組面
-			case constants.GroupInterview:
+			case pkg.GroupInterview:
 				fallthrough
 			//群面
-			case constants.TeamInterview:
+			case pkg.TeamInterview:
 				var allocationTime time.Time
-				if smsRequest.Next == string(constants.GroupInterview) {
+				if smsRequest.Next == string(pkg.GroupInterview) {
 					allocationTime = application.InterviewAllocationsGroup
-				} else if smsRequest.Next == string(constants.TeamInterview) {
+				} else if smsRequest.Next == string(pkg.TeamInterview) {
 					allocationTime = application.InterviewAllocationsTeam
 				}
 				if smsRequest.Place == "" {
@@ -156,25 +162,25 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				// FIXME
 				// {1}你好，请于{2}在启明学院亮胜楼{3}参加{4}，请准时到场。
 				smsBody = sms.SMSBody{
-					TemplateID: constants.SMSTemplateMap[constants.PassSMS],
-					Params:     []string{userInfo.Name, formatTime, smsRequest.Place, string(constants.EnToZhStepMap[smsRequest.Next])},
+					TemplateID: pkg.SMSTemplateMap[pkg.PassSMS],
+					Params:     []string{userInfo.Name, formatTime, smsRequest.Place, string(pkg.EnToZhStepMap[smsRequest.Next])},
 				}
 				return &smsBody, nil
 			//在线组面
-			case constants.OnlineGroupInterview:
+			case pkg.OnlineGroupInterview:
 				fallthrough
 			//在线群面
-			case constants.OnlineTeamInterview:
+			case pkg.OnlineTeamInterview:
 
 				var allocationTime time.Time
-				var smsTemplate constants.SMSTemplateType
+				var smsTemplate pkg.SMSTemplateType
 				// 为什么golang没有三目运算符orz
-				if smsRequest.Next == string(constants.OnlineGroupInterview) {
+				if smsRequest.Next == string(pkg.OnlineGroupInterview) {
 					allocationTime = application.InterviewAllocationsGroup
-					smsTemplate = constants.OnLineGroupInterviewSMS
-				} else if smsRequest.Next == string(constants.OnlineTeamInterview) {
+					smsTemplate = pkg.OnLineGroupInterviewSMS
+				} else if smsRequest.Next == string(pkg.OnlineTeamInterview) {
 					allocationTime = application.InterviewAllocationsTeam
-					smsTemplate = constants.OnLineTeamInterviewSMS
+					smsTemplate = pkg.OnLineTeamInterviewSMS
 				}
 				if allocationTime == (time.Time{}) {
 					return nil, errors.New("interview time is not allocated for " + userInfo.Name)
@@ -190,16 +196,16 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 
 				// {1}你好，欢迎参加{2}{3}组在线群面，面试将于{4}进行，请在PC端点击腾讯会议参加面试，会议号{5}，并提前调试好摄像头和麦克风，祝你面试顺利。
 				smsBody = sms.SMSBody{
-					TemplateID: constants.SMSTemplateMap[smsTemplate],
+					TemplateID: pkg.SMSTemplateMap[smsTemplate],
 					Params:     []string{userInfo.Name, recruitmentName, application.Group, formatTime, smsRequest.MeetingId},
 				}
 				return &smsBody, nil
 
 			//笔试
-			case constants.WrittenTest:
+			case pkg.WrittenTest:
 				fallthrough
 			//熬测
-			case constants.StressTest:
+			case pkg.StressTest:
 				if smsRequest.Place == "" {
 					return nil, errors.New("place is not provided for " + userInfo.Name)
 				}
@@ -208,17 +214,17 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				}
 
 				defaultRest = fmt.Sprintf("，请于%s在%s参加%s，请务必准时到场",
-					smsRequest.Time, smsRequest.Place, constants.EnToZhStepMap[smsRequest.Next])
+					smsRequest.Time, smsRequest.Place, pkg.EnToZhStepMap[smsRequest.Next])
 
 			//通过
-			case constants.Pass:
+			case pkg.Pass:
 				defaultRest = fmt.Sprintf("，你已成功加入%s组", application.Group)
 
 			//组面时间选择
-			case constants.GroupTimeSelection:
+			case pkg.GroupTimeSelection:
 				fallthrough
 			//群面时间选择
-			case constants.TeamTimeSelection:
+			case pkg.TeamTimeSelection:
 
 				defaultRest = "，请进入选手dashboard系统选择面试时间"
 
@@ -238,12 +244,12 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 			}
 			// {1}你好，你通过了{2}{3}组{4}审核{5}
 			smsBody = sms.SMSBody{
-				TemplateID: constants.SMSTemplateMap[constants.PassSMS],
-				Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.EnToZhStepMap[smsRequest.Current], smsResMessage},
+				TemplateID: pkg.SMSTemplateMap[pkg.PassSMS],
+				Params:     []string{userInfo.Name, recruitmentName, application.Group, pkg.EnToZhStepMap[smsRequest.Current], smsResMessage},
 			}
 			return &smsBody, nil
 		}
-	case constants.Reject:
+	case pkg.Reject:
 		defaultRest := "不要灰心，继续学习。期待与更强大的你的相遇！"
 		if smsRequest.Current == "" {
 			return nil, errors.New("current step is not provided")
@@ -256,8 +262,8 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 		}
 		// {1}你好，你没有通过{2}{3}组{4}审核，请你{5}
 		smsBody = sms.SMSBody{
-			TemplateID: constants.SMSTemplateMap[constants.Delay],
-			Params:     []string{userInfo.Name, recruitmentName, application.Group, constants.EnToZhStepMap[smsRequest.Current], smsResMessage},
+			TemplateID: pkg.SMSTemplateMap[pkg.Delay],
+			Params:     []string{userInfo.Name, recruitmentName, application.Group, pkg.EnToZhStepMap[smsRequest.Current], smsResMessage},
 		}
 		return &smsBody, nil
 	}

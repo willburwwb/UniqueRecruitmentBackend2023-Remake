@@ -2,7 +2,6 @@ package models
 
 import (
 	"UniqueRecruitmentBackend/global"
-	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/pkg"
 	"errors"
 	"github.com/xylonx/zapx"
@@ -24,7 +23,7 @@ func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) (*p
 		IsQuick:       opts.IsQuick,
 		Resume:        filePath,
 		CandidateID:   uid,
-		Step:          string(constants.SignUp),
+		Step:          string(pkg.SignUp),
 	}
 
 	if err := db.Transaction(func(tx *gorm.DB) error {

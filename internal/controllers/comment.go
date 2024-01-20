@@ -32,7 +32,8 @@ func CreateComment(c *gin.Context) {
 
 func DeleteComment(c *gin.Context) {
 	var (
-		err error
+		comment *pkg.Comment
+		err     error
 	)
 
 	defer func() { common.Resp(c, nil, err) }()
@@ -40,6 +41,15 @@ func DeleteComment(c *gin.Context) {
 	cid := c.Param("cid")
 	if cid == "" {
 		err = fmt.Errorf("request param error, comment id is nil")
+		return
+	}
+	comment, err = models.GetCommentById(cid)
+	if err != nil {
+		return
+	}
+
+	if comment.Uid != common.GetUID(c) {
+		err = fmt.Errorf("you can't delete other's comment")
 		return
 	}
 

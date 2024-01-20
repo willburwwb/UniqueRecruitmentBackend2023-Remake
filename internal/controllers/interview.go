@@ -7,6 +7,7 @@ import (
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/rerror"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,9 +17,21 @@ import (
 // PUT /recruitment/:rid/interviews/:name
 // Use put to prevent resource are duplicated
 func SetRecruitmentInterviews(c *gin.Context) {
-	// todo (get member info
+	var (
+		r    *pkg.Recruitment
+		user *pkg.UserDetail
+		err  error
+	)
+
+	defer func() { common.Resp(c, nil, err) }()
+
 	rid := c.Param("rid")
 	name := c.Param("name")
+	uid := common.GetUID(c)
+	if rid == "" || name == "" {
+		err = fmt.Errorf("request param wrong, you should set rid and name")
+		return
+	}
 
 	var interviews []pkg.UpdateInterviewOpts
 	if err := c.ShouldBind(&interviews); err != nil {
@@ -27,20 +40,22 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	}
 
 	// judge whether the recruitment has expired
-	resp, err := models.GetRecruitmentById(rid)
+	r, err = models.GetRecruitmentById(rid)
 	if err != nil {
-		common.Error(c, rerror.GetDatabaseError.WithData("recruitment").WithDetail(err.Error()))
 		return
 	}
-	if resp.End.Before(time.Now()) {
-		common.Error(c, rerror.RecruitmentEnd.WithData(resp.Name))
+	if r.End.Before(time.Now()) {
+		err = fmt.Errorf("recruitment %s has already ended", r.Name)
+		return
+	}
+
+	user, err = grpc.GetUserInfoByUID(uid)
+	if err != nil {
 		return
 	}
 
 	// member can only update his group's interview or team interview (组面/群面
-	// todo (get member' group
-	if !checkGroupName(c, name) {
-		common.Error(c, rerror.CheckPermissionError.WithDetail("you are not in this group"))
+	if err = checkInterviewGroupName(user, name); err != nil {
 		return
 	}
 
@@ -73,36 +88,27 @@ func SetRecruitmentInterviews(c *gin.Context) {
 
 	var errors []string
 
-	for _, origin := range *originInterviews {
+	for _, origin := range originInterviews {
 		value, ok := interviewsToUpdate[origin.Uid]
 		if ok {
 			// check whether the interview time has been selected by candidates
-
 			if len(origin.Applications) != 0 && (!utils.ComPareTimeHour(origin.Date, value.Date) || origin.Period != value.Period) {
-				//	common.Error(c, rerror.InterviewUpdateError.WithData("the interview time has been selected"))
-				//	return
-				errors = append(errors, rerror.InterviewHasBeenSelected.WithData(origin.Uid).Msg())
+				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))
 			} else {
 				origin.Date = value.Date
 				origin.SlotNumber = value.SlotNumber
 				origin.Period = value.Period
 				if err := models.UpdateInterview(&origin); err != nil {
-					//	common.Error(c, rerror.UpdateDatabaseError.WithData("interview").WithDetail(err.Error()))
-					//	return
-					errors = append(errors, rerror.UpdateDatabaseError.WithData("interview").Msg()+err.Error())
+					errors = append(errors, fmt.Sprintf("update interview %v on db failed, err: %v", origin, err))
 				}
 			}
 		} else {
 			if len(origin.Applications) != 0 {
 				// when some candidates have selected this interview time, abort delete
-				//	common.Error(c, rerror.InterviewHasBeenSelected.WithData("interview"))
-				//	return
-				errors = append(errors, rerror.InterviewHasBeenSelected.WithData(origin.Uid).Msg())
+				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))
 			} else {
 				if err := models.RemoveInterviewByID(origin.Uid); err != nil {
-					//		common.Error(c, rerror.UpdateDatabaseError.WithData("interview").WithDetail(err.Error()))
-					//		return
-					errors = append(errors, rerror.RemoveDatabaseError.WithData("interview").Msg()+err.Error())
+					errors = append(errors, fmt.Sprintf("delete interview %v on db failed, err: %v", origin, err))
 				}
 			}
 		}
@@ -110,32 +116,23 @@ func SetRecruitmentInterviews(c *gin.Context) {
 
 	for _, interview := range interviewsToAdd {
 		if err := models.CreateAndSaveInterview(interview); err != nil {
-			//	common.Error(c, rerror.SaveDatabaseError.WithData("interview"))
-			//	return
-			errors = append(errors, rerror.SaveDatabaseError.WithData("interview").Msg())
-
+			errors = append(errors, fmt.Sprintf("save interview %v on db failed, err: %v", interview, err))
 		}
 	}
 	if len(errors) != 0 {
-		common.Error(c, rerror.UpdateDatabaseError.WithData("interview").WithDetail(errors...))
+		err = fmt.Errorf("%v", errors)
 		return
 	}
-	common.Success(c, "Update interviews success", nil)
+	return
 }
 
 // check user's group == name
-func checkGroupName(c *gin.Context, name string) bool {
+func checkInterviewGroupName(user *pkg.UserDetail, name string) error {
 	if name != "unique" {
-		uid := common.GetUID(c)
-		userInfo, err := grpc.GetUserInfoByUID(uid)
-		if err != nil {
-			common.Error(c, rerror.CheckPermissionError.WithDetail(err.Error()))
-			return false
-		}
-		if !utils.CheckInGroups(userInfo.Groups, name) {
-			common.Error(c, rerror.CheckPermissionError.WithDetail("you are not in this group"))
-			return false
+		if !utils.CheckInGroups(user.Groups, name) {
+			err := fmt.Errorf("you can't set other group's interview time")
+			return err
 		}
 	}
-	return true
+	return nil
 }

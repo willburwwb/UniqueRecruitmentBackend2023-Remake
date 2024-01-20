@@ -1,7 +1,6 @@
 package grpc
 
 import (
-	"UniqueRecruitmentBackend/internal/constants"
 	"UniqueRecruitmentBackend/pkg"
 	pb "UniqueRecruitmentBackend/pkg/proto/sso"
 	"context"
@@ -32,7 +31,7 @@ func GetUserInfoByUID(uid string) (*pkg.UserDetail, error) {
 		AvatarURL:   resp.AvatarUrl,
 		Groups:      resp.Groups,
 		JoinTime:    resp.JoinTime,
-		Gender:      constants.Gender(resp.Gender),
+		Gender:      pkg.Gender(resp.Gender),
 		LarkUnionID: resp.LarkUnionId,
 	}, nil
 }

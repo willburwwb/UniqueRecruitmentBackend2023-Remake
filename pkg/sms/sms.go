@@ -10,11 +10,6 @@ import (
 
 type SMSType string
 
-const (
-	RegisterCode      = "RegisterCode"
-	ResetPasswordCode = "ResetPasswordCode"
-)
-
 type SMSBody struct {
 	Phone      string   `json:"phone_number"`
 	TemplateID uint     `json:"template_id"`
