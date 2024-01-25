@@ -3,9 +3,9 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"log"
 
 	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
 )
 
@@ -18,12 +18,12 @@ func CreateRecruitment(opts *pkg.CreateRecOpts) (r *pkg.Recruitment, err error) 
 	}
 
 	r = &pkg.Recruitment{
-		Name:      opts.Name,
-		Beginning: opts.Beginning,
-		Deadline:  opts.Deadline,
-		End:       opts.End,
+		Name:       opts.Name,
+		Beginning:  opts.Beginning,
+		Deadline:   opts.Deadline,
+		End:        opts.End,
+		Statistics: utils.GenRecruitmentStatistics(),
 	}
-	log.Println("create ", r)
 	err = db.Model(&pkg.Recruitment{}).Create(r).Error
 	return
 }
@@ -62,6 +62,8 @@ func GetFullRecruitmentById(rid string) (*pkg.Recruitment, error) {
 	if err = db.Model(&pkg.Recruitment{}).
 		Preload("Applications").
 		Preload("Interviews").
+		Preload("Applications.InterviewSelections").
+		Preload("Applications.Comments").
 		Where("uid = ?", rid).Find(&r).Error; err != nil {
 		err = db.Model(&pkg.Recruitment{}).Where("uid = ?", rid).Find(&r).Error
 	}

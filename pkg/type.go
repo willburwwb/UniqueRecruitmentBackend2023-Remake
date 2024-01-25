@@ -3,15 +3,14 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/pgtype"
 	"mime/multipart"
 	"time"
 )
 
 type Common struct {
-	Uid       string    `gorm:"column:uid;type:uuid;default:gen_random_uuid();primaryKey"`
-	CreatedAt time.Time `gorm:"column:createdAt;not null"`
-	UpdatedAt time.Time `gorm:"column:updatedAt;not null;index"`
+	Uid       string    `gorm:"column:uid;type:uuid;default:gen_random_uuid();primaryKey" json:"uid"`
+	CreatedAt time.Time `gorm:"column:createdAt;not null" json:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updatedAt;not null;index" json:"updated_at"`
 }
 
 type UserDetail struct {
@@ -29,14 +28,14 @@ type UserDetail struct {
 
 type Recruitment struct {
 	Common
-	Name       string       `gorm:"not null;unique" json:"name"`
-	Beginning  time.Time    `gorm:"not null" json:"beginning"`
-	Deadline   time.Time    `gorm:"not null" json:"deadline"`
-	End        time.Time    `gorm:"not null" json:"end"`
-	Statistics pgtype.JSONB `gorm:"type:jsonb"`
+	Name       string    `gorm:"not null;unique" json:"name"`
+	Beginning  time.Time `gorm:"not null" json:"beginning"`
+	Deadline   time.Time `gorm:"not null" json:"deadline"`
+	End        time.Time `gorm:"not null" json:"end"`
+	Statistics string    `gorm:"not null" json:"statistics"`
 
-	Applications []Application `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->简历 ;级联删除
-	Interviews   []Interview   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //一个hr->面试 ;级联删除
+	Applications []Application `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"applications"` //一个hr->简历 ;级联删除
+	Interviews   []Interview   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interviews"`   //一个hr->面试 ;级联删除
 }
 
 func (r Recruitment) TableName() string {
@@ -101,26 +100,26 @@ type SetRecInterviewTimeOpts struct {
 // uniqueIndex(CandidateID,RecruitmentID)
 type Application struct {
 	Common
-	Grade                     string `gorm:"not null"` //pkg.Grade
-	Institute                 string `gorm:"not null"`
-	Major                     string `gorm:"not null"`
-	Rank                      string `gorm:"not null"`
-	Group                     string `gorm:"not null"` //pkg.Group
-	Intro                     string `gorm:"not null"`
-	IsQuick                   bool   `gorm:"column:isQuick;not null"`
-	Referrer                  string
-	Resume                    string
-	Abandoned                 bool      `gorm:"not null; default false" `
-	Rejected                  bool      `gorm:"not null; default false"`
-	Step                      string    `gorm:"not null"`                                                                //pkg.Step
-	CandidateID               string    `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"`   //manytoone
-	RecruitmentID             string    `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID"` //manytoone
-	InterviewAllocationsGroup time.Time `gorm:"column:interviewAllocationsGroup;"`
-	InterviewAllocationsTeam  time.Time `gorm:"column:interviewAllocationsTeam;"`
+	Grade                     string    `gorm:"not null" json:"grade"` //pkg.Grade
+	Institute                 string    `gorm:"not null" json:"institute"`
+	Major                     string    `gorm:"not null" json:"major"`
+	Rank                      string    `gorm:"not null" json:"rank"`
+	Group                     string    `gorm:"not null" json:"group"` //pkg.Group
+	Intro                     string    `gorm:"not null" json:"intro"`
+	IsQuick                   bool      `gorm:"column:isQuick;not null" json:"is_quick"`
+	Referrer                  string    `json:"referrer"`
+	Resume                    string    `json:"resume"`
+	Abandoned                 bool      `gorm:"not null; default false" json:"abandoned"`
+	Rejected                  bool      `gorm:"not null; default false" json:"rejected"`
+	Step                      string    `gorm:"not null" json:"step"`                                                                          //pkg.Step
+	CandidateID               string    `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"candidate_id"`     //manytoone
+	RecruitmentID             string    `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"recruitment_id"` //manytoone
+	InterviewAllocationsGroup time.Time `gorm:"column:interviewAllocationsGroup;" json:"interview_allocations_group"`
+	InterviewAllocationsTeam  time.Time `gorm:"column:interviewAllocationsTeam;" json:"interview_allocations_team"`
 
-	UserDetail          *UserDetail  `gorm:"-" json:"user_detail"`                                                                  // get from sso
-	InterviewSelections []*Interview `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`          //manytomany
-	Comments            []Comment    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` //onetomany
+	UserDetail          *UserDetail  `gorm:"-" json:"user_detail"`                                                                                     // get from sso
+	InterviewSelections []*Interview `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interview_selections"` //manytomany
+	Comments            []Comment    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"comments"`    //onetomany
 }
 
 func (a Application) TableName() string {
@@ -181,12 +180,12 @@ type SetAppStepOpts struct {
 }
 
 func (opts *SetAppStepOpts) Validate() (err error) {
-	fromRank, ok := StepMap[Step(opts.From)]
+	fromRank, ok := StepRanks[Step(opts.From)]
 	if !ok {
 		return fmt.Errorf("request body error, from step %s set wrong", opts.From)
 	}
 
-	toRank, ok := StepMap[Step(opts.To)]
+	toRank, ok := StepRanks[Step(opts.To)]
 	if !ok {
 		return fmt.Errorf("request body error, to step %s set wrong", opts.To)
 	}
@@ -242,7 +241,7 @@ type Interview struct {
 	Common
 	Date          time.Time      `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
 	Period        Period         `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //pkg.Period
-	Name          Group          `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
+	Name          string         `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
 	SlotNumber    int            `json:"slot_number" gorm:"column:slotNumber;not null"`
 	RecruitmentID string         `json:"recruitment_id" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
 	Applications  []*Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                    //manytomany
@@ -250,12 +249,6 @@ type Interview struct {
 
 func (c Interview) TableName() string {
 	return "interviews"
-}
-
-type CreateInterviewOpts struct {
-	Date       time.Time `json:"date" form:"date" binding:"required"`
-	Period     Period    `json:"period" form:"period" binding:"required"`
-	SlotNumber int       `json:"slot_number" form:"slot_number" binding:"required"`
 }
 
 type UpdateInterviewOpts struct {
@@ -277,10 +270,10 @@ const (
 
 type Comment struct {
 	Common
-	ApplicationID string     `gorm:"column:applicationId;type:uuid;"` //manytoone
-	MemberID      string     `gorm:"column:memberId;type:uuid;"`      //manytoone
-	Content       string     `gorm:"not null"`
-	Evaluation    Evaluation `gorm:"column:evaluation;type:int;not null"`
+	ApplicationID string     `gorm:"column:applicationId;type:uuid;" json:"application_id"` //manytoone
+	MemberID      string     `gorm:"column:memberId;type:uuid;index" json:"member_id"`      //manytoone
+	Content       string     `gorm:"column:content;not null" json:"content"`
+	Evaluation    Evaluation `gorm:"column:evaluation;type:int;not null" json:"evaluation"`
 }
 
 func (c Comment) TableName() string {
@@ -288,9 +281,10 @@ func (c Comment) TableName() string {
 }
 
 type CreateCommentOpts struct {
-	ApplicationID string `json:"application_id"`
-	MemberID      string `json:"member_id"`
-	Content       string `json:"content"`
+	MemberID string `json:"member_id"`
+
+	ApplicationID string `json:"application_id" binding:"required"`
+	Content       string `json:"content" binding:"required"`
 	Evaluation    int    `json:"evaluation"`
 }
 

@@ -5,7 +5,6 @@ import (
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
-	"UniqueRecruitmentBackend/pkg/rerror"
 	"github.com/xylonx/zapx"
 	"go.uber.org/zap"
 	"time"
@@ -56,7 +55,6 @@ func UpdateRecruitment(c *gin.Context) {
 	opts := &pkg.UpdateRecOpts{}
 	opts.Rid = c.Param("rid")
 	if err = c.ShouldBindJSON(opts); err != nil {
-		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
 		return
 	}
 	if err = opts.Validate(); err != nil {

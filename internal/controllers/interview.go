@@ -1,16 +1,16 @@
 package controllers
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/gin-gonic/gin"
+
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
-	"UniqueRecruitmentBackend/pkg/rerror"
-	"fmt"
-	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 // SetRecruitmentInterviews set group/team all interview times
@@ -18,9 +18,10 @@ import (
 // Use put to prevent resource are duplicated
 func SetRecruitmentInterviews(c *gin.Context) {
 	var (
-		r    *pkg.Recruitment
-		user *pkg.UserDetail
-		err  error
+		r                *pkg.Recruitment
+		user             *pkg.UserDetail
+		originInterviews []pkg.Interview
+		err              error
 	)
 
 	defer func() { common.Resp(c, nil, err) }()
@@ -35,7 +36,6 @@ func SetRecruitmentInterviews(c *gin.Context) {
 
 	var interviews []pkg.UpdateInterviewOpts
 	if err := c.ShouldBind(&interviews); err != nil {
-		common.Error(c, rerror.RequestBodyError.WithData(err.Error()))
 		return
 	}
 
@@ -59,20 +59,22 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		return
 	}
 
-	var interviewsToAdd []*pkg.UpdateInterviewOpts
-	interviewsToUpdate := make(map[string]*pkg.UpdateInterviewOpts)
+	var interviewsToAdd []pkg.Interview
+	var interviewIdsToDel []string
+	interviewsToUpdate := make(map[string]pkg.Interview)
 	for _, interview := range interviews {
 		if interview.Uid != "" {
 			// update
-			interviewsToUpdate[interview.Uid] = &pkg.UpdateInterviewOpts{
+			interviewsToUpdate[interview.Uid] = pkg.Interview{
+				Name:       name,
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,
-				Uid:        interview.Uid,
 			}
 		} else {
 			// add
-			interviewsToAdd = append(interviewsToAdd, &pkg.UpdateInterviewOpts{
+			interviewsToAdd = append(interviewsToAdd, pkg.Interview{
+				Name:       name,
 				Date:       interview.Date,
 				Period:     interview.Period,
 				SlotNumber: interview.SlotNumber,
@@ -80,9 +82,8 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		}
 	}
 
-	originInterviews, err := models.GetInterviewsByRidAndName(rid, name)
+	originInterviews, err = models.GetInterviewsByRidAndName(rid, name)
 	if err != nil {
-		common.Error(c, rerror.GetDatabaseError.WithData("interviews").WithDetail("when you update interviews"))
 		return
 	}
 
@@ -94,31 +95,21 @@ func SetRecruitmentInterviews(c *gin.Context) {
 			// check whether the interview time has been selected by candidates
 			if len(origin.Applications) != 0 && (!utils.ComPareTimeHour(origin.Date, value.Date) || origin.Period != value.Period) {
 				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))
-			} else {
-				origin.Date = value.Date
-				origin.SlotNumber = value.SlotNumber
-				origin.Period = value.Period
-				if err := models.UpdateInterview(&origin); err != nil {
-					errors = append(errors, fmt.Sprintf("update interview %v on db failed, err: %v", origin, err))
-				}
 			}
 		} else {
 			if len(origin.Applications) != 0 {
 				// when some candidates have selected this interview time, abort delete
 				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))
 			} else {
-				if err := models.RemoveInterviewByID(origin.Uid); err != nil {
-					errors = append(errors, fmt.Sprintf("delete interview %v on db failed, err: %v", origin, err))
-				}
+				interviewIdsToDel = append(interviewIdsToDel, origin.Uid)
 			}
 		}
 	}
 
-	for _, interview := range interviewsToAdd {
-		if err := models.CreateAndSaveInterview(interview); err != nil {
-			errors = append(errors, fmt.Sprintf("save interview %v on db failed, err: %v", interview, err))
-		}
+	if errdb := models.UpdateInterview(interviewsToAdd, interviewIdsToDel, interviewsToUpdate); errdb != nil {
+		errors = append(errors, fmt.Sprintf("update interviews db failed, err: %s", errdb.Error()))
 	}
+
 	if len(errors) != 0 {
 		err = fmt.Errorf("%v", errors)
 		return

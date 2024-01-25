@@ -7,7 +7,6 @@ import (
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
-	"UniqueRecruitmentBackend/pkg/rerror"
 	"errors"
 	"fmt"
 	"net/http"
@@ -147,7 +146,11 @@ func UpdateApplication(c *gin.Context) {
 
 	filePath := ""
 	if opts.Resume != nil {
-		filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, opts.Group, uid, opts.Resume.Filename)
+		if opts.Group != "" {
+			filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, opts.Group, uid, opts.Resume.Filename)
+		} else {
+			filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, app.Group, uid, opts.Resume.Filename)
+		}
 	}
 
 	app, err = models.UpdateApplication(opts, filePath)
@@ -308,7 +311,10 @@ func SetApplicationStep(c *gin.Context) {
 	opts.Aid = c.Param("aid")
 
 	if err = c.ShouldBind(&opts); err != nil {
-		common.Error(c, rerror.RequestBodyError.WithDetail(err.Error()))
+		return
+	}
+
+	if err = opts.Validate(); err != nil {
 		return
 	}
 
@@ -345,7 +351,7 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 	}
 
 	// check application's status such as abandoned
-	app, err = models.GetApplicationById(opts.Aid)
+	app, err = models.GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return
 	}
@@ -373,47 +379,52 @@ func SetApplicationInterviewTimeById(c *gin.Context) {
 }
 
 // GetInterviewsSlots get the interviews times candidates can select
-// Follow the old HR code, this api will get all the interviews assigned by this group's member
-// I think this api should get the interviews times candidate selected
-// And the interviews selected by candidate can be got by GetApplicationById
 // GET /:aid/slots/:type
 // candidate / member role
 func GetInterviewsSlots(c *gin.Context) {
+	var (
+		interviews []pkg.Interview
+		app        *pkg.Application
+		r          *pkg.Recruitment
+		err        error
+	)
+	defer func() { common.Resp(c, interviews, err) }()
+
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
-	application, err := models.GetApplicationByIdForCandidate(aid)
+	if aid == "" || interviewType == "" {
+		err = fmt.Errorf("request param rerror, type or aid is nil")
+		return
+	}
+
+	app, err = models.GetApplicationByIdForCandidate(aid)
 	if err != nil {
-		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
 	// check application's step such as group/team when get interview time
-	// 	if !checkStep(c, application.Step, constants.GroupTimeSelection) {
-	// 		return
-	// 	}
+	//if !checkStep(application.Step, constants.GroupTimeSelection) {
+	//	return
+	//}
 
-	recruitment, err := models.GetFullRecruitmentById(application.RecruitmentID)
+	r, err = models.GetFullRecruitmentById(app.RecruitmentID)
 	if err != nil {
-		common.Error(c, rerror.GetDatabaseError.WithData("application").WithDetail(err.Error()))
 		return
 	}
 
-	// TODO(tmy) type
 	var name string
 	if interviewType == "group" {
-		name = application.Group
+		name = app.Group
 	} else {
 		name = "unique"
 	}
 
-	var res []pkg.Interview
-	for _, interview := range recruitment.Interviews {
+	for _, interview := range r.Interviews {
 		if string(interview.Name) == name {
-			res = append(res, interview)
+			interviews = append(interviews, interview)
 		}
 	}
-	common.Success(c, "Success get interview time", res)
-
+	return
 }
 
 // SelectInterviewSlots candidate select group/team interview time
@@ -438,7 +449,7 @@ func SelectInterviewSlots(c *gin.Context) {
 		return
 	}
 
-	app, err = models.GetApplicationById(opts.Aid)
+	app, err = models.GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return
 	}
@@ -467,20 +478,12 @@ func SelectInterviewSlots(c *gin.Context) {
 		return
 	}
 
-	var name pkg.Group
+	var name string
 	if opts.InterviewType == string(pkg.InGroup) {
-		name = pkg.GroupMap[app.Group]
+		name = app.Group
 	} else {
 		name = "unique"
 	}
-
-	// ？？？？?
-	// for _, interview := range application.InterviewSelections {
-	// 	if interview.Name != name {
-	// 		common.Error(c, rerror.ReselectInterviewError.WithData("application"))
-	// 		return
-	// 	}
-	// }
 
 	var ierrors []string
 	var interviews []*pkg.Interview

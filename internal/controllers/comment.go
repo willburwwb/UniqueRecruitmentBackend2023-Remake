@@ -17,10 +17,13 @@ func CreateComment(c *gin.Context) {
 
 	defer func() { common.Resp(c, comment, err) }()
 
+	uid := common.GetUID(c)
 	opts := &pkg.CreateCommentOpts{}
 	if err = c.ShouldBindJSON(&opts); err != nil {
 		return
 	}
+
+	opts.MemberID = uid
 
 	comment, err = models.CreateComment(opts)
 	if err != nil {
@@ -48,7 +51,7 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	if comment.Uid != common.GetUID(c) {
+	if comment.MemberID != common.GetUID(c) {
 		err = fmt.Errorf("you can't delete other's comment")
 		return
 	}

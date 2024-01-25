@@ -4,6 +4,7 @@ import (
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/pkg"
 	"errors"
+	"fmt"
 	"github.com/xylonx/zapx"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -171,7 +172,9 @@ func SetApplicationStepById(opts *pkg.SetAppStepOpts) error {
 	if app.Step != opts.From {
 		return errors.New("the step doesn't match")
 	}
-
+	if app.Abandoned || app.Rejected {
+		return fmt.Errorf("application of %s has already been abandoned/reject", app.Uid)
+	}
 	return db.Model(&pkg.Application{}).
 		Where("uid = ?", app.Uid).
 		Updates(map[string]interface{}{
@@ -196,14 +199,17 @@ func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {
 	return db.Updates(&application).Error
 }
 
-func UpdateInterviewSelection(application *pkg.Application, interviews []*pkg.Interview) error {
+func UpdateInterviewSelection(app *pkg.Application, interviews []*pkg.Interview) error {
 	db := global.GetDB()
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if errClear := tx.Model(application).Association("InterviewSelections").Clear(); errClear != nil {
+		if errClear := tx.Model(app).
+			Association("InterviewSelections").
+			Clear(); errClear != nil {
 			return errClear
 		}
-		application.InterviewSelections = interviews
-		if errUpdate := tx.Save(application).Error; errUpdate != nil {
+
+		app.InterviewSelections = interviews
+		if errUpdate := tx.Save(app).Error; errUpdate != nil {
 			return errUpdate
 		}
 		return nil

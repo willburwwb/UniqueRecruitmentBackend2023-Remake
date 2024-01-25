@@ -5,7 +5,6 @@ import (
 	"UniqueRecruitmentBackend/internal/tracer"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
-	"UniqueRecruitmentBackend/pkg/rerror"
 	"errors"
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +17,7 @@ func SetUpUserRole(c *gin.Context) {
 	role, err := getUserRoleByUID(c)
 	if err != nil {
 		c.Abort()
-		common.Error(c, rerror.CheckPermissionError)
+		common.Resp(c, nil, errors.New("check permission error"))
 		return
 	}
 	c.Request = c.Request.WithContext(common.CtxWithRole(apmCtx, role))

@@ -19,7 +19,7 @@ func CreateComment(req *pkg.CreateCommentOpts) (*pkg.Comment, error) {
 
 func DeleteCommentById(cid string) error {
 	db := global.GetDB()
-	return db.Delete(&pkg.Comment{}, cid).Error
+	return db.Delete(&pkg.Comment{}, "uid = ?", cid).Error
 }
 
 func GetCommentById(cid string) (*pkg.Comment, error) {
