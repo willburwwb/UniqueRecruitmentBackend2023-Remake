@@ -1,9 +1,10 @@
 package controllers
 
 import (
+	"UniqueRecruitmentBackend/pkg/grpc"
 	"errors"
 	"fmt"
-	"log"
+	"github.com/xylonx/zapx"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,6 @@ import (
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
-	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/sms"
 )
 
@@ -34,19 +34,13 @@ func SendSMS(c *gin.Context) {
 		return
 	}
 
-	uid := common.GetUID(c)
-	user, err = grpc.GetUserInfoByUID(uid)
-	if err != nil {
-		return
-	}
-
 	app, err = models.GetApplicationByIdForCandidate(opts.Aids[0])
 	if err != nil {
 		return
 	}
 
 	// judge whether the recruitment has expired
-	r, err = models.GetRecruitmentById(app.RecruitmentID)
+	r, err = models.GetFullRecruitmentById(app.RecruitmentID)
 	if err != nil {
 		return
 	}
@@ -60,6 +54,11 @@ func SendSMS(c *gin.Context) {
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("get application %s failed, error: %s", aid, err.Error()))
 			continue
+		}
+
+		user, err = grpc.GetUserInfoByUID(app.CandidateID)
+		if err != nil {
+			return
 		}
 
 		// check applicaiton group == member group
@@ -80,7 +79,7 @@ func SendSMS(c *gin.Context) {
 
 		if opts.Type == pkg.Accept {
 			// check the interview time has been allocated
-			if opts.Next == string(pkg.GroupInterview) && len(r.GetInterviews(string(app.Group))) == 0 {
+			if opts.Next == string(pkg.GroupInterview) && len(r.GetInterviews(app.Group)) == 0 {
 				errors = append(errors, fmt.Sprintf("no interviews are scheduled for %s", app.Group))
 				continue
 			}
@@ -109,6 +108,7 @@ func SendSMS(c *gin.Context) {
 
 		// send sms to candidate
 		smsBody.Phone = user.Phone
+		zapx.Infof("smsbody : %v", *smsBody)
 		if _, err := sms.SendSMS(*smsBody); err != nil {
 			errors = append(errors, fmt.Sprintf("send sms for user %s failed, error: %s", user.Name, err.Error()))
 			continue
@@ -158,7 +158,7 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				// interview time get from application instead of smsRequest
 				// 2006年1月2日 星期一 15时04分05秒
 				formatTime := utils.ConverToLocationTime(allocationTime)
-				log.Println("组面", formatTime, allocationTime)
+				//log.Println("组面", formatTime, allocationTime)
 				// FIXME
 				// {1}你好，请于{2}在启明学院亮胜楼{3}参加{4}，请准时到场。
 				smsBody = sms.SMSBody{

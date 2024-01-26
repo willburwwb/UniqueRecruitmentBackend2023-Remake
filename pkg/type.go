@@ -42,10 +42,10 @@ func (r Recruitment) TableName() string {
 	return "recruitments"
 }
 
-func (r *Recruitment) GetInterviews(name string) []Interview {
+func (r Recruitment) GetInterviews(name string) []Interview {
 	reInterviews := make([]Interview, 0)
 	for _, interview := range r.Interviews {
-		if string(interview.Name) == name {
+		if interview.Name == name {
 			reInterviews = append(reInterviews, interview)
 		}
 	}
@@ -117,9 +117,9 @@ type Application struct {
 	InterviewAllocationsGroup time.Time `gorm:"column:interviewAllocationsGroup;" json:"interview_allocations_group"`
 	InterviewAllocationsTeam  time.Time `gorm:"column:interviewAllocationsTeam;" json:"interview_allocations_team"`
 
-	UserDetail          *UserDetail  `gorm:"-" json:"user_detail"`                                                                                     // get from sso
-	InterviewSelections []*Interview `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interview_selections"` //manytomany
-	Comments            []Comment    `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"comments"`    //onetomany
+	UserDetail          *UserDetail `gorm:"-" json:"user_detail"`                                                                                     // get from sso
+	InterviewSelections []Interview `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interview_selections"` //manytomany
+	Comments            []Comment   `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"comments"`    //onetomany
 }
 
 func (a Application) TableName() string {
@@ -239,12 +239,12 @@ func (opts *SelectInterviewSlotsOpts) Validate() (err error) {
 
 type Interview struct {
 	Common
-	Date          time.Time      `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
-	Period        Period         `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //pkg.Period
-	Name          string         `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
-	SlotNumber    int            `json:"slot_number" gorm:"column:slotNumber;not null"`
-	RecruitmentID string         `json:"recruitment_id" gorm:"column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
-	Applications  []*Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                    //manytomany
+	Date          time.Time     `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
+	Period        Period        `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //pkg.Period
+	Name          string        `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
+	SlotNumber    int           `json:"slot_number" gorm:"column:slotNumber;not null"`
+	RecruitmentID string        `json:"recruitment_id" gorm:"not null;column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
+	Applications  []Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                             //manytomany
 }
 
 func (c Interview) TableName() string {
@@ -252,10 +252,10 @@ func (c Interview) TableName() string {
 }
 
 type UpdateInterviewOpts struct {
-	Uid        string    `json:"uid" form:"uid" binding:"required"`
-	Date       time.Time `json:"date" form:"date"`
-	Period     Period    `json:"period" form:"period"`
-	SlotNumber int       `json:"slot_number" form:"slot_number"`
+	Uid        string    `json:"uid" form:"uid"`
+	Date       time.Time `json:"date" form:"date" binding:"required"`
+	Period     Period    `json:"period" form:"period" binding:"required" `
+	SlotNumber int       `json:"slot_number" form:"slot_number" binding:"required"`
 }
 
 type DeleteInterviewUID string

@@ -49,27 +49,13 @@ func NewRouter() *gin.Engine {
 		// member role
 		recruitmentRouter.GET("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllRecruitment)
 		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetRecruitmentInterviews)
+		recruitmentRouter.GET("/:rid/interviews/:name", controllers.GetRecruitmentInterviews)
 
 		// admin role
 		recruitmentRouter.POST("/", middlewares.CheckAdminRoleMiddleWare, controllers.CreateRecruitment)
 		recruitmentRouter.PUT("/:rid/schedule", middlewares.CheckAdminRoleMiddleWare, controllers.UpdateRecruitment)
 	}
-	//memberRouter := r.Group("/members")
-	//{
-	//	memberRouter.GET("/me")
-	//	memberRouter.GET("/group")
-	//	memberRouter.PUT("/me")
-	//	memberRouter.PUT("/admin")
-	//}
-	//
-	//candidateRouter := r.Group("/candidates")
-	//{
-	//	candidateRouter.POST("/")
-	//	candidateRouter.GET("/me")
-	//	candidateRouter.PUT("/me")
-	//	candidateRouter.PUT("/me/password")
-	//}
-	//
+
 	applicationRouter := r.Group("/applications")
 	{
 		// public
@@ -79,34 +65,31 @@ func NewRouter() *gin.Engine {
 		applicationRouter.DELETE("/:aid", controllers.DeleteApplication)
 		applicationRouter.GET("/:aid/slots/:type", controllers.GetInterviewsSlots)
 		applicationRouter.GET("/:aid/resume", controllers.GetResume)
-		applicationRouter.PUT("/:aid/interview/:type", controllers.SetApplicationInterviewTimeById)
+		applicationRouter.PUT("/:aid/interview/:type", controllers.SetApplicationInterviewTime)
 
 		// member
 		applicationRouter.PUT("/:aid/abandoned", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.AbandonApplication)
 		applicationRouter.GET("/recruitment/:rid", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllApplications)
 		applicationRouter.PUT("/:aid/slots/:type", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SelectInterviewSlots)
 		applicationRouter.PUT("/:aid/step", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetApplicationStep)
-
-		//applicationRouter.PUT("/interview/:type", controllers.SetApplicationInterviewTime)
 	}
 
-	// interviewRouter := r.Group("/interviews")
-	// {
-	// 	interviewRouter.GET("/recruitment/:rid/interviews/:name", controllers.SetRecruitmentInterviews)
-	// }
 	commentRouter := r.Group("/comments")
 	{
+		// member
 		commentRouter.POST("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.CreateComment)
 		commentRouter.DELETE("/:cid", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.DeleteComment)
 	}
 
 	smsRouter := r.Group("/sms")
 	{
+		// member
 		smsRouter.POST("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SendSMS)
 	}
 
 	userRouter := r.Group("/user")
 	{
+		// public
 		userRouter.GET("/me", controllers.GetUserDetail)
 	}
 

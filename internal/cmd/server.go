@@ -20,7 +20,7 @@ import (
 var (
 	serverCmd = &cobra.Command{
 		Use:   "server",
-		Short: "A generator for Cobra based Applications",
+		Short: "the backend server for unique studio recruitment",
 		Run: func(cmd *cobra.Command, args []string) {
 			runServer()
 		},
@@ -61,9 +61,9 @@ func runServer() {
 	defer cancel()
 	defer shutdown(ctx)
 	if err := s.Shutdown(ctx); err != nil {
-		zapx.With(zap.Error(err)).Error("Server Shutdown rerror")
+		zapx.With(zap.Error(err)).Error("server Shutdown error")
 	}
-	zapx.Info("Server exiting")
+	zapx.Info("server exiting")
 }
 
 func init() {

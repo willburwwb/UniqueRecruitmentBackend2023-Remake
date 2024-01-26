@@ -1,26 +1,19 @@
 # UniqueRecruitmentBackend2023-Remake
 
-Backend of recruitment system for Unique Studio 
+This repository houses the source code for the backend of the Unique Studio recruitment system
+
+### 📚 External Packages
+
+- gin - A web framework written in Go
+- gorm - A powerful ORM library for handling relational databases
+- gRPC - A high performance, open source universal RPC framework
+- swag - Automatically generates Swagger documentation from Go annotations
+- zapx - A wrapper of zap , get from https://github.com/xylonx/zapx.git
+
 
 ------
 
-### External packages in project 
-
-- gin
-- gorm
-- go-redis
-- zap + lumberjack
-  - log 
-- swag : converts 
-  - Go annotations to Swagger Documentation
-- viper: 
-  - configuration management 
-
-**Get user's uid from http header field "X-UID"**
-
-------
-
-### Directory Structure
+### 🗂️ Directory Structure
 
 ```bash
 uniqueRecruitmentBackend2023-Remake
@@ -44,11 +37,5 @@ uniqueRecruitmentBackend2023-Remake
 └── main.go
 ```
 
-<br>
-<br>
-<br>
+### 🔑**Note:** 
 
-**<h2>暑假待办 （尽量不鸽</h2>**
-- 尽快与unique SSO连接，方便后续的工作！
-- 调整model tables的结构，与sso user/服务器上的postgres适配
-- 开始完成api工作

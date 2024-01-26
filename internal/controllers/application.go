@@ -328,10 +328,10 @@ func SetApplicationStep(c *gin.Context) {
 	return
 }
 
-// SetApplicationInterviewTimeById allocate application's group/team interview time
+// SetApplicationInterviewTime allocate application's group/team interview time
 // PUT /:aid/interview/:type
 // by the member of application's group
-func SetApplicationInterviewTimeById(c *gin.Context) {
+func SetApplicationInterviewTime(c *gin.Context) {
 	var (
 		app *pkg.Application
 		r   *pkg.Recruitment
@@ -393,7 +393,11 @@ func GetInterviewsSlots(c *gin.Context) {
 	aid := c.Param("aid")
 	interviewType := c.Param("type")
 	if aid == "" || interviewType == "" {
-		err = fmt.Errorf("request param rerror, type or aid is nil")
+		err = fmt.Errorf("request param error, type or aid is nil")
+		return
+	}
+	if interviewType != "group" && interviewType != "team" {
+		err = fmt.Errorf("request param error, interviewType should be group/team")
 		return
 	}
 
@@ -420,7 +424,7 @@ func GetInterviewsSlots(c *gin.Context) {
 	}
 
 	for _, interview := range r.Interviews {
-		if string(interview.Name) == name {
+		if interview.Name == name {
 			interviews = append(interviews, interview)
 		}
 	}
@@ -485,18 +489,14 @@ func SelectInterviewSlots(c *gin.Context) {
 		name = "unique"
 	}
 
-	var ierrors []string
-	var interviews []*pkg.Interview
+	var interviews []pkg.Interview
+	interviews, err = models.GetInterviewsByIds(opts.Iids)
+	if err != nil {
+		return
+	}
 
-	for _, iid := range opts.Iids {
-		interview := &pkg.Interview{}
-		var ierr error
-		// check the select interview is in the recruitment
-		interview, ierr = models.GetInterviewById(iid)
-		if err != nil {
-			ierrors = append(ierrors, fmt.Sprintf("[get interview %s in db failed, %s] ", interview.Uid, ierr.Error()))
-			continue
-		}
+	var ierrors []string
+	for _, interview := range interviews {
 		// check the select interview name == param name
 		if interview.Name != name {
 			ierrors = append(ierrors,

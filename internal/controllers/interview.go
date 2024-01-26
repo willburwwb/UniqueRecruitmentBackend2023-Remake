@@ -13,6 +13,29 @@ import (
 	"UniqueRecruitmentBackend/pkg/grpc"
 )
 
+func GetRecruitmentInterviews(c *gin.Context) {
+	var (
+		interviews []pkg.Interview
+		err        error
+	)
+
+	defer func() { common.Resp(c, interviews, err) }()
+
+	rid := c.Param("rid")
+	name := c.Param("name")
+	if rid == "" || name == "" {
+		err = fmt.Errorf("request param wrong, you should set rid and name")
+		return
+	}
+
+	interviews, err = models.GetInterviewsByRidAndNameWithoutApp(rid, name)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // SetRecruitmentInterviews set group/team all interview times
 // PUT /recruitment/:rid/interviews/:name
 // Use put to prevent resource are duplicated
@@ -35,7 +58,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	}
 
 	var interviews []pkg.UpdateInterviewOpts
-	if err := c.ShouldBind(&interviews); err != nil {
+	if err = c.ShouldBind(&interviews); err != nil {
 		return
 	}
 
@@ -66,18 +89,20 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		if interview.Uid != "" {
 			// update
 			interviewsToUpdate[interview.Uid] = pkg.Interview{
-				Name:       name,
-				Date:       interview.Date,
-				Period:     interview.Period,
-				SlotNumber: interview.SlotNumber,
+				Name:          name,
+				RecruitmentID: rid,
+				Date:          interview.Date,
+				Period:        interview.Period,
+				SlotNumber:    interview.SlotNumber,
 			}
 		} else {
 			// add
 			interviewsToAdd = append(interviewsToAdd, pkg.Interview{
-				Name:       name,
-				Date:       interview.Date,
-				Period:     interview.Period,
-				SlotNumber: interview.SlotNumber,
+				Name:          name,
+				RecruitmentID: rid,
+				Date:          interview.Date,
+				Period:        interview.Period,
+				SlotNumber:    interview.SlotNumber,
 			})
 		}
 	}
@@ -97,6 +122,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))
 			}
 		} else {
+			// delete
 			if len(origin.Applications) != 0 {
 				// when some candidates have selected this interview time, abort delete
 				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))

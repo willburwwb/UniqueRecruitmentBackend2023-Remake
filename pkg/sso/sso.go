@@ -1,13 +1,15 @@
 package sso
 
 import (
-	"UniqueRecruitmentBackend/configs"
-	"UniqueRecruitmentBackend/internal/constants"
-	"UniqueRecruitmentBackend/pkg/logger"
-	"github.com/gin-gonic/gin"
-	"github.com/imroc/req/v3"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/imroc/req/v3"
+
+	"UniqueRecruitmentBackend/configs"
+	"UniqueRecruitmentBackend/pkg"
+	"UniqueRecruitmentBackend/pkg/logger"
 )
 
 const UniqueSessionName = "SSO_SESSION"
@@ -26,17 +28,17 @@ type UserDetailResponse struct {
 }
 
 type UserDetail struct {
-	UID         string           `json:"uid"`
-	Phone       string           `json:"phone"`
-	Email       string           `json:"email"`
-	Password    string           `json:"password,omitempty"`
-	Roles       []string         `json:"roles"`
-	Name        string           `json:"name"`
-	AvatarURL   string           `json:"avatar_url"`
-	Gender      constants.Gender `json:"gender"`
-	JoinTime    string           `json:"join_time"`
-	Groups      []string         `json:"groups"`
-	LarkUnionID string           `json:"lark_union_id"`
+	UID         string     `json:"uid"`
+	Phone       string     `json:"phone"`
+	Email       string     `json:"email"`
+	Password    string     `json:"password,omitempty"`
+	Roles       []string   `json:"roles"`
+	Name        string     `json:"name"`
+	AvatarURL   string     `json:"avatar_url"`
+	Gender      pkg.Gender `json:"gender"`
+	JoinTime    string     `json:"join_time"`
+	Groups      []string   `json:"groups"`
+	LarkUnionID string     `json:"lark_union_id"`
 }
 
 func makeSSOCookie(ctx *gin.Context) *http.Cookie {

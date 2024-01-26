@@ -1,11 +1,12 @@
 package sms
 
 import (
-	"UniqueRecruitmentBackend/configs"
 	"bytes"
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"UniqueRecruitmentBackend/configs"
 )
 
 type SMSType string

@@ -4,10 +4,16 @@ import (
 	"UniqueRecruitmentBackend/internal/cmd"
 )
 
-// @titile Swagger api
-// @version 1.0
-// @description  This is backend of recruitment system for Unique Studio.
-// @BasePath /api/v1/
+// @title           UniqueStudio Recruitment API
+// @version         0.1
+// @description     This is API doc of UniqueStudio Recruitment.
+
+// @contact.email  wwbstar07@gmail.com
+
+// @host      https://dev.back.recruitment2023.hustunique.com/
+
+// @externalDocs.description  飞书 doc
+// @externalDocs.url todo
 
 func main() {
 	err := cmd.Execute()

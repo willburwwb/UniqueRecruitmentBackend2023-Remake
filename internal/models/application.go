@@ -199,7 +199,7 @@ func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {
 	return db.Updates(&application).Error
 }
 
-func UpdateInterviewSelection(app *pkg.Application, interviews []*pkg.Interview) error {
+func UpdateInterviewSelection(app *pkg.Application, interviews []pkg.Interview) error {
 	db := global.GetDB()
 	err := db.Transaction(func(tx *gorm.DB) error {
 		if errClear := tx.Model(app).

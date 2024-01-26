@@ -12,12 +12,6 @@ var (
 		Use: "migrate",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := global.GetDB().Migrator().AutoMigrate(
-				//models.ApplicationEntity{},
-				//models.CandidateEntity{},
-				//models.CommentEntity{},
-				//models.Interview{},
-				//models.MemberEntity{},
-				//models.RecruitmentEntity{},
 				pkg.Recruitment{},
 				pkg.Application{},
 				pkg.Interview{},
