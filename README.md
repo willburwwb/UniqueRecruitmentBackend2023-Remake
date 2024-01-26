@@ -21,21 +21,39 @@ uniqueRecruitmentBackend2023-Remake
 ├── docs
 ├── global
 ├── internal
-│   ├── constants
+│   ├── cmd
+│   ├── common
 │   ├── controllers
 │   ├── middlewares
 │   ├── models
-│   ├── request
-│   ├── response
-│   └── router
-├── pkg
-│   ├── msg
+│   ├── router
+│   ├── tracer
 │   └── utils
-├── config.yaml
-├── Docker-compose.yml
+├── pkg
+│   ├── grpc
+│   ├── logger
+│   ├── proto
+│   ├── sms
+│   ├── sso
+│   ├── constants.go
+│   └── type.go
+├── config.local.yaml
+├── docker-compose.yml
 ├── Dockerfile
 └── main.go
 ```
+
+
+
+------
+
+###  📝**Todo list:** 
+
+1. Add swagger annotations to the interfaces 
+2. Implement a new interface for updating user information on SSO 
+3. Collaborate with the frontend for alignment 
+
+------
 
 ### 🔑**Note:** 
 
