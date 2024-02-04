@@ -36,7 +36,7 @@ func AuthMiddleware(c *gin.Context) {
 		}
 	}
 
-	if errors.Is(err, http.ErrNoCookie) {
+	if err != nil {
 		c.Abort()
 		common.Resp(c, nil, fmt.Errorf("authentication failed could not get uid"))
 		return

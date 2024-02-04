@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	Tracer trace.Tracer = otel.Tracer("UniqueSSOBackendDefaultTracer")
+	Tracer trace.Tracer = otel.Tracer("UniqueRecruitmentBackend2023DefaultTracer")
 )
 
 // SetupTracing - setup otel tracer. return shutdown function

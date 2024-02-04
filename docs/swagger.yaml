@@ -1,0 +1,237 @@
+definitions:
+  common.JSONResult:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  pkg.Application:
+    properties:
+      abandoned:
+        type: boolean
+      candidate_id:
+        description: manytoone
+        type: string
+      comments:
+        description: onetomany
+        items:
+          $ref: '#/definitions/pkg.Comment'
+        type: array
+      created_at:
+        type: string
+      grade:
+        description: pkg.Grade
+        type: string
+      group:
+        description: pkg.Group
+        type: string
+      institute:
+        type: string
+      interview_allocations_group:
+        type: string
+      interview_allocations_team:
+        type: string
+      interview_selections:
+        description: manytomany
+        items:
+          $ref: '#/definitions/pkg.Interview'
+        type: array
+      intro:
+        type: string
+      is_quick:
+        type: boolean
+      major:
+        type: string
+      rank:
+        type: string
+      recruitment_id:
+        description: manytoone
+        type: string
+      referrer:
+        type: string
+      rejected:
+        type: boolean
+      resume:
+        type: string
+      step:
+        description: pkg.Step
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+      user_detail:
+        allOf:
+        - $ref: '#/definitions/pkg.UserDetail'
+        description: get from sso
+    type: object
+  pkg.Comment:
+    properties:
+      application_id:
+        description: manytoone
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      evaluation:
+        $ref: '#/definitions/pkg.Evaluation'
+      member_id:
+        description: manytoone
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  pkg.Evaluation:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - Good
+    - Normal
+    - Bad
+  pkg.Gender:
+    enum:
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - Male
+    - Female
+    - Oth
+  pkg.Interview:
+    properties:
+      applications:
+        description: manytomany
+        items:
+          $ref: '#/definitions/pkg.Application'
+        type: array
+      created_at:
+        type: string
+      date:
+        type: string
+      name:
+        description: pkg.Group
+        type: string
+      period:
+        allOf:
+        - $ref: '#/definitions/pkg.Period'
+        description: pkg.Period
+      recruitment_id:
+        description: manytoone
+        type: string
+      slot_number:
+        type: integer
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  pkg.Period:
+    enum:
+    - morning
+    - afternoon
+    - evening
+    type: string
+    x-enum-varnames:
+    - Morning
+    - Afternoon
+    - Evening
+  pkg.UserDetail:
+    properties:
+      avatar_url:
+        type: string
+      email:
+        type: string
+      gender:
+        $ref: '#/definitions/pkg.Gender'
+      groups:
+        items:
+          type: string
+        type: array
+      join_time:
+        type: string
+      lark_union_id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      uid:
+        type: string
+    type: object
+  pkg.UserDetailResp:
+    properties:
+      applications:
+        items:
+          $ref: '#/definitions/pkg.Application'
+        type: array
+      avatar_url:
+        type: string
+      email:
+        type: string
+      gender:
+        $ref: '#/definitions/pkg.Gender'
+      groups:
+        items:
+          type: string
+        type: array
+      join_time:
+        type: string
+      lark_union_id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      uid:
+        type: string
+    type: object
+externalDocs:
+  description: 飞书 doc
+  url: https://uniquestudio.feishu.cn/docx/Yh96d2DoyoCe6zxlR0ecSU5snDd?from=from_copylink
+host: https://dev.back.recruitment2023.hustunique.com/
+info:
+  contact:
+    email: wwbstar07@gmail.com
+  description: This is API doc of UniqueStudio Recruitment.
+  title: UniqueStudio Recruitment API
+  version: "0.1"
+paths:
+  /user/me:
+    get:
+      consumes:
+      - application/json
+      description: Get user detail include applications and interview selections
+      operationId: get_user_detail
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/pkg.UserDetailResp'
+              type: object
+        "400":
+          description: code is not 0 and msg not empty
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+      summary: Get user detail
+      tags:
+      - User
+swagger: "2.0"

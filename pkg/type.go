@@ -26,6 +26,11 @@ type UserDetail struct {
 	LarkUnionID string   `json:"lark_union_id"`
 }
 
+type UserDetailResp struct {
+	UserDetail
+	Applications []Application `json:"applications"`
+}
+
 type Recruitment struct {
 	Common
 	Name       string    `gorm:"not null;unique" json:"name"`

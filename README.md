@@ -52,6 +52,8 @@ uniqueRecruitmentBackend2023-Remake
 1. Add swagger annotations to the interfaces 
 2. Implement a new interface for updating user information on SSO 
 3. Collaborate with the frontend for alignment 
+4. Solve psql time zone problem
+5. Connect loki service to recruitment
 
 ------
 

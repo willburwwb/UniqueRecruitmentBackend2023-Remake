@@ -1,11 +1,11 @@
 package tracer
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/xylonx/zapx"
-
 	"go.opentelemetry.io/otel/attribute"
-	"strings"
 )
 
 func TracingMiddleware(ctx *gin.Context) {

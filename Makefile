@@ -12,6 +12,7 @@ endif
 	go mod tidy
 
 build: dep
+	# swag init --parseDependency --parseInternal # gen swagger docs
 	CGO_ENABLED=0 go build -ldflags="-s -w" -installsuffix cgo -o ${EXECUTABLE}
 
 server : build

@@ -158,12 +158,10 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				// interview time get from application instead of smsRequest
 				// 2006年1月2日 星期一 15时04分05秒
 				formatTime := utils.ConverToLocationTime(allocationTime)
-				//log.Println("组面", formatTime, allocationTime)
-				// FIXME
 				// {1}你好，请于{2}在启明学院亮胜楼{3}参加{4}，请准时到场。
 				smsBody = sms.SMSBody{
-					TemplateID: pkg.SMSTemplateMap[pkg.PassSMS],
-					Params:     []string{userInfo.Name, formatTime, smsRequest.Place, string(pkg.EnToZhStepMap[smsRequest.Next])},
+					TemplateID: pkg.SMSTemplateMap[pkg.Interviews],
+					Params:     []string{userInfo.Name, formatTime, smsRequest.Place, pkg.EnToZhStepMap[smsRequest.Next]},
 				}
 				return &smsBody, nil
 			//在线组面

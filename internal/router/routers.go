@@ -1,15 +1,19 @@
 package router
 
 import (
-	"UniqueRecruitmentBackend/global"
-	"UniqueRecruitmentBackend/internal/controllers"
-	"UniqueRecruitmentBackend/internal/middlewares"
-	"UniqueRecruitmentBackend/internal/tracer"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	"UniqueRecruitmentBackend/docs"
+	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/internal/controllers"
+	"UniqueRecruitmentBackend/internal/middlewares"
+	"UniqueRecruitmentBackend/internal/tracer"
 )
 
 // NewRouter create backend http group routers
@@ -18,6 +22,13 @@ func NewRouter() *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(tracer.TracingMiddleware)
+
+	// gen swagger file
+	docs.SwaggerInfo.Title = "UniqueStudio Recruitment API"
+	docs.SwaggerInfo.Description = "UniqueStudio Recruitment API"
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+	docs.SwaggerInfo.Version = "1.0"
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	if gin.Mode() == gin.DebugMode {
 		r.Use(cors.Default())

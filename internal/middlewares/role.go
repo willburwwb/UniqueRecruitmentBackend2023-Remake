@@ -6,7 +6,9 @@ import (
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var GlobalRoleMiddleWare gin.HandlerFunc = SetUpUserRole
@@ -20,6 +22,7 @@ func SetUpUserRole(c *gin.Context) {
 		common.Resp(c, nil, errors.New("check permission error"))
 		return
 	}
+	span.SetAttributes(attribute.String("UID", fmt.Sprintf("%v", role)))
 	c.Request = c.Request.WithContext(common.CtxWithRole(apmCtx, role))
 	c.Set("role", string(role))
 	c.Next()

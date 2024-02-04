@@ -13,7 +13,7 @@ import (
 // @host      https://dev.back.recruitment2023.hustunique.com/
 
 // @externalDocs.description  飞书 doc
-// @externalDocs.url todo
+// @externalDocs.url https://uniquestudio.feishu.cn/docx/Yh96d2DoyoCe6zxlR0ecSU5snDd?from=from_copylink
 
 func main() {
 	err := cmd.Execute()

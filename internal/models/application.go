@@ -222,3 +222,14 @@ func UpdateApplicationInfo(application *pkg.Application) error {
 	db := global.GetDB()
 	return db.Updates(&application).Error
 }
+
+func GetApplicationsByUserId(userId string) (*[]pkg.Application, error) {
+	db := global.GetDB()
+	var apps []pkg.Application
+	if err := db.Preload("InterviewSelections").
+		Where("\"candidateId\" = ?", userId).
+		Find(&apps).Error; err != nil {
+		return nil, err
+	}
+	return &apps, nil
+}

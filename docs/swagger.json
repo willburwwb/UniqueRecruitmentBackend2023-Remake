@@ -1,0 +1,355 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is API doc of UniqueStudio Recruitment.",
+        "title": "UniqueStudio Recruitment API",
+        "contact": {
+            "email": "wwbstar07@gmail.com"
+        },
+        "version": "0.1"
+    },
+    "host": "https://dev.back.recruitment2023.hustunique.com/",
+    "paths": {
+        "/user/me": {
+            "get": {
+                "description": "Get user detail include applications and interview selections",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get user detail",
+                "operationId": "get_user_detail",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.UserDetailResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "common.JSONResult": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.Application": {
+            "type": "object",
+            "properties": {
+                "abandoned": {
+                    "type": "boolean"
+                },
+                "candidate_id": {
+                    "description": "manytoone",
+                    "type": "string"
+                },
+                "comments": {
+                    "description": "onetomany",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg.Comment"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "grade": {
+                    "description": "pkg.Grade",
+                    "type": "string"
+                },
+                "group": {
+                    "description": "pkg.Group",
+                    "type": "string"
+                },
+                "institute": {
+                    "type": "string"
+                },
+                "interview_allocations_group": {
+                    "type": "string"
+                },
+                "interview_allocations_team": {
+                    "type": "string"
+                },
+                "interview_selections": {
+                    "description": "manytomany",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg.Interview"
+                    }
+                },
+                "intro": {
+                    "type": "string"
+                },
+                "is_quick": {
+                    "type": "boolean"
+                },
+                "major": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                },
+                "recruitment_id": {
+                    "description": "manytoone",
+                    "type": "string"
+                },
+                "referrer": {
+                    "type": "string"
+                },
+                "rejected": {
+                    "type": "boolean"
+                },
+                "resume": {
+                    "type": "string"
+                },
+                "step": {
+                    "description": "pkg.Step",
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_detail": {
+                    "description": "get from sso",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pkg.UserDetail"
+                        }
+                    ]
+                }
+            }
+        },
+        "pkg.Comment": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "description": "manytoone",
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "evaluation": {
+                    "$ref": "#/definitions/pkg.Evaluation"
+                },
+                "member_id": {
+                    "description": "manytoone",
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.Evaluation": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "Good",
+                "Normal",
+                "Bad"
+            ]
+        },
+        "pkg.Gender": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3
+            ],
+            "x-enum-varnames": [
+                "Male",
+                "Female",
+                "Oth"
+            ]
+        },
+        "pkg.Interview": {
+            "type": "object",
+            "properties": {
+                "applications": {
+                    "description": "manytomany",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg.Application"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "pkg.Group",
+                    "type": "string"
+                },
+                "period": {
+                    "description": "pkg.Period",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pkg.Period"
+                        }
+                    ]
+                },
+                "recruitment_id": {
+                    "description": "manytoone",
+                    "type": "string"
+                },
+                "slot_number": {
+                    "type": "integer"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.Period": {
+            "type": "string",
+            "enum": [
+                "morning",
+                "afternoon",
+                "evening"
+            ],
+            "x-enum-varnames": [
+                "Morning",
+                "Afternoon",
+                "Evening"
+            ]
+        },
+        "pkg.UserDetail": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "gender": {
+                    "$ref": "#/definitions/pkg.Gender"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "join_time": {
+                    "type": "string"
+                },
+                "lark_union_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.UserDetailResp": {
+            "type": "object",
+            "properties": {
+                "applications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg.Application"
+                    }
+                },
+                "avatar_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "gender": {
+                    "$ref": "#/definitions/pkg.Gender"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "join_time": {
+                    "type": "string"
+                },
+                "lark_union_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "externalDocs": {
+        "description": "飞书 doc",
+        "url": "https://uniquestudio.feishu.cn/docx/Yh96d2DoyoCe6zxlR0ecSU5snDd?from=from_copylink"
+    }
+}
