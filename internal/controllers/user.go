@@ -2,9 +2,12 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/xylonx/zapx"
+	"go.uber.org/zap"
 
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
+	"UniqueRecruitmentBackend/internal/tracer"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
 )
@@ -12,7 +15,7 @@ import (
 // GetUserDetail get user detail.
 // @Id get_user_detail
 // @Summary Get user detail
-// @Description Get user detail include applications and interview selections
+// @Description Get user detail include applications and interview selections (without comments)
 // @Tags User
 // @Accept  json
 // @Produce  json
@@ -28,14 +31,24 @@ func GetUserDetail(c *gin.Context) {
 	)
 	defer func() { common.Resp(c, resp, err) }()
 
+	apmCtx, span := tracer.Tracer.Start(c, "GetUserDetail")
+	defer span.End()
+
+	//	spanContext := span.SpanContext()
+	//	zapx.Infof("Span TraceID: %s, SpanID: %s", spanContext.TraceID().String(), spanContext.SpanID().String())
+
 	uid := common.GetUID(c)
 	user, err = grpc.GetUserInfoByUID(uid)
 	if err != nil {
+		span.RecordError(err)
+		zapx.WithContext(apmCtx).Error("get user info failed", zap.String("UID", uid))
 		return
 	}
 
 	apps, err = models.GetApplicationsByUserId(uid)
 	if err != nil {
+		span.RecordError(err)
+		zapx.WithContext(apmCtx).Error("get application failed", zap.String("UID", uid))
 		return
 	}
 

@@ -1,10 +1,6 @@
 package middlewares
 
 import (
-	"UniqueRecruitmentBackend/configs"
-	"UniqueRecruitmentBackend/internal/common"
-	"UniqueRecruitmentBackend/internal/tracer"
-	"UniqueRecruitmentBackend/pkg"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,6 +8,11 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel/attribute"
+
+	"UniqueRecruitmentBackend/configs"
+	"UniqueRecruitmentBackend/internal/common"
+	"UniqueRecruitmentBackend/internal/tracer"
+	"UniqueRecruitmentBackend/pkg"
 )
 
 func AuthMiddleware(c *gin.Context) {

@@ -16,6 +16,17 @@ import (
 	"UniqueRecruitmentBackend/pkg/sms"
 )
 
+// SendSMS send sms to user.
+// @Id send_sms
+// @Summary Send sms
+// @Description Send sms to user, include Accept,
+// @Tags Sms
+// @Accept  json
+// @Produce json
+// @Param pkg.SendSMSOpts body pkg.SendSMSOpts true "sms body params"
+// @Success 200 {object} JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /sms [Post]
 func SendSMS(c *gin.Context) {
 	var (
 		app  *pkg.Application
