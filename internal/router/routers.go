@@ -31,7 +31,10 @@ func NewRouter() *gin.Engine {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	if gin.Mode() == gin.DebugMode {
-		r.Use(cors.Default())
+		config := cors.DefaultConfig()
+		config.AllowAllOrigins = true
+		config.AllowCredentials = true
+		r.Use(cors.New(config))
 	} else if gin.Mode() == gin.ReleaseMode {
 		config := cors.DefaultConfig()
 		config.AllowOrigins = []string{"https://join.hustunique.com", "https://hr.hustunique.com"}
