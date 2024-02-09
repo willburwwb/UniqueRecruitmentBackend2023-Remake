@@ -19,7 +19,7 @@ func GetInterviewsByRidAndNameWithoutApp(rid string, name string) ([]pkg.Intervi
 	return res, nil
 }
 
-func GetInterviewsByRidAndName(rid string, name string) ([]pkg.Interview, error) {
+func GetInterviewsByRidAndName(rid string, name pkg.Group) ([]pkg.Interview, error) {
 	db := global.GetDB()
 	var res []pkg.Interview
 	if err := db.Model(&pkg.Interview{}).

@@ -205,7 +205,7 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				// {1}你好，欢迎参加{2}{3}组在线群面，面试将于{4}进行，请在PC端点击腾讯会议参加面试，会议号{5}，并提前调试好摄像头和麦克风，祝你面试顺利。
 				smsBody = sms.SMSBody{
 					TemplateID: pkg.SMSTemplateMap[smsTemplate],
-					Params:     []string{userInfo.Name, recruitmentName, application.Group, formatTime, smsRequest.MeetingId},
+					Params:     []string{userInfo.Name, recruitmentName, string(application.Group), formatTime, smsRequest.MeetingId},
 				}
 				return &smsBody, nil
 
@@ -249,7 +249,7 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 			// {1}你好，你通过了{2}{3}组{4}审核{5}
 			smsBody = sms.SMSBody{
 				TemplateID: pkg.SMSTemplateMap[pkg.PassSMS],
-				Params:     []string{userInfo.Name, recruitmentName, application.Group, pkg.EnToZhStepMap[smsRequest.Current], smsResMessage},
+				Params:     []string{userInfo.Name, recruitmentName, string(application.Group), pkg.EnToZhStepMap[smsRequest.Current], smsResMessage},
 			}
 			return &smsBody, nil
 		}
@@ -264,7 +264,7 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 		// {1}你好，你没有通过{2}{3}组{4}审核，请你{5}
 		smsBody = sms.SMSBody{
 			TemplateID: pkg.SMSTemplateMap[pkg.Delay],
-			Params:     []string{userInfo.Name, recruitmentName, application.Group, pkg.EnToZhStepMap[smsRequest.Current], smsResMessage},
+			Params:     []string{userInfo.Name, recruitmentName, string(application.Group), pkg.EnToZhStepMap[smsRequest.Current], smsResMessage},
 		}
 		return &smsBody, nil
 	}

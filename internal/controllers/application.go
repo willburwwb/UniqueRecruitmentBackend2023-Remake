@@ -345,7 +345,7 @@ func SetApplicationInterviewTime(c *gin.Context) {
 	}
 
 	opts.Aid = c.Param("aid")
-	opts.InterviewType = c.Param("type")
+	opts.InterviewType = pkg.GroupOrTeam(c.Param("type"))
 	if err = opts.Validate(); err != nil {
 		return
 	}
@@ -390,37 +390,29 @@ func GetInterviewsSlots(c *gin.Context) {
 	)
 	defer func() { common.Resp(c, interviews, err) }()
 
-	aid := c.Param("aid")
-	interviewType := c.Param("type")
-	if aid == "" || interviewType == "" {
-		err = fmt.Errorf("request param error, type or aid is nil")
+	opts := &pkg.GetInterviewsSlotsOpts{}
+	if err = c.ShouldBindUri(opts); err != nil {
 		return
 	}
-	if interviewType != "group" && interviewType != "team" {
-		err = fmt.Errorf("request param error, interviewType should be group/team")
+	if err = opts.Validate(); err != nil {
 		return
 	}
 
-	app, err = models.GetApplicationByIdForCandidate(aid)
+	app, err = models.GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return
 	}
-
-	// check application's step such as group/team when get interview time
-	//if !checkStep(application.Step, constants.GroupTimeSelection) {
-	//	return
-	//}
 
 	r, err = models.GetFullRecruitmentById(app.RecruitmentID)
 	if err != nil {
 		return
 	}
 
-	var name string
-	if interviewType == "group" {
+	var name pkg.Group
+	if opts.InterviewType == pkg.InGroup {
 		name = app.Group
 	} else {
-		name = "unique"
+		name = pkg.Unique
 	}
 
 	for _, interview := range r.Interviews {
@@ -448,7 +440,7 @@ func SelectInterviewSlots(c *gin.Context) {
 		return
 	}
 	opts.Aid = c.Param("aid")
-	opts.InterviewType = c.Param("type")
+	opts.InterviewType = pkg.GroupOrTeam(c.Param("type"))
 	if err = opts.Validate(); err != nil {
 		return
 	}
@@ -482,11 +474,11 @@ func SelectInterviewSlots(c *gin.Context) {
 		return
 	}
 
-	var name string
-	if opts.InterviewType == string(pkg.InGroup) {
+	var name pkg.Group
+	if opts.InterviewType == pkg.InGroup {
 		name = app.Group
 	} else {
-		name = "unique"
+		name = pkg.Unique
 	}
 
 	var interviews []pkg.Interview
@@ -555,11 +547,11 @@ func checkApplyStatus(application *pkg.Application) error {
 }
 
 // check if application step is in interview select status
-func checkStepInInterviewSelectStatus(interviewType string, app *pkg.Application) error {
-	if interviewType == "group" && app.Step != string(pkg.GroupTimeSelection) {
+func checkStepInInterviewSelectStatus(interviewType pkg.GroupOrTeam, app *pkg.Application) error {
+	if interviewType == pkg.InGroup && app.Step != pkg.GroupTimeSelection {
 		return fmt.Errorf("you can't set group interview time now")
 	}
-	if interviewType == "team" && app.Step != string(pkg.TeamTimeSelection) {
+	if interviewType == pkg.InTeam && app.Step != pkg.TeamTimeSelection {
 		return fmt.Errorf("you can't set team interview time now")
 	}
 	return nil

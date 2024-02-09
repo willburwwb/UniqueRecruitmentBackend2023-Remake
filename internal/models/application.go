@@ -24,7 +24,7 @@ func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) (*p
 		IsQuick:       opts.IsQuick,
 		Resume:        filePath,
 		CandidateID:   uid,
-		Step:          string(pkg.SignUp),
+		Step:          pkg.SignUp,
 	}
 
 	if err := db.Transaction(func(tx *gorm.DB) error {
@@ -190,9 +190,9 @@ func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {
 	}
 
 	switch opts.InterviewType {
-	case "group":
+	case pkg.InGroup:
 		application.InterviewAllocationsGroup = opts.Time
-	case "team":
+	case pkg.InTeam:
 		application.InterviewAllocationsTeam = opts.Time
 	}
 

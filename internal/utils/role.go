@@ -14,9 +14,9 @@ func CheckRoles(userRoles []string, roles ...pkg.Role) bool {
 	}
 	return false
 }
-func CheckInGroups(arr []string, str string) bool {
+func CheckInGroups(arr []string, group pkg.Group) bool {
 	for _, v := range arr {
-		if v == str {
+		if v == string(group) {
 			return true
 		}
 	}

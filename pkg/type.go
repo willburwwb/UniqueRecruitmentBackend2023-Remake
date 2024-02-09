@@ -37,7 +37,7 @@ type Recruitment struct {
 	Beginning  time.Time `gorm:"not null" json:"beginning"`
 	Deadline   time.Time `gorm:"not null" json:"deadline"`
 	End        time.Time `gorm:"not null" json:"end"`
-	Statistics string    `gorm:"not null" json:"statistics"`
+	Statistics string    `gorm:"-" json:"statistics"`
 
 	Applications []Application `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"applications"` //一个hr->简历 ;级联删除
 	Interviews   []Interview   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interviews"`   //一个hr->面试 ;级联删除
@@ -47,7 +47,7 @@ func (r Recruitment) TableName() string {
 	return "recruitments"
 }
 
-func (r Recruitment) GetInterviews(name string) []Interview {
+func (r Recruitment) GetInterviews(name Group) []Interview {
 	reInterviews := make([]Interview, 0)
 	for _, interview := range r.Interviews {
 		if interview.Name == name {
@@ -90,17 +90,6 @@ type GetRecOpts struct {
 	Rid string `uri:"rid" binding:"required"`
 }
 
-type InterviewInfo struct {
-	Id         string    `json:"id"`
-	Date       time.Time `json:"date"`
-	Period     Period    `json:"period"`
-	SlotNumber int       `json:"slot_number"`
-}
-
-type SetRecInterviewTimeOpts struct {
-	Interviews []InterviewInfo
-}
-
 // Application records the detail of application for candidate
 // uniqueIndex(CandidateID,RecruitmentID)
 type Application struct {
@@ -109,14 +98,14 @@ type Application struct {
 	Institute                 string    `gorm:"not null" json:"institute"`
 	Major                     string    `gorm:"not null" json:"major"`
 	Rank                      string    `gorm:"not null" json:"rank"`
-	Group                     string    `gorm:"not null" json:"group"` //pkg.Group
+	Group                     Group     `gorm:"not null" json:"group"` //pkg.Group
 	Intro                     string    `gorm:"not null" json:"intro"`
 	IsQuick                   bool      `gorm:"column:isQuick;not null" json:"is_quick"`
 	Referrer                  string    `json:"referrer"`
 	Resume                    string    `json:"resume"`
 	Abandoned                 bool      `gorm:"not null; default false" json:"abandoned"`
 	Rejected                  bool      `gorm:"not null; default false" json:"rejected"`
-	Step                      string    `gorm:"not null" json:"step"`                                                                          //pkg.Step
+	Step                      Step      `gorm:"not null" json:"step"`                                                                          //pkg.Step
 	CandidateID               string    `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"candidate_id"`     //manytoone
 	RecruitmentID             string    `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"recruitment_id"` //manytoone
 	InterviewAllocationsGroup time.Time `gorm:"column:interviewAllocationsGroup;" json:"interview_allocations_group"`
@@ -136,7 +125,7 @@ type CreateAppOpts struct {
 	Institute     string `form:"institute" json:"institute" binding:"required"`
 	Major         string `form:"major" json:"major" binding:"required"`
 	Rank          string `form:"rank" json:"rank" binding:"required"`
-	Group         string `form:"group" json:"group" binding:"required"`
+	Group         Group  `form:"group" json:"group" binding:"required"`
 	Intro         string `form:"intro" json:"intro" binding:"required"` //自我介绍
 	RecruitmentID string `form:"recruitment_id" json:"recruitment_id" binding:"required"`
 	Referrer      string `form:"referrer" json:"referrer"` //推荐人
@@ -146,7 +135,7 @@ type CreateAppOpts struct {
 }
 
 func (opts *CreateAppOpts) Validate() (err error) {
-	if GroupMap[opts.Group] == "" {
+	if _, ok := GroupMap[opts.Group]; !ok {
 		return errors.New("request body error, group set wrong")
 	}
 	return
@@ -159,7 +148,7 @@ type UpdateAppOpts struct {
 	Institute string `form:"institute" json:"institute,omitempty"`
 	Major     string `form:"major" json:"major,omitempty"`
 	Rank      string `form:"rank" json:"rank,omitempty"`
-	Group     string `form:"group" json:"group,omitempty"`
+	Group     Group  `form:"group" json:"group,omitempty"`
 	Intro     string `form:"intro" json:"intro,omitempty"`       //自我介绍
 	Referrer  string `form:"referrer" json:"referrer,omitempty"` //推荐人
 	IsQuick   *bool  `form:"is_quick" json:"is_quick"`           //速通
@@ -168,7 +157,7 @@ type UpdateAppOpts struct {
 }
 
 func (opts *UpdateAppOpts) Validate() (err error) {
-	if opts.Group != "" && GroupMap[opts.Group] == "" {
+	if _, ok := GroupMap[opts.Group]; !ok {
 		return errors.New("request body error, group set wrong")
 	}
 	if opts.Aid == "" {
@@ -180,17 +169,17 @@ func (opts *UpdateAppOpts) Validate() (err error) {
 type SetAppStepOpts struct {
 	Aid string
 
-	From string `json:"from" binding:"required"`
-	To   string `json:"to" binding:"required"`
+	From Step `json:"from" binding:"required"`
+	To   Step `json:"to" binding:"required"`
 }
 
 func (opts *SetAppStepOpts) Validate() (err error) {
-	fromRank, ok := StepRanks[Step(opts.From)]
+	fromRank, ok := StepRanks[opts.From]
 	if !ok {
 		return fmt.Errorf("request body error, from step %s set wrong", opts.From)
 	}
 
-	toRank, ok := StepRanks[Step(opts.To)]
+	toRank, ok := StepRanks[opts.To]
 	if !ok {
 		return fmt.Errorf("request body error, to step %s set wrong", opts.To)
 	}
@@ -207,13 +196,13 @@ func (opts *SetAppStepOpts) Validate() (err error) {
 
 type SetAppInterviewTimeOpts struct {
 	Aid           string
-	InterviewType string
+	InterviewType GroupOrTeam
 
 	Time time.Time `json:"time" binding:"required"`
 }
 
 func (opts *SetAppInterviewTimeOpts) Validate() (err error) {
-	if opts.InterviewType != "group" && opts.InterviewType != "team" {
+	if opts.InterviewType != InGroup && opts.InterviewType != InTeam {
 		return fmt.Errorf("request param rerror, type should be group/team")
 	}
 	if opts.Aid == "" {
@@ -224,13 +213,13 @@ func (opts *SetAppInterviewTimeOpts) Validate() (err error) {
 
 type SelectInterviewSlotsOpts struct {
 	Aid           string
-	InterviewType string
+	InterviewType GroupOrTeam
 
 	Iids []string `json:"iids" binding:"required"`
 }
 
 func (opts *SelectInterviewSlotsOpts) Validate() (err error) {
-	if opts.InterviewType != "group" && opts.InterviewType != "team" {
+	if opts.InterviewType != InGroup && opts.InterviewType != InTeam {
 		return fmt.Errorf("request param rerror, type should be group/team")
 	}
 	if opts.Aid == "" {
@@ -242,11 +231,24 @@ func (opts *SelectInterviewSlotsOpts) Validate() (err error) {
 	return
 }
 
+type GetInterviewsSlotsOpts struct {
+	Aid           string      `uri:"aid" binding:"required"`
+	InterviewType GroupOrTeam `uri:"type" binding:"required"`
+}
+
+func (opts *GetInterviewsSlotsOpts) Validate() (err error) {
+	if opts.InterviewType != InGroup && opts.InterviewType != InTeam {
+		err = fmt.Errorf("request param error, interviewType should be group/team")
+		return
+	}
+	return
+}
+
 type Interview struct {
 	Common
 	Date          time.Time     `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
 	Period        Period        `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //pkg.Period
-	Name          string        `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
+	Name          Group         `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
 	SlotNumber    int           `json:"slot_number" gorm:"column:slotNumber;not null"`
 	RecruitmentID string        `json:"recruitment_id" gorm:"not null;column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
 	Applications  []Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                             //manytomany
@@ -262,16 +264,6 @@ type UpdateInterviewOpts struct {
 	Period     Period    `json:"period" form:"period" binding:"required" `
 	SlotNumber int       `json:"slot_number" form:"slot_number" binding:"required"`
 }
-
-type DeleteInterviewUID string
-
-type Evaluation int
-
-const (
-	Good Evaluation = iota
-	Normal
-	Bad
-)
 
 type Comment struct {
 	Common

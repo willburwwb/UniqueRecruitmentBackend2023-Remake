@@ -50,10 +50,14 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	defer func() { common.Resp(c, nil, err) }()
 
 	rid := c.Param("rid")
-	name := c.Param("name")
+	name := pkg.Group(c.Param("name"))
 	uid := common.GetUID(c)
-	if rid == "" || name == "" {
-		err = fmt.Errorf("request param wrong, you should set rid and name")
+	if rid == "" {
+		err = fmt.Errorf("request param wrong, you should set rid")
+		return
+	}
+	if _, ok := pkg.GroupMap[name]; !ok {
+		err = fmt.Errorf("request param wrong, name set wrong")
 		return
 	}
 
@@ -144,8 +148,8 @@ func SetRecruitmentInterviews(c *gin.Context) {
 }
 
 // check user's group == name
-func checkInterviewGroupName(user *pkg.UserDetail, name string) error {
-	if name != "unique" {
+func checkInterviewGroupName(user *pkg.UserDetail, name pkg.Group) error {
+	if name != pkg.Unique {
 		if !utils.CheckInGroups(user.Groups, name) {
 			err := fmt.Errorf("you can't set other group's interview time")
 			return err

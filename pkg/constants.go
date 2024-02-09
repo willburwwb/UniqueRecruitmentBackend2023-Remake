@@ -11,18 +11,18 @@ const (
 	Ios     Group = "ios"
 	Design  Group = "design"
 	Pm      Group = "pm"
-	Unique  Group = "unique" // for group interview
+	Unique  Group = "unique" // for team interview
 )
 
-var GroupMap = map[string]Group{
-	"web":     "web",
-	"lab":     "lab",
-	"ai":      "ai",
-	"game":    "game",
-	"android": "android",
-	"ios":     "ios",
-	"design":  "design",
-	"pm":      "pm",
+var GroupMap = map[Group]struct{}{
+	Web:     struct{}{},
+	Lab:     struct{}{},
+	Ai:      struct{}{},
+	Game:    struct{}{},
+	Android: struct{}{},
+	Ios:     struct{}{},
+	Design:  struct{}{},
+	Pm:      struct{}{},
 }
 
 type Period string
@@ -122,6 +122,14 @@ type GroupOrTeam string
 const (
 	InGroup GroupOrTeam = "group"
 	InTeam  GroupOrTeam = "team"
+)
+
+type Evaluation int
+
+const (
+	Good Evaluation = iota
+	Normal
+	Bad
 )
 
 type Role string
