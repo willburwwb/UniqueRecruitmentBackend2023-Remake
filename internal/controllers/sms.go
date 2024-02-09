@@ -1,25 +1,25 @@
 package controllers
 
 import (
-	"UniqueRecruitmentBackend/pkg/grpc"
 	"errors"
 	"fmt"
-	"github.com/xylonx/zapx"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xylonx/zapx"
 
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
+	"UniqueRecruitmentBackend/pkg/grpc"
 	"UniqueRecruitmentBackend/pkg/sms"
 )
 
 // SendSMS send sms to user.
 // @Id send_sms
 // @Summary Send sms
-// @Description Send sms to user, include Accept,
+// @Description Send sms to user, include Accept, Reject, detailed information reference https://uniquestudio.feishu.cn/docx/Yh96d2DoyoCe6zxlR0ecSU5snDd?from=from_copylink
 // @Tags Sms
 // @Accept  json
 // @Produce json
@@ -37,7 +37,7 @@ func SendSMS(c *gin.Context) {
 	defer func() { common.Resp(c, nil, err) }()
 
 	opts := &pkg.SendSMSOpts{}
-	if err := c.ShouldBind(&opts); err != nil {
+	if err = c.ShouldBind(&opts); err != nil {
 		return
 	}
 
@@ -56,6 +56,7 @@ func SendSMS(c *gin.Context) {
 		return
 	}
 	if r.End.Before(time.Now()) {
+		err = fmt.Errorf("recruitment %s has already ended", r.Name)
 		return
 	}
 
@@ -90,24 +91,21 @@ func SendSMS(c *gin.Context) {
 
 		if opts.Type == pkg.Accept {
 			// check the interview time has been allocated
-			if opts.Next == string(pkg.GroupInterview) && len(r.GetInterviews(app.Group)) == 0 {
+			if opts.Next == pkg.GroupInterview && len(r.GetInterviews(app.Group)) == 0 {
 				errors = append(errors, fmt.Sprintf("no interviews are scheduled for %s", app.Group))
 				continue
 			}
-			if opts.Next == string(pkg.TeamInterview) && len(r.GetInterviews("unique")) == 0 {
+			if opts.Next == pkg.TeamInterview && len(r.GetInterviews("unique")) == 0 {
 				errors = append(errors, fmt.Sprintf("no interviews are scheduled for unique"))
 				continue
 			}
 		} else if opts.Type == pkg.Reject {
 			app.Rejected = true
 			// save application
-			if err := models.UpdateApplicationInfo(app); err != nil {
+			if err = models.UpdateApplicationInfo(app); err != nil {
 				errors = append(errors, fmt.Sprintf("update application %s failed, error: %s", aid, err.Error()))
+				continue
 			}
-			continue
-		} else {
-			errors = append(errors, "sms type is invalid")
-			continue
 		}
 
 		var smsBody *sms.SMSBody
@@ -120,7 +118,7 @@ func SendSMS(c *gin.Context) {
 		// send sms to candidate
 		smsBody.Phone = user.Phone
 		zapx.Infof("smsbody : %v", *smsBody)
-		if _, err := sms.SendSMS(*smsBody); err != nil {
+		if _, err = sms.SendSMS(*smsBody); err != nil {
 			errors = append(errors, fmt.Sprintf("send sms for user %s failed, error: %s", user.Name, err.Error()))
 			continue
 		}
@@ -153,15 +151,16 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 			//群面
 			case pkg.TeamInterview:
 				var allocationTime time.Time
-				if smsRequest.Next == string(pkg.GroupInterview) {
+				if smsRequest.Next == pkg.GroupInterview {
 					allocationTime = application.InterviewAllocationsGroup
-				} else if smsRequest.Next == string(pkg.TeamInterview) {
+				} else if smsRequest.Next == pkg.TeamInterview {
 					allocationTime = application.InterviewAllocationsTeam
 				}
+
 				if smsRequest.Place == "" {
 					return nil, errors.New("Place is not provided for " + userInfo.Name)
 				}
-				if allocationTime == (time.Time{}) {
+				if allocationTime.IsZero() {
 					return nil, errors.New("Interview time is not allocated for " + userInfo.Name)
 				}
 
@@ -184,14 +183,14 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				var allocationTime time.Time
 				var smsTemplate pkg.SMSTemplateType
 				// 为什么golang没有三目运算符orz
-				if smsRequest.Next == string(pkg.OnlineGroupInterview) {
+				if smsRequest.Next == pkg.OnlineGroupInterview {
 					allocationTime = application.InterviewAllocationsGroup
 					smsTemplate = pkg.OnLineGroupInterviewSMS
-				} else if smsRequest.Next == string(pkg.OnlineTeamInterview) {
+				} else if smsRequest.Next == pkg.OnlineTeamInterview {
 					allocationTime = application.InterviewAllocationsTeam
 					smsTemplate = pkg.OnLineTeamInterviewSMS
 				}
-				if allocationTime == (time.Time{}) {
+				if allocationTime.IsZero() {
 					return nil, errors.New("interview time is not allocated for " + userInfo.Name)
 				}
 				if smsRequest.MeetingId == "" {
@@ -234,16 +233,12 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				fallthrough
 			//群面时间选择
 			case pkg.TeamTimeSelection:
-
 				defaultRest = "，请进入选手dashboard系统选择面试时间"
 
 			default:
 				return nil, fmt.Errorf("next step %s is invalid", smsRequest.Next)
 			}
 
-			if smsRequest.Current == "" {
-				return nil, errors.New("current step is not provided")
-			}
 			// check the customize message
 			var smsResMessage string
 			if smsRequest.Rest == "" {
@@ -260,9 +255,6 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 		}
 	case pkg.Reject:
 		defaultRest := "不要灰心，继续学习。期待与更强大的你的相遇！"
-		if smsRequest.Current == "" {
-			return nil, errors.New("current step is not provided")
-		}
 		var smsResMessage string
 		if smsRequest.Rest == "" {
 			smsResMessage = defaultRest + suffix
@@ -277,4 +269,18 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 		return &smsBody, nil
 	}
 	return nil, errors.New("sms step is invalid")
+}
+
+// SendCode send code to member.
+// @Id send_code
+// @Summary Send code
+// @Description Send code to member
+// @Tags Sms
+// @Accept  json
+// @Produce json
+// @Success 200 {object} JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /sms [Post]
+func SendCode(c *gin.Context) {
+	//todo(wwb) send code to member
 }

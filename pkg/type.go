@@ -295,8 +295,8 @@ type CreateCommentOpts struct {
 
 type SendSMSOpts struct {
 	Type      SMSType  `json:"type" binding:"required"`    // the candidate status : Pass or Fail
-	Current   string   `json:"current" binding:"required"` // the application current step
-	Next      string   `json:"next" binding:"required"`    // the application next step
+	Current   Step     `json:"current" binding:"required"` // the application current step
+	Next      Step     `json:"next" binding:"required"`    // the application next step
 	Time      string   `json:"time"`                       // the next step(interview/test) time
 	Place     string   `json:"place"`                      // the next step(interview/test) place
 	MeetingId string   `json:"meeting_id"`
@@ -305,19 +305,27 @@ type SendSMSOpts struct {
 }
 
 func (opts *SendSMSOpts) Validate() (err error) {
-	if _, ok := ZhToEnStepMap[opts.Next]; !ok {
-		err = fmt.Errorf("request body error, next is invalid")
+	if opts.Type != Accept && opts.Type != Reject {
+		err = fmt.Errorf("sms type is invalid")
 		return
 	}
-	if _, ok := ZhToEnStepMap[opts.Current]; !ok {
-		err = fmt.Errorf("request body error, current is invalid")
-		return
+	if _, ok := ZhToEnStepMap[string(opts.Next)]; ok {
+		opts.Next = ZhToEnStepMap[string(opts.Next)]
+	}
+	if _, ok := ZhToEnStepMap[string(opts.Current)]; ok {
+		opts.Current = ZhToEnStepMap[string(opts.Current)]
 	}
 	if len(opts.Aids) == 0 {
 		err = fmt.Errorf("request body error, aids is nil")
 		return
 	}
-	opts.Next = ZhToEnStepMap[opts.Next]
-	opts.Current = ZhToEnStepMap[opts.Current]
+	if _, ok := EnToZhStepMap[opts.Next]; !ok {
+		err = fmt.Errorf("request body error, next is invalid")
+		return
+	}
+	if _, ok := EnToZhStepMap[opts.Current]; !ok {
+		err = fmt.Errorf("request body error, current is invalid")
+		return
+	}
 	return
 }

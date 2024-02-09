@@ -80,41 +80,41 @@ var StepMap = map[Step]string{
 }
 
 var StepRanks = map[Step]int{
-	"SignUp":               1,
-	"WrittenTest":          2,
-	"GroupTimeSelection":   3,
-	"GroupInterview":       4,
-	"OnlineGroupInterview": 4,
-	"StressTest":           5,
-	"TeamTimeSelection":    6,
-	"TeamInterview":        7,
-	"OnlineTeamInterview":  7,
-	"Pass":                 8,
+	SignUp:               1,
+	WrittenTest:          2,
+	GroupTimeSelection:   3,
+	GroupInterview:       4,
+	OnlineGroupInterview: 4,
+	StressTest:           5,
+	TeamTimeSelection:    6,
+	TeamInterview:        7,
+	OnlineTeamInterview:  7,
+	Pass:                 8,
 }
-var EnToZhStepMap = map[string]string{
-	"SignUp":               "报名",
-	"WrittenTest":          "笔试",
-	"GroupTimeSelection":   "组面时间选择",
-	"GroupInterview":       "组面",
-	"OnlineGroupInterview": "在线组面",
-	"StressTest":           "熬测",
-	"TeamTimeSelection":    "群面时间选择",
-	"TeamInterview":        "群面",
-	"OnlineTeamInterview":  "在线群面",
-	"Pass":                 "通过",
+var EnToZhStepMap = map[Step]string{
+	SignUp:               "报名",
+	WrittenTest:          "笔试",
+	GroupTimeSelection:   "组面时间选择",
+	GroupInterview:       "组面",
+	OnlineGroupInterview: "在线组面",
+	StressTest:           "熬测",
+	TeamTimeSelection:    "群面时间选择",
+	TeamInterview:        "团体面试", // Because of Tencent Cloud’s ban,change "群面" to "团体面试".
+	OnlineTeamInterview:  "在线群面",
+	Pass:                 "通过",
 }
 
-var ZhToEnStepMap = map[string]string{
-	"报名":     "SignUp",
-	"笔试":     "WrittenTest",
-	"组面时间选择": "GroupTimeSelection",
-	"组面":     "GroupInterview",
-	"在线组面":   "OnlineGroupInterview",
-	"熬测":     "StressTest",
-	"群面时间选择": "TeamTimeSelection",
-	"群面":     "TeamInterview",
-	"在线群面":   "OnlineTeamInterview",
-	"通过":     "Pass",
+var ZhToEnStepMap = map[string]Step{
+	"报名":     SignUp,
+	"笔试":     WrittenTest,
+	"组面时间选择": GroupTimeSelection,
+	"组面":     GroupInterview,
+	"在线组面":   OnlineGroupInterview,
+	"熬测":     StressTest,
+	"群面时间选择": TeamTimeSelection,
+	"群面":     TeamInterview,
+	"在线群面":   OnlineTeamInterview,
+	"通过":     Pass,
 }
 
 type GroupOrTeam string

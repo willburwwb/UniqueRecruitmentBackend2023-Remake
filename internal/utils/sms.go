@@ -10,7 +10,6 @@ var name = map[string]string{
 }
 
 func ConvertRecruitmentName(title string) string {
-
 	year := title[:4]
 	suffix := name[title[4:]]
 	if suffix == "" {
