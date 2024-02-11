@@ -48,9 +48,10 @@ func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) (*p
 
 func GetApplicationByIdForCandidate(aid string) (*pkg.Application, error) {
 	db := global.GetDB()
-
 	var a pkg.Application
-	if err := db.Preload("InterviewSelections").
+	if err := db.Preload("InterviewSelections", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("selectNumber") // omit selectNumber when candidate get
+	}).
 		Where("uid = ?", aid).
 		First(&a).Error; err != nil {
 		return nil, err

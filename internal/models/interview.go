@@ -11,6 +11,19 @@ func GetInterviewsByRidAndNameWithoutApp(rid string, name pkg.Group) ([]pkg.Inte
 	db := global.GetDB()
 	var res []pkg.Interview
 	if err := db.Model(&pkg.Interview{}).
+		Omit("\"selectNumber\", \"slotNumber\"").
+		Where("\"selectNumber\" < \"slotNumber\"").
+		Where("\"recruitmentId\" = ? AND name = ?", rid, name).
+		Find(&res).Error; err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func GetInterviewsByRidAndNameWithoutAppByMember(rid string, name pkg.Group) ([]pkg.Interview, error) {
+	db := global.GetDB()
+	var res []pkg.Interview
+	if err := db.Model(&pkg.Interview{}).
 		Where("\"recruitmentId\" = ? AND name = ?", rid, name).
 		Find(&res).Error; err != nil {
 		return nil, err

@@ -59,11 +59,11 @@ func NewRouter() *gin.Engine {
 		// public
 		recruitmentRouter.GET("/:rid", controllers.GetRecruitmentById)
 		recruitmentRouter.GET("/pending", controllers.GetPendingRecruitment)
+		recruitmentRouter.GET("/:rid/interviews/:name", controllers.GetRecruitmentInterviews)
 
 		// member role
 		recruitmentRouter.GET("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllRecruitment)
 		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetRecruitmentInterviews)
-		recruitmentRouter.GET("/:rid/interviews/:name", controllers.GetRecruitmentInterviews)
 
 		// admin role
 		recruitmentRouter.POST("/", middlewares.CheckAdminRoleMiddleWare, controllers.CreateRecruitment)
@@ -79,13 +79,13 @@ func NewRouter() *gin.Engine {
 		applicationRouter.DELETE("/:aid", controllers.DeleteApplication)
 		applicationRouter.GET("/:aid/slots/:type", controllers.GetInterviewsSlots)
 		applicationRouter.GET("/:aid/resume", controllers.GetResume)
-		applicationRouter.PUT("/:aid/interview/:type", controllers.SetApplicationInterviewTime)
+		applicationRouter.PUT("/:aid/slots/:type", controllers.SelectInterviewSlots)
 
 		// member
 		applicationRouter.PUT("/:aid/abandoned", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.AbandonApplication)
 		applicationRouter.GET("/recruitment/:rid", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllApplications)
-		applicationRouter.PUT("/:aid/slots/:type", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SelectInterviewSlots)
 		applicationRouter.PUT("/:aid/step", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetApplicationStep)
+		applicationRouter.PUT("/:aid/interview/:type", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetApplicationInterviewTime)
 	}
 
 	commentRouter := r.Group("/comments")

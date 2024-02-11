@@ -16,7 +16,7 @@ import (
 // GetRecruitmentInterviews get recruitment interviews
 // @Id get_recruitment_interviews.
 // @Summary get recruitment interviews.
-// @Description get recruitment interviews, only can be got by member(will get interviews of groups or unique)
+// @Description get recruitment interviews, candidate can't see slotNumber and selectNumber of Interviews (will get interviews of groups or unique), guarantee slotNumber > selectNumber
 // @Tags interviews
 // @Accept  json
 // @Produce  json
@@ -41,11 +41,15 @@ func GetRecruitmentInterviews(c *gin.Context) {
 		return
 	}
 
-	interviews, err = models.GetInterviewsByRidAndNameWithoutApp(opts.Rid, opts.Name)
+	if common.IsMember(c) {
+		interviews, err = models.GetInterviewsByRidAndNameWithoutAppByMember(opts.Rid, opts.Name)
+	} else {
+		interviews, err = models.GetInterviewsByRidAndNameWithoutApp(opts.Rid, opts.Name)
+	}
+
 	if err != nil {
 		return
 	}
-
 	return
 }
 
