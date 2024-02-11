@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"UniqueRecruitmentBackend/global"
-	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
 )
 
@@ -18,11 +17,10 @@ func CreateRecruitment(opts *pkg.CreateRecOpts) (r *pkg.Recruitment, err error) 
 	}
 
 	r = &pkg.Recruitment{
-		Name:       opts.Name,
-		Beginning:  opts.Beginning,
-		Deadline:   opts.Deadline,
-		End:        opts.End,
-		Statistics: utils.GenRecruitmentStatistics(),
+		Name:      opts.Name,
+		Beginning: opts.Beginning,
+		Deadline:  opts.Deadline,
+		End:       opts.End,
 	}
 	err = db.Model(&pkg.Recruitment{}).Create(r).Error
 	return
@@ -97,4 +95,27 @@ func GetPendingRecruitment() (*pkg.Recruitment, error) {
 		return nil, err
 	}
 	return &r, nil
+}
+
+func GetRecruitmentStatistics(rid string) (map[string]int, error) {
+	var results []struct {
+		Group string
+		Count int
+	}
+	statistics := make(map[string]int)
+	db := global.GetDB()
+	if err := db.Model(&pkg.Recruitment{}).
+		Select("applications.group, count(*) as count").
+		Joins("JOIN applications on recruitments.uid = applications.\"recruitmentId\"").
+		Where("recruitments.uid = ?", rid).
+		Group("applications.group").
+		Scan(&results).Error; err != nil {
+		return nil, err
+	}
+
+	for _, result := range results {
+		statistics[result.Group] = result.Count
+	}
+
+	return statistics, nil
 }

@@ -125,6 +125,7 @@ func GetRecruitmentById(c *gin.Context) {
 		r, err = models.GetRecruitmentById(opts.Rid)
 	}
 
+	r.Statistics, err = models.GetRecruitmentStatistics(opts.Rid)
 	return
 }
 
@@ -140,12 +141,18 @@ func GetRecruitmentById(c *gin.Context) {
 // @Router /recruitments [get]
 func GetAllRecruitment(c *gin.Context) {
 	var (
-		r   []pkg.Recruitment
-		err error
+		recruitments []pkg.Recruitment
+		err          error
 	)
-	defer func() { common.Resp(c, r, err) }()
+	defer func() { common.Resp(c, recruitments, err) }()
 
-	r, err = models.GetAllRecruitment()
+	recruitments, err = models.GetAllRecruitment()
+	for i := range recruitments {
+		recruitments[i].Statistics, err = models.GetRecruitmentStatistics(recruitments[i].Uid)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
@@ -178,6 +185,8 @@ func GetPendingRecruitment(c *gin.Context) {
 	} else {
 		r, err = models.GetRecruitmentById(r.Uid)
 	}
+
+	r.Statistics, err = models.GetRecruitmentStatistics(r.Uid)
 	return
 }
 

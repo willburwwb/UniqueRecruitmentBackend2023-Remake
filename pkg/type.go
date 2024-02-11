@@ -33,11 +33,11 @@ type UserDetailResp struct {
 
 type Recruitment struct {
 	Common
-	Name       string    `gorm:"not null;unique" json:"name"`
-	Beginning  time.Time `gorm:"not null" json:"beginning"`
-	Deadline   time.Time `gorm:"not null" json:"deadline"`
-	End        time.Time `gorm:"not null" json:"end"`
-	Statistics string    `gorm:"-" json:"statistics"`
+	Name       string         `gorm:"not null;unique" json:"name"`
+	Beginning  time.Time      `gorm:"not null" json:"beginning"`
+	Deadline   time.Time      `gorm:"not null" json:"deadline"`
+	End        time.Time      `gorm:"not null" json:"end"`
+	Statistics map[string]int `gorm:"-" json:"statistics"`
 
 	Applications []Application `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"applications"` //一个hr->简历 ;级联删除
 	Interviews   []Interview   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interviews"`   //一个hr->面试 ;级联删除
