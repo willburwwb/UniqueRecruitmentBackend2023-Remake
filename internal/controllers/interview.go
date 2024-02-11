@@ -13,6 +13,18 @@ import (
 	"UniqueRecruitmentBackend/pkg/grpc"
 )
 
+// GetRecruitmentInterviews get recruitment interviews
+// @Id get_recruitment_interviews.
+// @Summary get recruitment interviews.
+// @Description get recruitment interviews, only can be got by member(will get interviews of groups or unique)
+// @Tags interviews
+// @Accept  json
+// @Produce  json
+// @Param	rid path string true "recruitment id"
+// @Param 	name path pkg.Group true "pkg.Group or unique"
+// @Success 200 {object} common.JSONResult{data=[]pkg.Interview} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments/{rid}/interviews/{name} [get]
 func GetRecruitmentInterviews(c *gin.Context) {
 	var (
 		interviews []pkg.Interview
@@ -21,14 +33,15 @@ func GetRecruitmentInterviews(c *gin.Context) {
 
 	defer func() { common.Resp(c, interviews, err) }()
 
-	rid := c.Param("rid")
-	name := c.Param("name")
-	if rid == "" || name == "" {
-		err = fmt.Errorf("request param wrong, you should set rid and name")
+	opts := &pkg.GetInterviewsOpts{}
+	if err = c.ShouldBindUri(opts); err != nil {
+		return
+	}
+	if err = opts.Validate(); err != nil {
 		return
 	}
 
-	interviews, err = models.GetInterviewsByRidAndNameWithoutApp(rid, name)
+	interviews, err = models.GetInterviewsByRidAndNameWithoutApp(opts.Rid, opts.Name)
 	if err != nil {
 		return
 	}
@@ -36,9 +49,19 @@ func GetRecruitmentInterviews(c *gin.Context) {
 	return
 }
 
-// SetRecruitmentInterviews set group/team all interview times
-// PUT /recruitment/:rid/interviews/:name
-// Use put to prevent resource are duplicated
+// SetRecruitmentInterviews set recruitment interviews
+// @Id set_recruitment_interviews.
+// @Summary set recruitment interviews.
+// @Description get recruitment interviews, use PUt method to prevent resource are duplicated
+// @Tags interviews
+// @Accept  json
+// @Produce  json
+// @Param	rid path string true "recruitment id"
+// @Param 	name path pkg.Group true "pkg.Group or unique"
+// @Param	[]pkg.UpdateInterviewOpts body []pkg.UpdateInterviewOpts true "update interview info"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments/{rid}/interviews/{name} [put]
 func SetRecruitmentInterviews(c *gin.Context) {
 	var (
 		r                *pkg.Recruitment
@@ -93,10 +116,15 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		if interview.Uid != "" {
 			// update
 			interviewsToUpdate[interview.Uid] = pkg.Interview{
+				Common: pkg.Common{
+					Uid: interview.Uid,
+				},
 				Name:          name,
 				RecruitmentID: rid,
 				Date:          interview.Date,
 				Period:        interview.Period,
+				Start:         interview.Start,
+				End:           interview.End,
 				SlotNumber:    interview.SlotNumber,
 			}
 		} else {
@@ -106,6 +134,8 @@ func SetRecruitmentInterviews(c *gin.Context) {
 				RecruitmentID: rid,
 				Date:          interview.Date,
 				Period:        interview.Period,
+				Start:         interview.Start,
+				End:           interview.End,
 				SlotNumber:    interview.SlotNumber,
 			})
 		}
@@ -119,25 +149,30 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	var errors []string
 
 	for _, origin := range originInterviews {
-		value, ok := interviewsToUpdate[origin.Uid]
+		interview, ok := interviewsToUpdate[origin.Uid]
 		if ok {
+			// update
 			// check whether the interview time has been selected by candidates
-			if len(origin.Applications) != 0 && (!utils.ComPareTimeHour(origin.Date, value.Date) || origin.Period != value.Period) {
-				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))
+			if len(origin.Applications) != 0 && !checkUpdateInterview(&origin, &interview) {
+				errors = append(errors, fmt.Sprintf("interview %s have been selected", origin.Uid))
+			} else {
+				if errdb := models.UpdateInterview(&interview); errdb != nil {
+					errors = append(errors, fmt.Sprintf("update interviews db failed, err: %s", errdb.Error()))
+				}
 			}
 		} else {
 			// delete
+			// check whether the interview time has been selected by candidates
 			if len(origin.Applications) != 0 {
-				// when some candidates have selected this interview time, abort delete
-				errors = append(errors, fmt.Sprintf("interview %v have been selected", origin))
+				errors = append(errors, fmt.Sprintf("interview %s have been selected", origin.Uid))
 			} else {
 				interviewIdsToDel = append(interviewIdsToDel, origin.Uid)
 			}
 		}
 	}
 
-	if errdb := models.UpdateInterview(interviewsToAdd, interviewIdsToDel, interviewsToUpdate); errdb != nil {
-		errors = append(errors, fmt.Sprintf("update interviews db failed, err: %s", errdb.Error()))
+	if errdb := models.AddAndDeleteInterviews(interviewsToAdd, interviewIdsToDel); errdb != nil {
+		errors = append(errors, fmt.Sprintf("add and delete interviews db failed, err: %s", errdb.Error()))
 	}
 
 	if len(errors) != 0 {
@@ -156,4 +191,21 @@ func checkInterviewGroupName(user *pkg.UserDetail, name pkg.Group) error {
 		}
 	}
 	return nil
+}
+
+// check if interview times are equal
+func checkUpdateInterview(origin *pkg.Interview, interview *pkg.Interview) bool {
+	if !origin.Date.Equal(interview.Date) {
+		return false
+	}
+	if !origin.Start.Equal(interview.Date) {
+		return false
+	}
+	if !origin.End.Equal(interview.Date) {
+		return false
+	}
+	if origin.Period != interview.Period {
+		return false
+	}
+	return true
 }

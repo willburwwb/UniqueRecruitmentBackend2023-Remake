@@ -11,7 +11,7 @@ func CreateComment(req *pkg.CreateCommentOpts) (*pkg.Comment, error) {
 		ApplicationID: req.ApplicationID,
 		MemberID:      req.MemberID,
 		Content:       req.Content,
-		Evaluation:    pkg.Evaluation(req.Evaluation),
+		Evaluation:    req.Evaluation,
 	}
 	err := db.Create(c).Error
 	return c, err

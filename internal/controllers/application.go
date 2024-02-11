@@ -9,14 +9,24 @@ import (
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"errors"
 	"fmt"
+	"github.com/xylonx/zapx"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// CreateApplication create an application. Remember to submit data with form instead of json!!!
-// POST applications/
+// CreateApplication create application.
+// @Id create_application.
+// @Summary create an application for candidate.
+// @Description create an application. Remember to submit data with form instead of json!!!
+// @Tags application
+// @Accept  multipart/form-data
+// @Produce  json
+// @Param pkg.CreateAppOpts body pkg.CreateAppOpts true "application detail"
+// @Success 200 {object} common.JSONResult{data=pkg.Application} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications [post]
 func CreateApplication(c *gin.Context) {
 	var (
 		app *pkg.Application
@@ -47,8 +57,8 @@ func CreateApplication(c *gin.Context) {
 	uid := common.GetUID(c)
 	filePath := ""
 	if opts.Resume != nil {
-		// file path example: 2023秋(rname)/web(group)/wwb(uid)/filename
-		filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, opts.Group, uid, opts.Resume.Filename)
+		// file path example: 2023秋(rname)/wwb(uid)/filename
+		filePath = fmt.Sprintf("%s/%s/%s", r.Name, uid, opts.Resume.Filename)
 	}
 
 	//save application to database
@@ -56,9 +66,17 @@ func CreateApplication(c *gin.Context) {
 	return
 }
 
-// GetApplication get candidate's application by applicationId
-// GET applications/:aid
-// candidate and member will see two different views of application
+// GetApplication get application.
+// @Id get_application.
+// @Summary get an application for candidate and member
+// @Description get candidate's application by applicationId, candidate and member will see different views of application
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Success 200 {object} common.JSONResult{data=pkg.Application} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid} [get]
 func GetApplication(c *gin.Context) {
 	var (
 		app  *pkg.Application
@@ -97,9 +115,18 @@ func GetApplication(c *gin.Context) {
 	return
 }
 
-// UpdateApplication update candidate's application by applicationId
-// PUT applications/:aid
-// only by application's candidate
+// UpdateApplication update application.
+// @Id update_application.
+// @Summary update candidate's application by applicationId
+// @Description update candidate's application by applicationId, can only be modified by application's owner
+// @Tags application
+// @Accept  multipart/form-data
+// @Produce  json
+// @Param aid path string true "application id"
+// @Param pkg.UpdateAppOpts body pkg.UpdateAppOpts true "update application opts"
+// @Success 200 {object} common.JSONResult{data=pkg.Application} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid} [put]
 func UpdateApplication(c *gin.Context) {
 	var (
 		app *pkg.Application
@@ -146,20 +173,24 @@ func UpdateApplication(c *gin.Context) {
 
 	filePath := ""
 	if opts.Resume != nil {
-		if opts.Group != "" {
-			filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, opts.Group, uid, opts.Resume.Filename)
-		} else {
-			filePath = fmt.Sprintf("%s/%s/%s/%s", r.Name, app.Group, uid, opts.Resume.Filename)
-		}
+		filePath = fmt.Sprintf("%s/%s/%s", r.Name, uid, opts.Resume.Filename)
 	}
 
 	app, err = models.UpdateApplication(opts, filePath)
 	return
 }
 
-// DeleteApplication delete candidate's application by applicationId
-// DELETE applications/:aid
-// only by application's candidate
+// DeleteApplication delete application.
+// @Id delete_application.
+// @Summary delete candidate's application by applicationId
+// @Description delete candidate's application by applicationId, can only be deleted by application's owner
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Success 200 {object} common.JSONResult{data=pkg.Application} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid} [delete]
 func DeleteApplication(c *gin.Context) {
 	var (
 		app *pkg.Application
@@ -188,9 +219,17 @@ func DeleteApplication(c *gin.Context) {
 	return
 }
 
-// AbandonApplication abandon candidate's application by applicationId
-// DELETE applications/:aid/abandoned
-// only by the member of application's group
+// AbandonApplication abandon application.
+// @Id abandon_application.
+// @Summary abandon candidate's application by applicationId
+// @Description abandon candidate's application by applicationId, can only be abandoned by member of the corresponding group
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid}/abandoned [put]
 func AbandonApplication(c *gin.Context) {
 	var (
 		err error
@@ -214,8 +253,17 @@ func AbandonApplication(c *gin.Context) {
 	return
 }
 
-// GetResume Download resume by application's
-// GET applications/:aid/resume
+// GetResume get application's resume.
+// @Id get_resume.
+// @Summary get application's resume by applicationId
+// @Description get application's resume by applicationId, can only be got by member or application's owner
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid}/resume [get]
 func GetResume(c *gin.Context) {
 	var (
 		app *pkg.Application
@@ -259,9 +307,17 @@ func GetResume(c *gin.Context) {
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
 }
 
-// GetAllApplications get all applications by recruitmentId
-// GET applications/recruitment/:rid
-// member role
+// GetAllApplications get all applications by recruitmentId.
+// @Id get_all_applications.
+// @Summary get all applications by recruitmentId.
+// @Description get all applications by recruitmentId, can only be got by member, applications information included comments and interview selections.
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Success 200 {object} common.JSONResult{data=[]pkg.Application} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/recruitment/{rid} [get]
 func GetAllApplications(c *gin.Context) {
 	var (
 		apps []pkg.Application
@@ -299,8 +355,17 @@ func GetAllApplications(c *gin.Context) {
 	return
 }
 
-// PUT applications/:aid/step
-// only by the member of application's group
+// SetApplicationStep set application step by applicationId.
+// @Id set_application_step.
+// @Summary set application step by applicationId.
+// @Description get all applications by recruitmentId, can only be modified by member of the corresponding group
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid}/step [put]
 func SetApplicationStep(c *gin.Context) {
 	var (
 		err error
@@ -328,9 +393,18 @@ func SetApplicationStep(c *gin.Context) {
 	return
 }
 
-// SetApplicationInterviewTime allocate application's group/team interview time
-// PUT /:aid/interview/:type
-// by the member of application's group
+// SetApplicationInterviewTime set_application_interview_time
+// @Id set_application_interview_time.
+// @Summary allocate application's group/team interview time.
+// @Description allocate application's group/team interview time, can only be modified by member of the corresponding group
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Param	type path pkg.GroupOrTeam true "application id"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid}/interview/{type} [put]
 func SetApplicationInterviewTime(c *gin.Context) {
 	var (
 		app *pkg.Application
@@ -378,9 +452,18 @@ func SetApplicationInterviewTime(c *gin.Context) {
 	return
 }
 
-// GetInterviewsSlots get the interviews times candidates can select
-// GET /:aid/slots/:type
-// candidate / member role
+// GetInterviewsSlots set_application_interview_time
+// @Id set_application_interview_time.
+// @Summary allocate application's group/team interview time.
+// @Description allocate application's group/team interview time, can only be modified by member of the corresponding group
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Param	type path pkg.GroupOrTeam true "group or team"
+// @Success 200 {object} common.JSONResult{data=[]pkg.Interview} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid}/interview/{type} [get]
 func GetInterviewsSlots(c *gin.Context) {
 	var (
 		interviews []pkg.Interview
@@ -423,10 +506,18 @@ func GetInterviewsSlots(c *gin.Context) {
 	return
 }
 
-// SelectInterviewSlots candidate select group/team interview time
-// to save time, this api will not check Whether slotnum exceeds the limit
-// PUT /:aid/slots/:type
-// candidate role
+// SelectInterviewSlots select interview slots
+// @Id select_interview_slots.
+// @Summary candidate select group/team interview time.
+// @Description candidate select group/team interview time, to save time, this api will not check Whether slot number exceeds the limit
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Param	type path pkg.GroupOrTeam true "group or team"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid}/slots/{type} [put]
 func SelectInterviewSlots(c *gin.Context) {
 	var (
 		app *pkg.Application
@@ -498,7 +589,10 @@ func SelectInterviewSlots(c *gin.Context) {
 		interviews = append(interviews, interview)
 	}
 
-	if updateErr := models.UpdateInterviewSelection(app, interviews); updateErr != nil {
+	iidsToAdd, iidsToDel := getAddAndDelInterviews(app.InterviewSelections, opts.Iids)
+	zapx.Infof("iidsToAdd %v, iidsToDel %v", iidsToAdd, iidsToDel)
+
+	if updateErr := models.UpdateInterviewSelection(app, interviews, iidsToAdd, iidsToDel); updateErr != nil {
 		ierrors = append(ierrors, fmt.Sprintf("[%s]", updateErr.Error()))
 	}
 	if len(ierrors) != 0 {
@@ -575,4 +669,33 @@ func checkMemberGroup(aid string, uid string) (err error) {
 
 	return errors.New("you and the candidate are not in the same group, " +
 		"and you cannot manipulate other people’s application. ")
+}
+
+func getAddAndDelInterviews(originInterviews []pkg.Interview, selectIids []string) (iidsToAdd []string, iidsToDel []string) {
+	for i := range originInterviews {
+		ok := false
+		for _, selectIid := range selectIids {
+			if originInterviews[i].Uid == selectIid {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			iidsToDel = append(iidsToDel, originInterviews[i].Uid)
+		}
+	}
+
+	for _, selectIid := range selectIids {
+		ok := false
+		for i := range originInterviews {
+			if originInterviews[i].Uid == selectIid {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			iidsToAdd = append(iidsToAdd, selectIid)
+		}
+	}
+	return
 }

@@ -247,8 +247,11 @@ func (opts *GetInterviewsSlotsOpts) Validate() (err error) {
 type Interview struct {
 	Common
 	Date          time.Time     `json:"date" gorm:"not null;uniqueIndex:interviews_all"`
-	Period        Period        `json:"period" gorm:"not null;uniqueIndex:interviews_all"` //pkg.Period
-	Name          Group         `json:"name" gorm:"not null;uniqueIndex:interviews_all"`   //pkg.Group
+	Period        Period        `json:"period" gorm:"not null;uniqueIndex:interviews_all"`
+	Name          Group         `json:"name" gorm:"not null;uniqueIndex:interviews_all"`
+	Start         time.Time     `json:"start" gorm:"not null;"`
+	End           time.Time     `json:"end" gorm:"not null;"`
+	SelectNumber  int           `json:"select_number" gorm:"not null;column:selectNumber;default:0"`
 	SlotNumber    int           `json:"slot_number" gorm:"column:slotNumber;not null"`
 	RecruitmentID string        `json:"recruitment_id" gorm:"not null;column:recruitmentId;type:uuid;uniqueIndex:interviews_all"` //manytoone
 	Applications  []Application `json:"applications,omitempty" gorm:"many2many:interview_selections"`                             //manytomany
@@ -258,10 +261,25 @@ func (c Interview) TableName() string {
 	return "interviews"
 }
 
+type GetInterviewsOpts struct {
+	Rid  string `uri:"rid" binding:"required"`
+	Name Group  `uri:"name" binding:"required"`
+}
+
+func (opts *GetInterviewsOpts) Validate() (err error) {
+	if _, ok := GroupMap[opts.Name]; !ok {
+		err = fmt.Errorf("request param wrong, you should set name")
+		return
+	}
+	return nil
+}
+
 type UpdateInterviewOpts struct {
 	Uid        string    `json:"uid" form:"uid"`
 	Date       time.Time `json:"date" form:"date" binding:"required"`
 	Period     Period    `json:"period" form:"period" binding:"required" `
+	Start      time.Time `json:"start" form:"start" binding:"required"`
+	End        time.Time `json:"end" form:"end" binding:"required"`
 	SlotNumber int       `json:"slot_number" form:"slot_number" binding:"required"`
 }
 
@@ -280,9 +298,9 @@ func (c Comment) TableName() string {
 type CreateCommentOpts struct {
 	MemberID string `json:"member_id"`
 
-	ApplicationID string `json:"application_id" binding:"required"`
-	Content       string `json:"content" binding:"required"`
-	Evaluation    int    `json:"evaluation"`
+	ApplicationID string     `json:"application_id" binding:"required"`
+	Content       string     `json:"content" binding:"required"`
+	Evaluation    Evaluation `json:"evaluation" binding:"required"`
 }
 
 type SendSMSOpts struct {

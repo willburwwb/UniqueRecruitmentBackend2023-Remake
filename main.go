@@ -6,7 +6,7 @@ import (
 
 // @title           UniqueStudio Recruitment API
 // @version         0.1
-// @description     This is API doc of UniqueStudio Recruitment.
+// @description     This is API doc of UniqueStudio Recruitment. For more API information, please see https://app.apifox.com/project/2985744
 
 // @contact.email  wwbstar07@gmail.com
 

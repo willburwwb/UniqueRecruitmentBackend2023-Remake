@@ -19,6 +19,7 @@ ARG PROJECT_NAME=uniquehr
 
 COPY --from=builder /app/main ./${PROJECT_NAME}
 COPY --from=builder /app/config.local.yml ./config.local.yml
+COPY --from=builder /app/docs/* ./docs/*
 
 EXPOSE 3333
 

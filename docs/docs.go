@@ -17,9 +17,1001 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/applications": {
+            "post": {
+                "description": "create an application. Remember to submit data with form instead of json!!!",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "create an application for candidate.",
+                "operationId": "create_application.",
+                "parameters": [
+                    {
+                        "description": "application detail",
+                        "name": "pkg.CreateAppOpts",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.CreateAppOpts"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.Application"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/recruitment/{rid}": {
+            "get": {
+                "description": "get all applications by recruitmentId, can only be got by member, applications information included comments and interview selections.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "get all applications by recruitmentId.",
+                "operationId": "get_all_applications.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/pkg.Application"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{aid}": {
+            "get": {
+                "description": "get candidate's application by applicationId, candidate and member will see different views of application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "get an application for candidate and member",
+                "operationId": "get_application.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.Application"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update candidate's application by applicationId, can only be modified by application's owner",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "update candidate's application by applicationId",
+                "operationId": "update_application.",
+                "parameters": [
+                    {
+                        "description": "update application opts",
+                        "name": "pkg.UpdateAppOpts",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.UpdateAppOpts"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.Application"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete candidate's application by applicationId, can only be deleted by application's owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "delete candidate's application by applicationId",
+                "operationId": "delete_application.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.Application"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{aid}/abandoned": {
+            "put": {
+                "description": "abandon candidate's application by applicationId, can only be abandoned by member of the corresponding group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "abandon candidate's application by applicationId",
+                "operationId": "abandon_application.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{aid}/interview/{type}": {
+            "get": {
+                "description": "allocate application's group/team interview time, can only be modified by member of the corresponding group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "allocate application's group/team interview time.",
+                "operationId": "set_application_interview_time.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "group",
+                            "team"
+                        ],
+                        "type": "string",
+                        "description": "group or team",
+                        "name": "type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/pkg.Interview"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "allocate application's group/team interview time, can only be modified by member of the corresponding group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "allocate application's group/team interview time.",
+                "operationId": "set_application_interview_time.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "group",
+                            "team"
+                        ],
+                        "type": "string",
+                        "description": "application id",
+                        "name": "type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{aid}/resume": {
+            "get": {
+                "description": "get application's resume by applicationId, can only be got by member or application's owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "get application's resume by applicationId",
+                "operationId": "get_resume.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{aid}/slots/{type}": {
+            "put": {
+                "description": "candidate select group/team interview time, to save time, this api will not check Whether slot number exceeds the limit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "candidate select group/team interview time.",
+                "operationId": "select_interview_slots.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "group",
+                            "team"
+                        ],
+                        "type": "string",
+                        "description": "group or team",
+                        "name": "type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{aid}/step": {
+            "put": {
+                "description": "get all applications by recruitmentId, can only be modified by member of the corresponding group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "set application step by applicationId.",
+                "operationId": "set_application_step.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments": {
+            "post": {
+                "description": "create comment for applications, only can be created by member.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "comment"
+                ],
+                "summary": "create comment for application",
+                "operationId": "create_comment.",
+                "parameters": [
+                    {
+                        "description": "create comment opts",
+                        "name": "pkg.CreateCommentOpts",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.CreateCommentOpts"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.Comment"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{cid}": {
+            "delete": {
+                "description": "delete comment of application, only can be deleted by comment's owner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "comment"
+                ],
+                "summary": "delete comment of application",
+                "operationId": "delete_comment.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "comment uid",
+                        "name": "cid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/recruitments": {
+            "get": {
+                "description": "get pending(the most recent) recruitment, member can only get the recruitment's detail(include application, interviews) after join in.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recruitment"
+                ],
+                "summary": "get pending recruitment.",
+                "operationId": "get_pending_recruitment.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.Recruitment"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "gcreate recruitment, only can be created by admin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recruitment"
+                ],
+                "summary": "create recruitment.",
+                "operationId": "create_recruitment.",
+                "parameters": [
+                    {
+                        "description": "create recruitment opts",
+                        "name": "pkg.CreateRecOpts",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.CreateRecOpts"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/pkg.Recruitment"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/recruitments/{rid}": {
+            "get": {
+                "description": "get recruitment, member can only get the recruitment's detail(include application, interviews) after join in.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recruitment"
+                ],
+                "summary": "get recruitment.",
+                "operationId": "get_recruitment.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recruitment uid",
+                        "name": "rid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pkg.Recruitment"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update recruitment, only can be updated by admin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recruitment"
+                ],
+                "summary": "update recruitment.",
+                "operationId": "update_recruitment.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recruitment uid",
+                        "name": "rid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "update recruitment opts",
+                        "name": "pkg.UpdateRecOpts",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg.UpdateRecOpts"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/recruitments/{rid}/interviews/{name}": {
+            "get": {
+                "description": "get recruitment interviews, only can be got by member(will get interviews of groups or unique)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "interviews"
+                ],
+                "summary": "get recruitment interviews.",
+                "operationId": "get_recruitment_interviews.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recruitment id",
+                        "name": "rid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "web",
+                            "lab",
+                            "ai",
+                            "game",
+                            "android",
+                            "ios",
+                            "design",
+                            "pm",
+                            "unique"
+                        ],
+                        "type": "string",
+                        "description": "pkg.Group or unique",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/pkg.Interview"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "get recruitment interviews, use PUt method to prevent resource are duplicated",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "interviews"
+                ],
+                "summary": "set recruitment interviews.",
+                "operationId": "set_recruitment_interviews.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recruitment id",
+                        "name": "rid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "web",
+                            "lab",
+                            "ai",
+                            "game",
+                            "android",
+                            "ios",
+                            "design",
+                            "pm",
+                            "unique"
+                        ],
+                        "type": "string",
+                        "description": "pkg.Group or unique",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "update interview info",
+                        "name": "[]pkg.UpdateInterviewOpts",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/pkg.UpdateInterviewOpts"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/sms": {
+            "post": {
+                "description": "Send code to member(todo)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sms"
+                ],
+                "summary": "Send code",
+                "operationId": "send_code",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
         "/user/me": {
             "get": {
-                "description": "Get user detail include applications and interview selections",
+                "description": "Get user detail include applications and interview selections (without comments)",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,6 +1065,20 @@ const docTemplate = `{
                 }
             }
         },
+        "multipart.FileHeader": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string"
+                },
+                "header": {
+                    "$ref": "#/definitions/textproto.MIMEHeader"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "pkg.Application": {
             "type": "object",
             "properties": {
@@ -99,7 +1105,11 @@ const docTemplate = `{
                 },
                 "group": {
                     "description": "pkg.Group",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pkg.Group"
+                        }
+                    ]
                 },
                 "institute": {
                     "type": "string"
@@ -144,7 +1154,11 @@ const docTemplate = `{
                 },
                 "step": {
                     "description": "pkg.Step",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pkg.Step"
+                        }
+                    ]
                 },
                 "uid": {
                     "type": "string"
@@ -190,6 +1204,103 @@ const docTemplate = `{
                 }
             }
         },
+        "pkg.CreateAppOpts": {
+            "type": "object",
+            "required": [
+                "grade",
+                "group",
+                "institute",
+                "intro",
+                "major",
+                "rank",
+                "recruitment_id"
+            ],
+            "properties": {
+                "grade": {
+                    "type": "string"
+                },
+                "group": {
+                    "$ref": "#/definitions/pkg.Group"
+                },
+                "institute": {
+                    "type": "string"
+                },
+                "intro": {
+                    "description": "自我介绍",
+                    "type": "string"
+                },
+                "is_quick": {
+                    "description": "速通",
+                    "type": "boolean"
+                },
+                "major": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                },
+                "recruitment_id": {
+                    "type": "string"
+                },
+                "referrer": {
+                    "description": "推荐人",
+                    "type": "string"
+                },
+                "resume": {
+                    "description": "简历",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/multipart.FileHeader"
+                        }
+                    ]
+                }
+            }
+        },
+        "pkg.CreateCommentOpts": {
+            "type": "object",
+            "required": [
+                "application_id",
+                "content",
+                "evaluation"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "evaluation": {
+                    "$ref": "#/definitions/pkg.Evaluation"
+                },
+                "member_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.CreateRecOpts": {
+            "type": "object",
+            "required": [
+                "beginning",
+                "deadline",
+                "end",
+                "name"
+            ],
+            "properties": {
+                "beginning": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "pkg.Evaluation": {
             "type": "integer",
             "enum": [
@@ -216,6 +1327,34 @@ const docTemplate = `{
                 "Oth"
             ]
         },
+        "pkg.Group": {
+            "type": "string",
+            "enum": [
+                "web",
+                "lab",
+                "ai",
+                "game",
+                "android",
+                "ios",
+                "design",
+                "pm",
+                "unique"
+            ],
+            "x-enum-comments": {
+                "Unique": "for team interview"
+            },
+            "x-enum-varnames": [
+                "Web",
+                "Lab",
+                "Ai",
+                "Game",
+                "Android",
+                "Ios",
+                "Design",
+                "Pm",
+                "Unique"
+            ]
+        },
         "pkg.Interview": {
             "type": "object",
             "properties": {
@@ -232,24 +1371,27 @@ const docTemplate = `{
                 "date": {
                     "type": "string"
                 },
-                "name": {
-                    "description": "pkg.Group",
+                "end": {
                     "type": "string"
                 },
+                "name": {
+                    "$ref": "#/definitions/pkg.Group"
+                },
                 "period": {
-                    "description": "pkg.Period",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/pkg.Period"
-                        }
-                    ]
+                    "$ref": "#/definitions/pkg.Period"
                 },
                 "recruitment_id": {
                     "description": "manytoone",
                     "type": "string"
                 },
+                "select_number": {
+                    "type": "integer"
+                },
                 "slot_number": {
                     "type": "integer"
+                },
+                "start": {
+                    "type": "string"
                 },
                 "uid": {
                     "type": "string"
@@ -271,6 +1413,247 @@ const docTemplate = `{
                 "Afternoon",
                 "Evening"
             ]
+        },
+        "pkg.Recruitment": {
+            "type": "object",
+            "properties": {
+                "applications": {
+                    "description": "一个hr-\u003e简历 ;级联删除",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg.Application"
+                    }
+                },
+                "beginning": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "interviews": {
+                    "description": "一个hr-\u003e面试 ;级联删除",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg.Interview"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "statistics": {
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.SMSType": {
+            "type": "string",
+            "enum": [
+                "Accept",
+                "Reject"
+            ],
+            "x-enum-varnames": [
+                "Accept",
+                "Reject"
+            ]
+        },
+        "pkg.SendSMSOpts": {
+            "type": "object",
+            "required": [
+                "current",
+                "next",
+                "type"
+            ],
+            "properties": {
+                "aids": {
+                    "description": "the applications will be sent sms",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "current": {
+                    "description": "the application current step",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pkg.Step"
+                        }
+                    ]
+                },
+                "meeting_id": {
+                    "type": "string"
+                },
+                "next": {
+                    "description": "the application next step",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pkg.Step"
+                        }
+                    ]
+                },
+                "place": {
+                    "description": "the next step(interview/test) place",
+                    "type": "string"
+                },
+                "rest": {
+                    "type": "string"
+                },
+                "time": {
+                    "description": "the next step(interview/test) time",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "the candidate status : Pass or Fail",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pkg.SMSType"
+                        }
+                    ]
+                }
+            }
+        },
+        "pkg.Step": {
+            "type": "string",
+            "enum": [
+                "SignUp",
+                "WrittenTest",
+                "GroupTimeSelection",
+                "GroupInterview",
+                "OnlineGroupInterview",
+                "StressTest",
+                "TeamTimeSelection",
+                "TeamInterview",
+                "OnlineTeamInterview",
+                "Pass"
+            ],
+            "x-enum-comments": {
+                "GroupInterview": "组面",
+                "GroupTimeSelection": "组面时间选择",
+                "OnlineGroupInterview": "在线组面",
+                "OnlineTeamInterview": "在线群面",
+                "Pass": "通过",
+                "SignUp": "报名",
+                "StressTest": "熬测",
+                "TeamInterview": "群面",
+                "TeamTimeSelection": "面试时间选择",
+                "WrittenTest": "笔试"
+            },
+            "x-enum-varnames": [
+                "SignUp",
+                "WrittenTest",
+                "GroupTimeSelection",
+                "GroupInterview",
+                "OnlineGroupInterview",
+                "StressTest",
+                "TeamTimeSelection",
+                "TeamInterview",
+                "OnlineTeamInterview",
+                "Pass"
+            ]
+        },
+        "pkg.UpdateAppOpts": {
+            "type": "object",
+            "properties": {
+                "aid": {
+                    "type": "string"
+                },
+                "grade": {
+                    "type": "string"
+                },
+                "group": {
+                    "$ref": "#/definitions/pkg.Group"
+                },
+                "institute": {
+                    "type": "string"
+                },
+                "intro": {
+                    "description": "自我介绍",
+                    "type": "string"
+                },
+                "is_quick": {
+                    "description": "速通",
+                    "type": "boolean"
+                },
+                "major": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                },
+                "referrer": {
+                    "description": "推荐人",
+                    "type": "string"
+                },
+                "resume": {
+                    "description": "简历",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/multipart.FileHeader"
+                        }
+                    ]
+                }
+            }
+        },
+        "pkg.UpdateInterviewOpts": {
+            "type": "object",
+            "required": [
+                "date",
+                "end",
+                "period",
+                "slot_number",
+                "start"
+            ],
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "period": {
+                    "$ref": "#/definitions/pkg.Period"
+                },
+                "slot_number": {
+                    "type": "integer"
+                },
+                "start": {
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg.UpdateRecOpts": {
+            "type": "object",
+            "properties": {
+                "beginning": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rid": {
+                    "type": "string"
+                }
+            }
         },
         "pkg.UserDetail": {
             "type": "object",
@@ -353,6 +1736,15 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "textproto.MIMEHeader": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
         }
     },
     "externalDocs": {
@@ -368,7 +1760,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "UniqueStudio Recruitment API",
-	Description:      "This is API doc of UniqueStudio Recruitment.",
+	Description:      "This is API doc of UniqueStudio Recruitment. For more API information, please see https://app.apifox.com/project/2985744",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

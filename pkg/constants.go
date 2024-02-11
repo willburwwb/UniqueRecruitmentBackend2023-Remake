@@ -127,9 +127,9 @@ const (
 type Evaluation int
 
 const (
-	Good Evaluation = iota
-	Normal
-	Bad
+	Good   Evaluation = 0
+	Normal Evaluation = 1
+	Bad    Evaluation = 2
 )
 
 type Role string

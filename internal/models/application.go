@@ -199,18 +199,34 @@ func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {
 	return db.Updates(&application).Error
 }
 
-func UpdateInterviewSelection(app *pkg.Application, interviews []pkg.Interview) error {
+func UpdateInterviewSelection(app *pkg.Application, interviews []pkg.Interview, iidsToAdd, iidsToDel []string) error {
 	db := global.GetDB()
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if errClear := tx.Model(app).
+		if errDb := tx.Model(app).
 			Association("InterviewSelections").
-			Clear(); errClear != nil {
-			return errClear
+			Clear(); errDb != nil {
+			return errDb
 		}
 
 		app.InterviewSelections = interviews
-		if errUpdate := tx.Save(app).Error; errUpdate != nil {
-			return errUpdate
+		if errDb := tx.Save(app).Error; errDb != nil {
+			return errDb
+		}
+
+		if errDb := tx.Model(&pkg.Interview{}).
+			Where("uid IN ?", iidsToAdd).
+			Updates(map[string]interface{}{
+				"selectNumber": gorm.Expr("\"selectNumber\" + ?", 1),
+			}).Error; errDb != nil {
+			return errDb
+		}
+
+		if errDb := tx.Model(&pkg.Interview{}).
+			Where("uid IN ?", iidsToDel).
+			Updates(map[string]interface{}{
+				"selectNumber": gorm.Expr("\"selectNumber\" - ?", 1),
+			}).Error; errDb != nil {
+			return errDb
 		}
 		return nil
 	})

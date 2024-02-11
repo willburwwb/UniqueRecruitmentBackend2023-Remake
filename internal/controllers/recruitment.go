@@ -12,10 +12,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Post recruitment/
-// admin role
-
-// CreateRecruitment create new recruitment
+// CreateRecruitment create recruitment
+// @Id create_recruitment.
+// @Summary create recruitment.
+// @Description gcreate recruitment, only can be created by admin
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Param 	pkg.CreateRecOpts body pkg.CreateRecOpts true "create recruitment opts"
+// @Success 200 {object} common.JSONResult{data=[]pkg.Recruitment} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments [post]
 func CreateRecruitment(c *gin.Context) {
 	var (
 		r   *pkg.Recruitment
@@ -42,10 +49,18 @@ func CreateRecruitment(c *gin.Context) {
 	return
 }
 
-// Post recruitment/:rid/schedule
-// admin role
-
-// UpdateRecruitment update recruitment details
+// UpdateRecruitment update recruitment
+// @Id update_recruitment.
+// @Summary update recruitment.
+// @Description update recruitment, only can be updated by admin
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Param 	rid path string true "recruitment uid"
+// @Param 	pkg.UpdateRecOpts body pkg.UpdateRecOpts true "update recruitment opts"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments/{rid} [put]
 func UpdateRecruitment(c *gin.Context) {
 	var (
 		err error
@@ -69,10 +84,17 @@ func UpdateRecruitment(c *gin.Context) {
 	return
 }
 
-// Get recruitment/:rid
-
-// GetRecruitmentById get recruitment details by id
-// member can only get the recruitments' detail after join in
+// GetRecruitmentById get recruitment
+// @Id get_recruitment.
+// @Summary get recruitment.
+// @Description get recruitment, member can only get the recruitment's detail(include application, interviews) after join in.
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Param 	rid path string true "recruitment uid"
+// @Success 200 {object} common.JSONResult{data=pkg.Recruitment} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments/{rid} [get]
 func GetRecruitmentById(c *gin.Context) {
 	var (
 		r   *pkg.Recruitment
@@ -81,7 +103,7 @@ func GetRecruitmentById(c *gin.Context) {
 	defer func() { common.Resp(c, r, err) }()
 
 	opts := &pkg.GetRecOpts{}
-	if err = c.BindUri(opts); err != nil {
+	if err = c.ShouldBindUri(opts); err != nil {
 		return
 	}
 
@@ -106,9 +128,16 @@ func GetRecruitmentById(c *gin.Context) {
 	return
 }
 
-// Get recruitment/
-
-// GetAllRecruitment get all recruitment details
+// GetAllRecruitment get all recruitment
+// @Id get_all_recruitment.
+// @Summary get all recruitment.
+// @Description get all recruitment, can only be got by member(not include applications and interviews).
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.JSONResult{data=[]pkg.Recruitment} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments [get]
 func GetAllRecruitment(c *gin.Context) {
 	var (
 		r   []pkg.Recruitment
@@ -122,7 +151,16 @@ func GetAllRecruitment(c *gin.Context) {
 
 // Get recruitment/:rid/pending
 
-// GetPendingRecruitment get pending recruitment details
+// GetPendingRecruitment get pending recruitment
+// @Id get_pending_recruitment.
+// @Summary get pending recruitment.
+// @Description get pending(the most recent) recruitment, member can only get the recruitment's detail(include application, interviews) after join in.
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.JSONResult{data=pkg.Recruitment} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments [get]
 func GetPendingRecruitment(c *gin.Context) {
 	var (
 		r   *pkg.Recruitment

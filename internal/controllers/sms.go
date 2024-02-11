@@ -24,7 +24,7 @@ import (
 // @Accept  json
 // @Produce json
 // @Param pkg.SendSMSOpts body pkg.SendSMSOpts true "sms body params"
-// @Success 200 {object} JSONResult{} ""
+// @Success 200 {object} common.JSONResult{} ""
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
 // @Router /sms [Post]
 func SendSMS(c *gin.Context) {
@@ -271,14 +271,14 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 	return nil, errors.New("sms step is invalid")
 }
 
-// SendCode send code to member.
+// SendCode send code to member(todo).
 // @Id send_code
 // @Summary Send code
-// @Description Send code to member
+// @Description Send code to member(todo)
 // @Tags Sms
 // @Accept  json
 // @Produce json
-// @Success 200 {object} JSONResult{} ""
+// @Success 200 {object} common.JSONResult{} ""
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
 // @Router /sms [Post]
 func SendCode(c *gin.Context) {
