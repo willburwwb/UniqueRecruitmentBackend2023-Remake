@@ -401,7 +401,8 @@ func SetApplicationStep(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param	aid path int true "application id"
-// @Param	type path pkg.GroupOrTeam true "application id"
+// @Param	type path pkg.GroupOrTeam true "group or team"
+// @Param	interview_id body string true "interview uid"
 // @Success 200 {object} common.JSONResult{} ""
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
 // @Router /applications/{aid}/interview/{type} [put]

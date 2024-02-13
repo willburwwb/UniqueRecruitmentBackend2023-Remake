@@ -20,7 +20,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param 	pkg.CreateRecOpts body pkg.CreateRecOpts true "create recruitment opts"
-// @Success 200 {object} common.JSONResult{data=[]pkg.Recruitment} ""
+// @Success 200 {object} common.JSONResult{data=pkg.Recruitment} ""
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
 // @Router /recruitments [post]
 func CreateRecruitment(c *gin.Context) {
@@ -155,8 +155,6 @@ func GetAllRecruitment(c *gin.Context) {
 	}
 	return
 }
-
-// Get recruitment/:rid/pending
 
 // GetPendingRecruitment get pending recruitment
 // @Id get_pending_recruitment.

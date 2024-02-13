@@ -152,9 +152,9 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 			case pkg.TeamInterview:
 				var allocationTime time.Time
 				if smsRequest.Next == pkg.GroupInterview {
-					allocationTime = application.InterviewAllocationsGroup
+					allocationTime = application.InterviewAllocationsGroup.Start
 				} else if smsRequest.Next == pkg.TeamInterview {
-					allocationTime = application.InterviewAllocationsTeam
+					allocationTime = application.InterviewAllocationsTeam.Start
 				}
 
 				if smsRequest.Place == "" {
@@ -184,10 +184,10 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 				var smsTemplate pkg.SMSTemplateType
 				// 为什么golang没有三目运算符orz
 				if smsRequest.Next == pkg.OnlineGroupInterview {
-					allocationTime = application.InterviewAllocationsGroup
+					allocationTime = application.InterviewAllocationsGroup.Start
 					smsTemplate = pkg.OnLineGroupInterviewSMS
 				} else if smsRequest.Next == pkg.OnlineTeamInterview {
-					allocationTime = application.InterviewAllocationsTeam
+					allocationTime = application.InterviewAllocationsTeam.Start
 					smsTemplate = pkg.OnLineTeamInterviewSMS
 				}
 				if allocationTime.IsZero() {

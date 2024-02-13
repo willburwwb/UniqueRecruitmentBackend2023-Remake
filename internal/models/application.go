@@ -51,6 +51,10 @@ func GetApplicationByIdForCandidate(aid string) (*pkg.Application, error) {
 	var a pkg.Application
 	if err := db.Preload("InterviewSelections", func(db *gorm.DB) *gorm.DB {
 		return db.Omit("selectNumber") // omit selectNumber when candidate get
+	}).Preload("InterviewAllocationsGroup", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("selectNumber") // omit selectNumber when candidate get
+	}).Preload("InterviewAllocationsTeam", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("selectNumber") // omit selectNumber when candidate get
 	}).
 		Where("uid = ?", aid).
 		First(&a).Error; err != nil {
@@ -66,11 +70,12 @@ func GetApplicationById(aid string) (*pkg.Application, error) {
 	var a pkg.Application
 	if err := db.Preload("Comments").
 		Preload("InterviewSelections").
+		Preload("InterviewAllocationsGroup").
+		Preload("InterviewAllocationsTeam").
 		Where("uid = ?", aid).
 		First(&a).Error; err != nil {
 		return nil, err
 	}
-
 	return &a, nil
 }
 
@@ -185,6 +190,10 @@ func SetApplicationStepById(opts *pkg.SetAppStepOpts) error {
 
 func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {
 	db := global.GetDB()
+	if _, err := GetInterviewById(opts.InterviewId); err != nil {
+		return err
+	}
+
 	application, err := GetApplicationByIdForCandidate(opts.Aid)
 	if err != nil {
 		return err
@@ -192,12 +201,15 @@ func SetApplicationInterviewTime(opts *pkg.SetAppInterviewTimeOpts) error {
 
 	switch opts.InterviewType {
 	case pkg.InGroup:
-		application.InterviewAllocationsGroup = opts.Time
+		err = db.Model(&pkg.Application{}).
+			Where("uid = ?", application.Uid).
+			Update("\"interviewAllocationsGroupId\"", opts.InterviewId).Error
 	case pkg.InTeam:
-		application.InterviewAllocationsTeam = opts.Time
+		err = db.Model(&pkg.Application{}).
+			Where("uid = ?", application.Uid).
+			Update("\"interviewAllocationsTeamId\"", opts.InterviewId).Error
 	}
-
-	return db.Updates(&application).Error
+	return err
 }
 
 func UpdateInterviewSelection(app *pkg.Application, interviews []pkg.Interview, iidsToAdd, iidsToDel []string) error {
@@ -243,7 +255,13 @@ func UpdateApplicationInfo(application *pkg.Application) error {
 func GetApplicationsByUserId(userId string) (*[]pkg.Application, error) {
 	db := global.GetDB()
 	var apps []pkg.Application
-	if err := db.Preload("InterviewSelections").
+	if err := db.Preload("InterviewSelections", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("selectNumber", "slotNumber") // omit selectNumber when candidate get
+	}).Preload("InterviewAllocationsGroup", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("selectNumber", "slotNumber") // omit selectNumber when candidate get
+	}).Preload("InterviewAllocationsTeam", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("selectNumber", "slotNumber") // omit selectNumber when candidate get
+	}).
 		Where("\"candidateId\" = ?", userId).
 		Find(&apps).Error; err != nil {
 		return nil, err

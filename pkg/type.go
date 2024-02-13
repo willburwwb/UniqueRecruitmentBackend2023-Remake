@@ -94,26 +94,27 @@ type GetRecOpts struct {
 // uniqueIndex(CandidateID,RecruitmentID)
 type Application struct {
 	Common
-	Grade                     string    `gorm:"not null" json:"grade"` //pkg.Grade
-	Institute                 string    `gorm:"not null" json:"institute"`
-	Major                     string    `gorm:"not null" json:"major"`
-	Rank                      string    `gorm:"not null" json:"rank"`
-	Group                     Group     `gorm:"not null" json:"group"` //pkg.Group
-	Intro                     string    `gorm:"not null" json:"intro"`
-	IsQuick                   bool      `gorm:"column:isQuick;not null" json:"is_quick"`
-	Referrer                  string    `json:"referrer"`
-	Resume                    string    `json:"resume"`
-	Abandoned                 bool      `gorm:"not null; default false" json:"abandoned"`
-	Rejected                  bool      `gorm:"not null; default false" json:"rejected"`
-	Step                      Step      `gorm:"not null" json:"step"`                                                                          //pkg.Step
-	CandidateID               string    `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"candidate_id"`     //manytoone
-	RecruitmentID             string    `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"recruitment_id"` //manytoone
-	InterviewAllocationsGroup time.Time `gorm:"column:interviewAllocationsGroup;" json:"interview_allocations_group"`
-	InterviewAllocationsTeam  time.Time `gorm:"column:interviewAllocationsTeam;" json:"interview_allocations_team"`
-
-	UserDetail          *UserDetail `gorm:"-" json:"user_detail"`                                                                                     // get from sso
-	InterviewSelections []Interview `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interview_selections"` //manytomany
-	Comments            []Comment   `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"comments"`    //onetomany
+	Grade                       string      `gorm:"not null" json:"grade"` //pkg.Grade
+	Institute                   string      `gorm:"not null" json:"institute"`
+	Major                       string      `gorm:"not null" json:"major"`
+	Rank                        string      `gorm:"not null" json:"rank"`
+	Group                       Group       `gorm:"not null" json:"group"` //pkg.Group
+	Intro                       string      `gorm:"not null" json:"intro"`
+	IsQuick                     bool        `gorm:"column:isQuick;not null" json:"is_quick"`
+	Referrer                    string      `json:"referrer"`
+	Resume                      string      `json:"resume"`
+	Abandoned                   bool        `gorm:"not null; default false" json:"abandoned"`
+	Rejected                    bool        `gorm:"not null; default false" json:"rejected"`
+	Step                        Step        `gorm:"not null" json:"step"`                                                                          //pkg.Step
+	CandidateID                 string      `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"candidate_id"`     //manytoone
+	RecruitmentID               string      `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"recruitment_id"` //manytoone
+	InterviewAllocationsGroupId string      `gorm:"column:interviewAllocationsGroupId;" json:"interview_allocations_group_id"`
+	InterviewAllocationsTeamId  string      `gorm:"column:interviewAllocationsTeamId;" json:"interview_allocations_team_id"`
+	InterviewAllocationsGroup   Interview   `gorm:"foreignKey:InterviewAllocationsGroupId" json:"interview_allocations_group"`
+	InterviewAllocationsTeam    Interview   `gorm:"foreignKey:InterviewAllocationsTeamId" json:"interview_allocations_team"`
+	UserDetail                  *UserDetail `gorm:"-" json:"user_detail"`                                                                                     // get from sso
+	InterviewSelections         []Interview `gorm:"many2many:interview_selections;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interview_selections"` //manytomany
+	Comments                    []Comment   `gorm:"foreignKey:ApplicationID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"comments"`    //onetomany
 }
 
 func (a Application) TableName() string {
@@ -198,7 +199,8 @@ type SetAppInterviewTimeOpts struct {
 	Aid           string
 	InterviewType GroupOrTeam
 
-	Time time.Time `json:"time" binding:"required"`
+	InterviewId string `json:"interview_id" binding:"required"`
+	//	Time time.Time `json:"time" binding:"required"`
 }
 
 func (opts *SetAppInterviewTimeOpts) Validate() (err error) {

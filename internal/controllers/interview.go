@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/xylonx/zapx"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -150,25 +151,33 @@ func SetRecruitmentInterviews(c *gin.Context) {
 		return
 	}
 
+	var iids []string
+	for _, origin := range originInterviews {
+		iids = append(iids, origin.Uid)
+	}
+	interviewsCannotBeUpdate, err := models.GetInterviewsCannotBeUpdate(iids)
+	zapx.Infof("interviews can not be update: %v", interviewsCannotBeUpdate)
+
 	var errors []string
 
 	for _, origin := range originInterviews {
-		interview, ok := interviewsToUpdate[origin.Uid]
-		if ok {
+		interview, toUpdate := interviewsToUpdate[origin.Uid]
+		_, cannotBeUpdate := interviewsCannotBeUpdate[origin.Uid]
+		if toUpdate {
 			// update
 			// check whether the interview time has been selected by candidates
-			if len(origin.Applications) != 0 && !checkUpdateInterview(&origin, &interview) {
-				errors = append(errors, fmt.Sprintf("interview %s have been selected", origin.Uid))
+			if cannotBeUpdate && !checkUpdateInterview(&origin, &interview) {
+				errors = append(errors, fmt.Sprintf("[interview %s have been selected]", origin.Uid))
 			} else {
 				if errdb := models.UpdateInterview(&interview); errdb != nil {
-					errors = append(errors, fmt.Sprintf("update interviews db failed, err: %s", errdb.Error()))
+					errors = append(errors, fmt.Sprintf("[update interviews db failed, err: %s]", errdb.Error()))
 				}
 			}
 		} else {
 			// delete
 			// check whether the interview time has been selected by candidates
-			if len(origin.Applications) != 0 {
-				errors = append(errors, fmt.Sprintf("interview %s have been selected", origin.Uid))
+			if cannotBeUpdate {
+				errors = append(errors, fmt.Sprintf("[interview %s have been selected]", origin.Uid))
 			} else {
 				interviewIdsToDel = append(interviewIdsToDel, origin.Uid)
 			}
@@ -176,7 +185,7 @@ func SetRecruitmentInterviews(c *gin.Context) {
 	}
 
 	if errdb := models.AddAndDeleteInterviews(interviewsToAdd, interviewIdsToDel); errdb != nil {
-		errors = append(errors, fmt.Sprintf("add and delete interviews db failed, err: %s", errdb.Error()))
+		errors = append(errors, fmt.Sprintf("[add and delete interviews db failed, err: %s]", errdb.Error()))
 	}
 
 	if len(errors) != 0 {

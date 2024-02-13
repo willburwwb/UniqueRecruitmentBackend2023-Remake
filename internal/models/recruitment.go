@@ -62,6 +62,8 @@ func GetFullRecruitmentById(rid string) (*pkg.Recruitment, error) {
 		Preload("Interviews").
 		Preload("Applications.InterviewSelections").
 		Preload("Applications.Comments").
+		Preload("Applications.InterviewAllocationsGroup").
+		Preload("Applications.InterviewAllocationsTeam").
 		Where("uid = ?", rid).Find(&r).Error; err != nil {
 		err = db.Model(&pkg.Recruitment{}).Where("uid = ?", rid).Find(&r).Error
 	}

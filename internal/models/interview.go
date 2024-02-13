@@ -1,11 +1,20 @@
 package models
 
 import (
-	"gorm.io/gorm"
-
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/pkg"
 )
+
+func GetInterviewById(iid string) (*pkg.Interview, error) {
+	db := global.GetDB()
+	var interview pkg.Interview
+	if err := db.Model(&pkg.Interview{}).
+		Where("uid = ?", iid).
+		First(&interview).Error; err != nil {
+		return nil, err
+	}
+	return &interview, nil
+}
 
 func GetInterviewsByRidAndNameWithoutApp(rid string, name pkg.Group) ([]pkg.Interview, error) {
 	db := global.GetDB()
@@ -72,20 +81,58 @@ func UpdateInterview(interview *pkg.Interview) error {
 
 func AddAndDeleteInterviews(interviewsToAdd []pkg.Interview, interviewIdsToDel []string) (err error) {
 	db := global.GetDB()
-	if err = db.Transaction(func(tx *gorm.DB) error {
-		if len(interviewsToAdd) != 0 {
-			if errCreate := tx.Create(interviewsToAdd).Error; errCreate != nil {
-				return errCreate
-			}
+	if len(interviewsToAdd) != 0 {
+		if errCreate := db.Create(interviewsToAdd).Error; errCreate != nil {
+			return errCreate
 		}
-		if len(interviewIdsToDel) != 0 {
-			if errDelete := tx.Delete(&pkg.Interview{}, "uid in ?", interviewIdsToDel).Error; errDelete != nil {
-				return errDelete
-			}
+	}
+	if len(interviewIdsToDel) != 0 {
+		if errDelete := db.Delete(&pkg.Interview{}, "uid in ?", interviewIdsToDel).Error; errDelete != nil {
+			return errDelete
 		}
-		return nil
-	}); err != nil {
-		return
 	}
 	return
+}
+
+func GetInterviewsCannotBeUpdate(iids []string) (map[string]struct{}, error) {
+	db := global.GetDB()
+	interviewsCannotBeUpdate := make(map[string]struct{})
+	res := []string{}
+
+	if len(iids) == 0 {
+		return interviewsCannotBeUpdate, nil
+	}
+
+	// get the interview uid that has been selected by the application
+	if err := db.Table("interview_selections").
+		Select("DISTINCT interview_uid").
+		Where("interview_uid IN ?", iids).
+		Find(&res).Error; err != nil {
+		return nil, err
+	}
+	for _, val := range res {
+		interviewsCannotBeUpdate[val] = struct{}{}
+	}
+
+	// get the interview uid that has been allocated by the application
+	if err := db.Model(&pkg.Application{}).
+		Select("DISTINCT \"interviewAllocationsGroupId\"").
+		Where("\"interviewAllocationsGroupId\" IN ?", iids).
+		Find(&res).Error; err != nil {
+		return nil, err
+	}
+	for _, val := range res {
+		interviewsCannotBeUpdate[val] = struct{}{}
+	}
+
+	if err := db.Model(&pkg.Application{}).
+		Select("DISTINCT \"interviewAllocationsTeamId\"").
+		Where("\"interviewAllocationsTeamId\" IN ?", iids).
+		Find(&res).Error; err != nil {
+		return nil, err
+	}
+	for _, val := range res {
+		interviewsCannotBeUpdate[val] = struct{}{}
+	}
+	return interviewsCannotBeUpdate, nil
 }
