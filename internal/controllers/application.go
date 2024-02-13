@@ -180,7 +180,7 @@ func UpdateApplication(c *gin.Context) {
 	return
 }
 
-// DeleteApplication delete application.
+// DeleteApplication delete application.(DEPRECATED! Use abandon instead.)
 // @Id delete_application.
 // @Summary delete candidate's application by applicationId
 // @Description delete candidate's application by applicationId, can only be deleted by application's owner
@@ -221,8 +221,8 @@ func DeleteApplication(c *gin.Context) {
 
 // AbandonApplication abandon application.
 // @Id abandon_application.
-// @Summary abandon candidate's application by applicationId
-// @Description abandon candidate's application by applicationId, can only be abandoned by member of the corresponding group
+// @Summary candidate abandon his/her application
+// @Description candidate abandon his/her application, can only be abandoned by application's owner
 // @Tags application
 // @Accept  json
 // @Produce  json
@@ -231,6 +231,45 @@ func DeleteApplication(c *gin.Context) {
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
 // @Router /applications/{aid}/abandoned [put]
 func AbandonApplication(c *gin.Context) {
+	var (
+		app *pkg.Application
+		err error
+	)
+	defer func() { common.Resp(c, nil, err) }()
+
+	aid := c.Param("aid")
+	if aid == "" {
+		err = fmt.Errorf("request param error, application id is nil")
+		return
+	}
+
+	uid := common.GetUID(c)
+	app, err = models.GetApplicationByIdForCandidate(aid)
+	if err != nil {
+		return
+	}
+
+	if app.CandidateID != uid {
+		err = errors.New("you can't abandon other's application")
+		return
+	}
+
+	err = models.AbandonApplication(aid)
+	return
+}
+
+// RejectApplication reject application.
+// @Id reject_application.
+// @Summary reject candidate's application by applicationId,
+// @Description reject candidate's application by applicationId, can only be abandoned by member of the corresponding group
+// @Tags application
+// @Accept  json
+// @Produce  json
+// @Param	aid path int true "application id"
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /applications/{aid}/abandoned [put]
+func RejectApplication(c *gin.Context) {
 	var (
 		err error
 	)
@@ -249,7 +288,7 @@ func AbandonApplication(c *gin.Context) {
 		return
 	}
 
-	err = models.AbandonApplication(aid)
+	err = models.RejectApplication(aid)
 	return
 }
 

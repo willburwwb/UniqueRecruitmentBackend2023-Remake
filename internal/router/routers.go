@@ -76,13 +76,14 @@ func NewRouter() *gin.Engine {
 		applicationRouter.POST("/", controllers.CreateApplication)
 		applicationRouter.GET("/:aid", controllers.GetApplication)
 		applicationRouter.PUT("/:aid", controllers.UpdateApplication)
-		applicationRouter.DELETE("/:aid", controllers.DeleteApplication)
+		//applicationRouter.DELETE("/:aid", controllers.DeleteApplication)
 		applicationRouter.GET("/:aid/slots/:type", controllers.GetInterviewsSlots)
 		applicationRouter.GET("/:aid/resume", controllers.GetResume)
 		applicationRouter.PUT("/:aid/slots/:type", controllers.SelectInterviewSlots)
+		applicationRouter.PUT("/:aid/abandoned", controllers.AbandonApplication)
 
 		// member
-		applicationRouter.PUT("/:aid/abandoned", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.AbandonApplication)
+		applicationRouter.PUT("/:aid/rejected", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.RejectApplication)
 		applicationRouter.GET("/recruitment/:rid", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllApplications)
 		applicationRouter.PUT("/:aid/step", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetApplicationStep)
 		applicationRouter.PUT("/:aid/interview/:type", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetApplicationInterviewTime)

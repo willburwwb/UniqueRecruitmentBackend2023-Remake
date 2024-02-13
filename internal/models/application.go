@@ -159,6 +159,16 @@ func AbandonApplication(aid string) error {
 	return db.Updates(&application).Error
 }
 
+func RejectApplication(aid string) error {
+	db := global.GetDB()
+	application, err := GetApplicationByIdForCandidate(aid)
+	if err != nil {
+		return err
+	}
+	application.Rejected = true
+	return db.Updates(&application).Error
+}
+
 func GetApplicationsByRid(rid string) ([]pkg.Application, error) {
 	recruitment, err := GetFullRecruitmentById(rid)
 	if err != nil {
