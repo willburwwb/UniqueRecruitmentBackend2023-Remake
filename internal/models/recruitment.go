@@ -1,11 +1,11 @@
 package models
 
 import (
-	"encoding/json"
-	"errors"
-
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/pkg"
+	"UniqueRecruitmentBackend/pkg/grpc"
+	"encoding/json"
+	"errors"
 )
 
 func CreateRecruitment(opts *pkg.CreateRecOpts) (r *pkg.Recruitment, err error) {
@@ -65,7 +65,14 @@ func GetFullRecruitmentById(rid string) (*pkg.Recruitment, error) {
 		Preload("Applications.InterviewAllocationsGroup").
 		Preload("Applications.InterviewAllocationsTeam").
 		Where("uid = ?", rid).Find(&r).Error; err != nil {
-		err = db.Model(&pkg.Recruitment{}).Where("uid = ?", rid).Find(&r).Error
+		return nil, err
+	}
+
+	for i := range r.Applications {
+		r.Applications[i].UserDetail, err = grpc.GetUserInfoByUID(r.Applications[i].CandidateID)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &r, err
 }

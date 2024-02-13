@@ -7,6 +7,7 @@ import (
 	"UniqueRecruitmentBackend/pkg/grpc"
 	"github.com/xylonx/zapx"
 	"go.uber.org/zap"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -97,8 +98,9 @@ func UpdateRecruitment(c *gin.Context) {
 // @Router /recruitments/{rid} [get]
 func GetRecruitmentById(c *gin.Context) {
 	var (
-		r   *pkg.Recruitment
-		err error
+		r    *pkg.Recruitment
+		user *pkg.UserDetail
+		err  error
 	)
 	defer func() { common.Resp(c, r, err) }()
 
@@ -109,7 +111,7 @@ func GetRecruitmentById(c *gin.Context) {
 
 	// member role, return interviews + applications
 	if common.IsMember(c) {
-		user, err := grpc.GetUserInfoByUID(common.GetUID(c))
+		user, err = grpc.GetUserInfoByUID(common.GetUID(c))
 		if err != nil {
 			return
 		}
@@ -120,12 +122,12 @@ func GetRecruitmentById(c *gin.Context) {
 			zapx.Warn("get old recruitment detail failed....")
 		} else {
 			r, err = models.GetFullRecruitmentById(opts.Rid)
+			log.Println(r, err)
+			//r.Statistics, err = models.GetRecruitmentStatistics(opts.Rid)
 		}
 	} else {
 		r, err = models.GetRecruitmentById(opts.Rid)
 	}
-
-	r.Statistics, err = models.GetRecruitmentStatistics(opts.Rid)
 	return
 }
 
@@ -180,11 +182,11 @@ func GetPendingRecruitment(c *gin.Context) {
 
 	if common.IsMember(c) {
 		r, err = models.GetFullRecruitmentById(r.Uid)
+		r.Statistics, err = models.GetRecruitmentStatistics(r.Uid)
 	} else {
 		r, err = models.GetRecruitmentById(r.Uid)
 	}
 
-	r.Statistics, err = models.GetRecruitmentStatistics(r.Uid)
 	return
 }
 
