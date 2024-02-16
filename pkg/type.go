@@ -289,6 +289,7 @@ type Comment struct {
 	Common
 	ApplicationID string     `gorm:"column:applicationId;type:uuid;" json:"application_id"` //manytoone
 	MemberID      string     `gorm:"column:memberId;type:uuid;index" json:"member_id"`      //manytoone
+	MemberName    string     `gorm:"column:memberName;" json:"member_name"`
 	Content       string     `gorm:"column:content;not null" json:"content"`
 	Evaluation    Evaluation `gorm:"column:evaluation;type:int;not null" json:"evaluation"`
 }
@@ -298,7 +299,8 @@ func (c Comment) TableName() string {
 }
 
 type CreateCommentOpts struct {
-	MemberID string `json:"member_id"`
+	MemberID   string `json:"member_id"`
+	MemberName string `json:"member_name"`
 
 	ApplicationID string     `json:"application_id" binding:"required"`
 	Content       string     `json:"content" binding:"required"`

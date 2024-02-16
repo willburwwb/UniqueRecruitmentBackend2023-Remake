@@ -5,13 +5,14 @@ import (
 	"UniqueRecruitmentBackend/pkg"
 )
 
-func CreateComment(req *pkg.CreateCommentOpts) (*pkg.Comment, error) {
+func CreateComment(opts *pkg.CreateCommentOpts) (*pkg.Comment, error) {
 	db := global.GetDB()
 	c := &pkg.Comment{
-		ApplicationID: req.ApplicationID,
-		MemberID:      req.MemberID,
-		Content:       req.Content,
-		Evaluation:    req.Evaluation,
+		ApplicationID: opts.ApplicationID,
+		MemberName:    opts.MemberName,
+		MemberID:      opts.MemberID,
+		Content:       opts.Content,
+		Evaluation:    opts.Evaluation,
 	}
 	err := db.Create(c).Error
 	return c, err

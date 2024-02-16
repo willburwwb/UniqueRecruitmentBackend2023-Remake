@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"UniqueRecruitmentBackend/pkg/grpc"
 	"fmt"
 	"github.com/gin-gonic/gin"
 
@@ -23,6 +24,7 @@ import (
 func CreateComment(c *gin.Context) {
 	var (
 		comment *pkg.Comment
+		user    *pkg.UserDetail
 		err     error
 	)
 
@@ -34,7 +36,12 @@ func CreateComment(c *gin.Context) {
 		return
 	}
 
-	opts.MemberID = uid
+	user, err = grpc.GetUserInfoByUID(uid)
+	if err != nil {
+		return
+	}
+	opts.MemberID = user.UID
+	opts.MemberName = user.Name
 
 	comment, err = models.CreateComment(opts)
 	if err != nil {
