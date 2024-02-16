@@ -138,14 +138,6 @@ func UpdateApplication(opts *pkg.UpdateAppOpts, filePath string) (*pkg.Applicati
 	return &a, nil
 }
 
-func UpdateApplicationStep(aid string, step string) error {
-	db := global.GetDB()
-	if err := db.Model(&pkg.Application{}).Where("uid = ?", aid).Update("step", step).Error; err != nil {
-		return err
-	}
-	return nil
-}
-
 func DeleteApplication(aid string) error {
 	db := global.GetDB()
 	return db.Where("uid = ?", aid).Delete(&pkg.Application{}).Error
@@ -193,6 +185,7 @@ func SetApplicationStepById(opts *pkg.SetAppStepOpts) error {
 	if app.Abandoned || app.Rejected {
 		return fmt.Errorf("application of %s has already been abandoned/reject", app.Uid)
 	}
+
 	return db.Model(&pkg.Application{}).
 		Where("uid = ?", app.Uid).
 		Updates(map[string]interface{}{
@@ -258,7 +251,6 @@ func UpdateInterviewSelection(app *pkg.Application, interviews []pkg.Interview, 
 	return err
 }
 
-// TODO 上面的几个更新函数统一改调这个
 func UpdateApplicationInfo(application *pkg.Application) error {
 	db := global.GetDB()
 	return db.Updates(&application).Error
@@ -275,6 +267,7 @@ func GetApplicationsByUserId(userId string) (*[]pkg.Application, error) {
 		return db.Omit("selectNumber", "slotNumber") // omit selectNumber when candidate get
 	}).
 		Where("\"candidateId\" = ?", userId).
+		Order("\"createdAt\" DESC").
 		Find(&apps).Error; err != nil {
 		return nil, err
 	}

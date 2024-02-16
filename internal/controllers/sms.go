@@ -144,7 +144,7 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 		{
 
 			var defaultRest = ""
-			switch pkg.Step(smsRequest.Next) {
+			switch smsRequest.Next {
 			//組面
 			case pkg.GroupInterview:
 				fallthrough
