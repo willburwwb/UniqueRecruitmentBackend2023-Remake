@@ -108,8 +108,8 @@ type Application struct {
 	Step                        Step        `gorm:"not null" json:"step"`                                                                          //pkg.Step
 	CandidateID                 string      `gorm:"column:candidateId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"candidate_id"`     //manytoone
 	RecruitmentID               string      `gorm:"column:recruitmentId;type:uuid;uniqueIndex:UQ_CandidateID_RecruitmentID" json:"recruitment_id"` //manytoone
-	InterviewAllocationsGroupId string      `gorm:"column:interviewAllocationsGroupId;" json:"interview_allocations_group_id"`
-	InterviewAllocationsTeamId  string      `gorm:"column:interviewAllocationsTeamId;" json:"interview_allocations_team_id"`
+	InterviewAllocationsGroupId string      `gorm:"column:interviewAllocationsGroupId;default:NULL" json:"interview_allocations_group_id"`
+	InterviewAllocationsTeamId  string      `gorm:"column:interviewAllocationsTeamId;default:NULL" json:"interview_allocations_team_id"`
 	InterviewAllocationsGroup   Interview   `gorm:"foreignKey:InterviewAllocationsGroupId" json:"interview_allocations_group"`
 	InterviewAllocationsTeam    Interview   `gorm:"foreignKey:InterviewAllocationsTeamId" json:"interview_allocations_team"`
 	UserDetail                  *UserDetail `gorm:"-" json:"user_detail"`                                                                                     // get from sso

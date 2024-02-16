@@ -19,12 +19,14 @@ func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) (*p
 		Rank:          opts.Rank,
 		Group:         opts.Group,
 		Intro:         opts.Intro,
-		RecruitmentID: opts.RecruitmentID,
-		Referrer:      opts.Referrer,
 		IsQuick:       opts.IsQuick,
+		Referrer:      opts.Referrer,
 		Resume:        filePath,
-		CandidateID:   uid,
+		Abandoned:     false,
+		Rejected:      false,
 		Step:          pkg.SignUp,
+		CandidateID:   uid,
+		RecruitmentID: opts.RecruitmentID,
 	}
 
 	if err := db.Transaction(func(tx *gorm.DB) error {
