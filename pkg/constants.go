@@ -23,6 +23,7 @@ var GroupMap = map[Group]struct{}{
 	Ios:     struct{}{},
 	Design:  struct{}{},
 	Pm:      struct{}{},
+	Unique:  struct{}{},
 }
 
 type Period string
