@@ -52,10 +52,11 @@ func GetInterviewsByRidAndName(rid string, name pkg.Group) ([]pkg.Interview, err
 	return res, nil
 }
 
-func GetInterviewsByIds(ids []string) ([]pkg.Interview, error) {
+func GetInterviewsByIdsAndName(ids []string, name pkg.Group) ([]pkg.Interview, error) {
 	db := global.GetDB()
 	var interviews []pkg.Interview
 	if err := db.Where("uid in ?", ids).
+		Where("name = ?", name).
 		Find(&interviews).Error; err != nil {
 		return nil, err
 	}

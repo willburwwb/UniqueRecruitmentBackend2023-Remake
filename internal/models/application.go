@@ -1,13 +1,15 @@
 package models
 
 import (
-	"UniqueRecruitmentBackend/global"
-	"UniqueRecruitmentBackend/pkg"
 	"errors"
 	"fmt"
+
 	"github.com/xylonx/zapx"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+
+	"UniqueRecruitmentBackend/global"
+	"UniqueRecruitmentBackend/pkg"
 )
 
 func CreateApplication(opts *pkg.CreateAppOpts, uid string, filePath string) (*pkg.Application, error) {
@@ -226,10 +228,15 @@ func UpdateInterviewSelection(app *pkg.Application, interviews []pkg.Interview, 
 			return errDb
 		}
 
-		app.InterviewSelections = interviews
-		if errDb := tx.Save(app).Error; errDb != nil {
+		if errDb := tx.Model(app).
+			Association("InterviewSelections").
+			Append(interviews); errDb != nil {
 			return errDb
 		}
+		//app.InterviewSelections = interviews
+		//if errDb := tx.Save(app).Error; errDb != nil {
+		//	return errDb
+		//}
 
 		if errDb := tx.Model(&pkg.Interview{}).
 			Where("uid IN ?", iidsToAdd).

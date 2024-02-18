@@ -613,32 +613,18 @@ func SelectInterviewSlots(c *gin.Context) {
 	}
 
 	var interviews []pkg.Interview
-	interviews, err = models.GetInterviewsByIds(opts.Iids)
+	interviews, err = models.GetInterviewsByIdsAndName(opts.Iids, name)
 	if err != nil {
 		return
 	}
 
-	var ierrors []string
-	for _, interview := range interviews {
-		// check the select interview name == param name
-		if interview.Name != name {
-			ierrors = append(ierrors,
-				fmt.Sprintf("[the select interview %s name = %s, group/team name = %s , failed]", interview.Uid, interview.Name, name))
-			continue
-		}
-		interviews = append(interviews, interview)
-	}
-
-	iidsToAdd, iidsToDel := getAddAndDelInterviews(app.InterviewSelections, opts.Iids)
+	iidsToAdd, iidsToDel := getAddAndDelInterviews(app.InterviewSelections, interviews)
 	zapx.Infof("iidsToAdd %v, iidsToDel %v", iidsToAdd, iidsToDel)
 
-	if updateErr := models.UpdateInterviewSelection(app, interviews, iidsToAdd, iidsToDel); updateErr != nil {
-		ierrors = append(ierrors, fmt.Sprintf("[%s]", updateErr.Error()))
-	}
-	if len(ierrors) != 0 {
-		err = fmt.Errorf("there are %d error msg: %v", len(ierrors), ierrors)
+	if err = models.UpdateInterviewSelection(app, interviews, iidsToAdd, iidsToDel); err != nil {
 		return
 	}
+
 	return
 }
 
@@ -711,11 +697,11 @@ func checkMemberGroup(aid string, uid string) (err error) {
 		"and you cannot manipulate other people’s application. ")
 }
 
-func getAddAndDelInterviews(originInterviews []pkg.Interview, selectIids []string) (iidsToAdd []string, iidsToDel []string) {
+func getAddAndDelInterviews(originInterviews []pkg.Interview, selectInterviews []pkg.Interview) (iidsToAdd []string, iidsToDel []string) {
 	for i := range originInterviews {
 		ok := false
-		for _, selectIid := range selectIids {
-			if originInterviews[i].Uid == selectIid {
+		for j := range selectInterviews {
+			if originInterviews[i].Uid == selectInterviews[j].Uid {
 				ok = true
 				break
 			}
@@ -725,16 +711,16 @@ func getAddAndDelInterviews(originInterviews []pkg.Interview, selectIids []strin
 		}
 	}
 
-	for _, selectIid := range selectIids {
+	for j := range selectInterviews {
 		ok := false
 		for i := range originInterviews {
-			if originInterviews[i].Uid == selectIid {
+			if originInterviews[i].Uid == selectInterviews[j].Uid {
 				ok = true
 				break
 			}
 		}
 		if !ok {
-			iidsToAdd = append(iidsToAdd, selectIid)
+			iidsToAdd = append(iidsToAdd, selectInterviews[j].Uid)
 		}
 	}
 	return
