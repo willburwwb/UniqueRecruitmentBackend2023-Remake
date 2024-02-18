@@ -122,7 +122,7 @@ func UpdateApplication(opts *pkg.UpdateAppOpts, filePath string) (*pkg.Applicati
 	}
 
 	if err := db.Transaction(func(tx *gorm.DB) error {
-		if errdb := tx.Save(&a).Error; errdb != nil {
+		if errdb := tx.Updates(&a).Error; errdb != nil {
 			return errdb
 		}
 
