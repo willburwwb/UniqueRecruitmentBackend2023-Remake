@@ -174,8 +174,10 @@ type UpdateAppOpts struct {
 }
 
 func (opts *UpdateAppOpts) Validate() (err error) {
-	if _, ok := GroupMap[opts.Group]; !ok {
-		return errors.New("request body error, group set wrong")
+	if opts.Group != "" {
+		if _, ok := GroupMap[opts.Group]; !ok {
+			return errors.New("request body error, group set wrong")
+		}
 	}
 	if opts.Aid == "" {
 		return errors.New("request body error, application id is nil")
