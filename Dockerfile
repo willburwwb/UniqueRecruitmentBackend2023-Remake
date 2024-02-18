@@ -23,7 +23,9 @@ COPY --from=builder /app/docs/ ./docs/
 
 EXPOSE 3333
 
-RUN echo "./${PROJECT_NAME} server" > ./run.sh &&\
+RUN apt-get -qq update &&\
+    apt-get -qq install -y --no-install-recommends ca-certificates &&\
+    echo "./${PROJECT_NAME} server" > ./run.sh &&\
     chmod u+x ./run.sh
 
 CMD ./run.sh
