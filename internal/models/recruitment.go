@@ -90,12 +90,6 @@ func GetAllRecruitment() ([]pkg.Recruitment, error) {
 func GetPendingRecruitment() (*pkg.Recruitment, error) {
 	db := global.GetDB()
 	var r pkg.Recruitment
-	//if err := db.Model(&Recruitment{}).
-	//	Select("uid").
-	//	Where("? BETWEEN \"beginning\" AND \"end\"", time.Now()).
-	//	First(&r).Error; err != nil {
-	//	return nil, err
-	//}
 	if err := db.Model(&pkg.Recruitment{}).
 		Select("uid").
 		Order("beginning DESC").
@@ -127,4 +121,17 @@ func GetRecruitmentStatistics(rid string) (map[string]int, error) {
 	}
 
 	return statistics, nil
+}
+
+func UpdateStressTestTime(opts *pkg.SetStressTestTimeOpts) error {
+	db := global.GetDB()
+	if err := db.Model(&pkg.Recruitment{}).
+		Where("uid = ?", opts.Rid).
+		Updates(map[string]interface{}{
+			"\"stressTestStart\"": opts.Start,
+			"\"stressTestEnd\"":   opts.End,
+		}).Error; err != nil {
+		return err
+	}
+	return nil
 }

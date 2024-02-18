@@ -68,6 +68,7 @@ func NewRouter() *gin.Engine {
 		// admin role
 		recruitmentRouter.POST("/", middlewares.CheckAdminRoleMiddleWare, controllers.CreateRecruitment)
 		recruitmentRouter.PUT("/:rid/schedule", middlewares.CheckAdminRoleMiddleWare, controllers.UpdateRecruitment)
+		recruitmentRouter.PUT("/:rid/stressTest", middlewares.CheckAdminRoleMiddleWare, controllers.SetStressTestTime)
 	}
 
 	applicationRouter := r.Group("/applications")

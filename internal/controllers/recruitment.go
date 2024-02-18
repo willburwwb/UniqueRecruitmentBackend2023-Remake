@@ -190,6 +190,36 @@ func GetPendingRecruitment(c *gin.Context) {
 	return
 }
 
+// SetStressTestTime set StressTest time
+// @Id set_stress_test_time
+// @Summary set stress test start and end time.
+// @Description set stress test start and end time.
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.JSONResult{data=pkg.Recruitment} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments/{rid}/stressTest [put]
+func SetStressTestTime(c *gin.Context) {
+	var (
+		r   *pkg.Recruitment
+		err error
+	)
+	defer func() { common.Resp(c, r, err) }()
+
+	opts := &pkg.SetStressTestTimeOpts{}
+	if err = c.ShouldBind(opts); err != nil {
+		return
+	}
+	opts.Rid = c.Param("rid")
+	if err = opts.Validate(); err != nil {
+		return
+	}
+
+	err = models.UpdateStressTestTime(opts)
+	return
+}
+
 func checkJoinTime(joinTime string, recruitmentTime time.Time) bool {
 	return true
 }

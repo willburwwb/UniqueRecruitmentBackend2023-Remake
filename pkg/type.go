@@ -33,14 +33,16 @@ type UserDetailResp struct {
 
 type Recruitment struct {
 	Common
-	Name       string         `gorm:"not null;unique" json:"name"`
-	Beginning  time.Time      `gorm:"not null" json:"beginning"`
-	Deadline   time.Time      `gorm:"not null" json:"deadline"`
-	End        time.Time      `gorm:"not null" json:"end"`
-	Statistics map[string]int `gorm:"-" json:"statistics"`
+	Name            string    `gorm:"not null;unique" json:"name"`
+	Beginning       time.Time `gorm:"not null" json:"beginning"`
+	Deadline        time.Time `gorm:"not null" json:"deadline"`
+	End             time.Time `gorm:"not null" json:"end"`
+	StressTestStart time.Time `gorm:"column:stressTestStart" json:"stress_test_start"`
+	StressTestEnd   time.Time `gorm:"column:stressTestEnd" json:"stress_test_end"`
 
-	Applications []Application `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"applications"` //一个hr->简历 ;级联删除
-	Interviews   []Interview   `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interviews"`   //一个hr->面试 ;级联删除
+	Statistics   map[string]int `gorm:"-" json:"statistics"`
+	Applications []Application  `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"applications"` //一个hr->简历 ;级联删除
+	Interviews   []Interview    `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interviews"`   //一个hr->面试 ;级联删除
 }
 
 func (r Recruitment) TableName() string {
@@ -88,6 +90,20 @@ func (r *UpdateRecOpts) Validate() error {
 
 type GetRecOpts struct {
 	Rid string `uri:"rid" binding:"required"`
+}
+
+type SetStressTestTimeOpts struct {
+	Rid string
+
+	Start time.Time `json:"stress_test_start" binding:"required"`
+	End   time.Time `json:"stress_test_end" binding:"required"`
+}
+
+func (opts *SetStressTestTimeOpts) Validate() error {
+	if opts.Rid == "" {
+		return errors.New("recruitment id is null")
+	}
+	return nil
 }
 
 // Application records the detail of application for candidate

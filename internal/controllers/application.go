@@ -1,19 +1,20 @@
 package controllers
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/xylonx/zapx"
+
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/internal/utils"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
-	"errors"
-	"fmt"
-	"github.com/xylonx/zapx"
-	"net/http"
-	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 // CreateApplication create application.
@@ -385,7 +386,7 @@ func GetAllApplications(c *gin.Context) {
 	//for _, app := range apps {
 	//	userIds = append(userIds, app.CandidateID)
 	//}
-	for i, _ := range apps {
+	for i := range apps {
 		apps[i].UserDetail, err = grpc.GetUserInfoByUID(apps[i].CandidateID)
 		if err != nil {
 			return
