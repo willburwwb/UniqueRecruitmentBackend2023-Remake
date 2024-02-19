@@ -60,10 +60,12 @@ func NewRouter() *gin.Engine {
 		recruitmentRouter.GET("/:rid", controllers.GetRecruitmentById)
 		recruitmentRouter.GET("/pending", controllers.GetPendingRecruitment)
 		recruitmentRouter.GET("/:rid/interviews/:name", controllers.GetRecruitmentInterviews)
+		recruitmentRouter.GET("/:rid/file/:group/:type", controllers.DownloadRecruitmentFile)
 
 		// member role
 		recruitmentRouter.GET("/", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.GetAllRecruitment)
 		recruitmentRouter.PUT("/:rid/interviews/:name", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.SetRecruitmentInterviews)
+		recruitmentRouter.PUT("/:rid/file/:group/:type", middlewares.CheckMemberRoleOrAdminMiddleWare, controllers.UploadRecruitmentFile)
 
 		// admin role
 		recruitmentRouter.POST("/", middlewares.CheckAdminRoleMiddleWare, controllers.CreateRecruitment)

@@ -106,6 +106,39 @@ func (opts *SetStressTestTimeOpts) Validate() error {
 	return nil
 }
 
+type UploadRecruitmentFileOpts struct {
+	Rid   string                `uri:"rid" binding:"required"`
+	Type  Step                  `uri:"type" binding:"required"`
+	Group Group                 `uri:"group" binding:"required"`
+	File  *multipart.FileHeader `form:"file" json:"file"` //简历
+}
+
+func (opts *UploadRecruitmentFileOpts) Validate() error {
+	if opts.Type != WrittenTest {
+		return errors.New("request param error, type should be WrittenTest")
+	}
+	if _, ok := GroupMap[opts.Group]; !ok {
+		return errors.New("request param error, group set wrong")
+	}
+	return nil
+}
+
+type DownloadRecruitmentFileOpts struct {
+	Rid   string `uri:"rid" binding:"required"`
+	Type  Step   `uri:"type" binding:"required"`
+	Group Group  `uri:"group" binding:"required"`
+}
+
+func (opts *DownloadRecruitmentFileOpts) Validate() error {
+	if opts.Type != WrittenTest {
+		return errors.New("request param error, type should be WrittenTest")
+	}
+	if _, ok := GroupMap[opts.Group]; !ok {
+		return errors.New("request param error, group set wrong")
+	}
+	return nil
+}
+
 // Application records the detail of application for candidate
 // uniqueIndex(CandidateID,RecruitmentID)
 type Application struct {

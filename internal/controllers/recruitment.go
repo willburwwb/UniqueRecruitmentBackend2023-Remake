@@ -1,13 +1,16 @@
 package controllers
 
 import (
+	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
+	"fmt"
 	"github.com/xylonx/zapx"
 	"go.uber.org/zap"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -197,15 +200,14 @@ func GetPendingRecruitment(c *gin.Context) {
 // @Tags recruitment
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} common.JSONResult{data=pkg.Recruitment} ""
+// @Success 200 {object} common.JSONResult{} ""
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
 // @Router /recruitments/{rid}/stressTest [put]
 func SetStressTestTime(c *gin.Context) {
 	var (
-		r   *pkg.Recruitment
 		err error
 	)
-	defer func() { common.Resp(c, r, err) }()
+	defer func() { common.Resp(c, nil, err) }()
 
 	opts := &pkg.SetStressTestTimeOpts{}
 	if err = c.ShouldBind(opts); err != nil {
@@ -218,6 +220,92 @@ func SetStressTestTime(c *gin.Context) {
 
 	err = models.UpdateStressTestTime(opts)
 	return
+}
+
+// UploadRecruitmentFile upload recruitment file
+// @Id upload_recruitment_file
+// @Summary upload recruitment file, such as written test.
+// @Description upload recruitment file, such as written test.
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments/{rid}/file/{group}/{type} [put]
+func UploadRecruitmentFile(c *gin.Context) {
+	var (
+		r   *pkg.Recruitment
+		err error
+	)
+	defer func() { common.Resp(c, nil, err) }()
+
+	opts := &pkg.UploadRecruitmentFileOpts{}
+	if err = c.ShouldBindUri(opts); err != nil {
+		return
+	}
+	if err = c.ShouldBind(opts); err != nil {
+		return
+	}
+	if err = opts.Validate(); err != nil {
+		return
+	}
+
+	r, err = models.GetRecruitmentById(opts.Rid)
+	if err != nil {
+		return
+	}
+
+	// file path example: 2023秋(rname)/web(group)/WrittenTest.pdf(type)
+	filePath := fmt.Sprintf("%s/%s/%s", r.Name, opts.Group, fmt.Sprintf("%s.pdf", opts.Type))
+	err = global.UpLoadAndSaveFileToCos(opts.File, filePath)
+	return
+}
+
+// DownloadRecruitmentFile download recruitment file
+// @Id download_recruitment_file
+// @Summary download recruitment file, such as written test.
+// @Description upload recruitment file, such as written test.
+// @Tags recruitment
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.JSONResult{} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /recruitments/{rid}/file/{type}/{group} [get]
+func DownloadRecruitmentFile(c *gin.Context) {
+	var (
+		r   *pkg.Recruitment
+		err error
+	)
+
+	opts := &pkg.DownloadRecruitmentFileOpts{}
+	if err = c.ShouldBindUri(opts); err != nil {
+		common.Resp(c, nil, err)
+		return
+	}
+	if err = opts.Validate(); err != nil {
+		common.Resp(c, nil, err)
+		return
+	}
+
+	r, err = models.GetRecruitmentById(opts.Rid)
+	if err != nil {
+		common.Resp(c, nil, err)
+		return
+	}
+
+	// file path example: 2023秋(rname)/web(group)/WrittenTest.pdf(type)
+	filePath := fmt.Sprintf("%s/%s/%s", r.Name, opts.Group, fmt.Sprintf("%s.pdf", opts.Type))
+	resp, err := global.GetCOSObjectResp(filePath)
+	if err != nil {
+		common.Resp(c, nil, err)
+		return
+	}
+
+	reader := resp.Body
+	contentLength := resp.ContentLength
+	contentType := resp.Header.Get("Content-Type")
+
+	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
 }
 
 func checkJoinTime(joinTime string, recruitmentTime time.Time) bool {
