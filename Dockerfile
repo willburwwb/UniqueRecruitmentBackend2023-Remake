@@ -13,7 +13,7 @@ COPY . .
 RUN GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -ldflags="-s -w" -installsuffix cgo -o main .
 
 
-FROM ubuntu:latest AS prod
+FROM ubuntu:20.04 AS prod
 WORKDIR /app
 ARG PROJECT_NAME=uniquehr
 
