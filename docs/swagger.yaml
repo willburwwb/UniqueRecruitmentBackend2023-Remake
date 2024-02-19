@@ -40,8 +40,12 @@ definitions:
       institute:
         type: string
       interview_allocations_group:
+        $ref: '#/definitions/pkg.Interview'
+      interview_allocations_group_id:
         type: string
       interview_allocations_team:
+        $ref: '#/definitions/pkg.Interview'
+      interview_allocations_team_id:
         type: string
       interview_selections:
         description: manytomany
@@ -91,6 +95,8 @@ definitions:
         $ref: '#/definitions/pkg.Evaluation'
       member_id:
         description: manytoone
+        type: string
+      member_name:
         type: string
       uid:
         type: string
@@ -142,6 +148,8 @@ definitions:
       evaluation:
         $ref: '#/definitions/pkg.Evaluation'
       member_id:
+        type: string
+      member_name:
         type: string
     required:
     - application_id
@@ -272,6 +280,12 @@ definitions:
       name:
         type: string
       statistics:
+        additionalProperties:
+          type: integer
+        type: object
+      stress_test_end:
+        type: string
+      stress_test_start:
         type: string
       uid:
         type: string
@@ -592,6 +606,11 @@ paths:
         by application's owner
       operationId: update_application.
       parameters:
+      - description: application id
+        in: path
+        name: aid
+        required: true
+        type: string
       - description: update application opts
         in: body
         name: pkg.UpdateAppOpts
@@ -621,9 +640,9 @@ paths:
     put:
       consumes:
       - application/json
-      description: abandon candidate's application by applicationId, can only be abandoned
+      description: reject candidate's application by applicationId, can only be abandoned
         by member of the corresponding group
-      operationId: abandon_application.
+      operationId: reject_application.
       parameters:
       - description: application id
         in: path
@@ -641,7 +660,7 @@ paths:
           description: code is not 0 and msg not empty
           schema:
             $ref: '#/definitions/common.JSONResult'
-      summary: abandon candidate's application by applicationId
+      summary: reject candidate's application by applicationId,
       tags:
       - application
   /applications/{aid}/interview/{type}:
@@ -698,7 +717,7 @@ paths:
         name: aid
         required: true
         type: integer
-      - description: application id
+      - description: group or team
         enum:
         - group
         - team
@@ -706,6 +725,12 @@ paths:
         name: type
         required: true
         type: string
+      - description: interview uid
+        in: body
+        name: interview_id
+        required: true
+        schema:
+          type: string
       produces:
       - application/json
       responses:
@@ -950,9 +975,7 @@ paths:
             - $ref: '#/definitions/common.JSONResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/pkg.Recruitment'
-                  type: array
+                  $ref: '#/definitions/pkg.Recruitment'
               type: object
         "400":
           description: code is not 0 and msg not empty
@@ -1024,12 +1047,53 @@ paths:
       summary: update recruitment.
       tags:
       - recruitment
+  /recruitments/{rid}/file/{group}/{type}:
+    put:
+      consumes:
+      - application/json
+      description: upload recruitment file, such as written test.
+      operationId: upload_recruitment_file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+        "400":
+          description: code is not 0 and msg not empty
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+      summary: upload recruitment file, such as written test.
+      tags:
+      - recruitment
+  /recruitments/{rid}/file/{type}/{group}:
+    get:
+      consumes:
+      - application/json
+      description: upload recruitment file, such as written test.
+      operationId: download_recruitment_file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+        "400":
+          description: code is not 0 and msg not empty
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+      summary: download recruitment file, such as written test.
+      tags:
+      - recruitment
   /recruitments/{rid}/interviews/{name}:
     get:
       consumes:
       - application/json
-      description: get recruitment interviews, only can be got by member(will get
-        interviews of groups or unique)
+      description: get recruitment interviews, candidate can't see slotNumber and
+        selectNumber of Interviews (will get interviews of groups or unique), guarantee
+        slotNumber > selectNumber
       operationId: get_recruitment_interviews.
       parameters:
       - description: recruitment id
@@ -1122,6 +1186,26 @@ paths:
       summary: set recruitment interviews.
       tags:
       - interviews
+  /recruitments/{rid}/stressTest:
+    put:
+      consumes:
+      - application/json
+      description: set stress test start and end time.
+      operationId: set_stress_test_time
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+        "400":
+          description: code is not 0 and msg not empty
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+      summary: set stress test start and end time.
+      tags:
+      - recruitment
   /sms:
     post:
       consumes:

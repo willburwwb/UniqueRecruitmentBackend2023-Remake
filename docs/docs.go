@@ -189,6 +189,13 @@ const docTemplate = `{
                 "operationId": "update_application.",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "application id",
+                        "name": "aid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "update application opts",
                         "name": "pkg.UpdateAppOpts",
                         "in": "body",
@@ -277,7 +284,7 @@ const docTemplate = `{
         },
         "/applications/{aid}/abandoned": {
             "put": {
-                "description": "abandon candidate's application by applicationId, can only be abandoned by member of the corresponding group",
+                "description": "reject candidate's application by applicationId, can only be abandoned by member of the corresponding group",
                 "consumes": [
                     "application/json"
                 ],
@@ -287,8 +294,8 @@ const docTemplate = `{
                 "tags": [
                     "application"
                 ],
-                "summary": "abandon candidate's application by applicationId",
-                "operationId": "abandon_application.",
+                "summary": "reject candidate's application by applicationId,",
+                "operationId": "reject_application.",
                 "parameters": [
                     {
                         "type": "integer",
@@ -405,10 +412,19 @@ const docTemplate = `{
                             "team"
                         ],
                         "type": "string",
-                        "description": "application id",
+                        "description": "group or team",
                         "name": "type",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "interview uid",
+                        "name": "interview_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -724,10 +740,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/pkg.Recruitment"
-                                            }
+                                            "$ref": "#/definitions/pkg.Recruitment"
                                         }
                                     }
                                 }
@@ -840,9 +853,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/recruitments/{rid}/file/{group}/{type}": {
+            "put": {
+                "description": "upload recruitment file, such as written test.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recruitment"
+                ],
+                "summary": "upload recruitment file, such as written test.",
+                "operationId": "upload_recruitment_file",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/recruitments/{rid}/file/{type}/{group}": {
+            "get": {
+                "description": "upload recruitment file, such as written test.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recruitment"
+                ],
+                "summary": "download recruitment file, such as written test.",
+                "operationId": "download_recruitment_file",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
         "/recruitments/{rid}/interviews/{name}": {
             "get": {
-                "description": "get recruitment interviews, only can be got by member(will get interviews of groups or unique)",
+                "description": "get recruitment interviews, candidate can't see slotNumber and selectNumber of Interviews (will get interviews of groups or unique), guarantee slotNumber \u003e selectNumber",
                 "consumes": [
                     "application/json"
                 ],
@@ -963,6 +1036,36 @@ const docTemplate = `{
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    },
+                    "400": {
+                        "description": "code is not 0 and msg not empty",
+                        "schema": {
+                            "$ref": "#/definitions/common.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/recruitments/{rid}/stressTest": {
+            "put": {
+                "description": "set stress test start and end time.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recruitment"
+                ],
+                "summary": "set stress test start and end time.",
+                "operationId": "set_stress_test_time",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1115,9 +1218,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "interview_allocations_group": {
+                    "$ref": "#/definitions/pkg.Interview"
+                },
+                "interview_allocations_group_id": {
                     "type": "string"
                 },
                 "interview_allocations_team": {
+                    "$ref": "#/definitions/pkg.Interview"
+                },
+                "interview_allocations_team_id": {
                     "type": "string"
                 },
                 "interview_selections": {
@@ -1194,6 +1303,9 @@ const docTemplate = `{
                 },
                 "member_id": {
                     "description": "manytoone",
+                    "type": "string"
+                },
+                "member_name": {
                     "type": "string"
                 },
                 "uid": {
@@ -1274,6 +1386,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/pkg.Evaluation"
                 },
                 "member_id": {
+                    "type": "string"
+                },
+                "member_name": {
                     "type": "string"
                 }
             }
@@ -1447,6 +1562,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "statistics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "stress_test_end": {
+                    "type": "string"
+                },
+                "stress_test_start": {
                     "type": "string"
                 },
                 "uid": {
