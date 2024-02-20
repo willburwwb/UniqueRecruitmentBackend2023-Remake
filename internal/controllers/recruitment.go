@@ -1,19 +1,19 @@
 package controllers
 
 import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/xylonx/zapx"
+	"go.uber.org/zap"
+
 	"UniqueRecruitmentBackend/global"
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
 	"UniqueRecruitmentBackend/pkg"
 	"UniqueRecruitmentBackend/pkg/grpc"
-	"fmt"
-	"github.com/xylonx/zapx"
-	"go.uber.org/zap"
-	"log"
-	"net/http"
-	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 // CreateRecruitment create recruitment
@@ -125,8 +125,7 @@ func GetRecruitmentById(c *gin.Context) {
 			zapx.Warn("get old recruitment detail failed....")
 		} else {
 			r, err = models.GetFullRecruitmentById(opts.Rid)
-			log.Println(r, err)
-			//r.Statistics, err = models.GetRecruitmentStatistics(opts.Rid)
+			r.Statistics, err = models.GetRecruitmentStatistics(opts.Rid)
 		}
 	} else {
 		r, err = models.GetRecruitmentById(opts.Rid)
@@ -270,7 +269,7 @@ func UploadRecruitmentFile(c *gin.Context) {
 // @Produce  json
 // @Success 200 {object} common.JSONResult{} ""
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
-// @Router /recruitments/{rid}/file/{type}/{group} [get]
+// @Router /recruitments/{rid}/file/{group}/{type} [get]
 func DownloadRecruitmentFile(c *gin.Context) {
 	var (
 		r   *pkg.Recruitment

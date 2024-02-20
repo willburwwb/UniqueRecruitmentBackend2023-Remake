@@ -1048,26 +1048,6 @@ paths:
       tags:
       - recruitment
   /recruitments/{rid}/file/{group}/{type}:
-    put:
-      consumes:
-      - application/json
-      description: upload recruitment file, such as written test.
-      operationId: upload_recruitment_file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/common.JSONResult'
-        "400":
-          description: code is not 0 and msg not empty
-          schema:
-            $ref: '#/definitions/common.JSONResult'
-      summary: upload recruitment file, such as written test.
-      tags:
-      - recruitment
-  /recruitments/{rid}/file/{type}/{group}:
     get:
       consumes:
       - application/json
@@ -1085,6 +1065,25 @@ paths:
           schema:
             $ref: '#/definitions/common.JSONResult'
       summary: download recruitment file, such as written test.
+      tags:
+      - recruitment
+    put:
+      consumes:
+      - application/json
+      description: upload recruitment file, such as written test.
+      operationId: upload_recruitment_file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+        "400":
+          description: code is not 0 and msg not empty
+          schema:
+            $ref: '#/definitions/common.JSONResult'
+      summary: upload recruitment file, such as written test.
       tags:
       - recruitment
   /recruitments/{rid}/interviews/{name}:

@@ -854,7 +854,7 @@ const docTemplate = `{
             }
         },
         "/recruitments/{rid}/file/{group}/{type}": {
-            "put": {
+            "get": {
                 "description": "upload recruitment file, such as written test.",
                 "consumes": [
                     "application/json"
@@ -865,8 +865,8 @@ const docTemplate = `{
                 "tags": [
                     "recruitment"
                 ],
-                "summary": "upload recruitment file, such as written test.",
-                "operationId": "upload_recruitment_file",
+                "summary": "download recruitment file, such as written test.",
+                "operationId": "download_recruitment_file",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -881,10 +881,8 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/recruitments/{rid}/file/{type}/{group}": {
-            "get": {
+            },
+            "put": {
                 "description": "upload recruitment file, such as written test.",
                 "consumes": [
                     "application/json"
@@ -895,8 +893,8 @@ const docTemplate = `{
                 "tags": [
                     "recruitment"
                 ],
-                "summary": "download recruitment file, such as written test.",
-                "operationId": "download_recruitment_file",
+                "summary": "upload recruitment file, such as written test.",
+                "operationId": "upload_recruitment_file",
                 "responses": {
                     "200": {
                         "description": "OK",

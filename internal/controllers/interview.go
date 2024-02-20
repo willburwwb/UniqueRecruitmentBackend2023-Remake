@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/xylonx/zapx"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xylonx/zapx"
 
 	"UniqueRecruitmentBackend/internal/common"
 	"UniqueRecruitmentBackend/internal/models"
