@@ -56,3 +56,17 @@ func GetUserDetail(c *gin.Context) {
 	resp.Applications = *apps
 	return
 }
+
+// GetMembersDetail get members detail.
+// @Id get_members_detail
+// @Summary Get members detail
+// @Description Get members detail
+// @Tags User
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.JSONResult{data=pkg.MembersDetail} ""
+// @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
+// @Router /user/me [get]
+func GetMembersDetail(c *gin.Context) {
+
+}

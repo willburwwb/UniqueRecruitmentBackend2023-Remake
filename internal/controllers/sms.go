@@ -271,10 +271,10 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 	return nil, errors.New("sms step is invalid")
 }
 
-// SendCode send code to member(todo).
+// SendCode send code to admin
 // @Id send_code
 // @Summary Send code
-// @Description Send code to member(todo)
+// @Description Send code to admin
 // @Tags Sms
 // @Accept  json
 // @Produce json
@@ -282,5 +282,29 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
 // @Router /sms [Post]
 func SendCode(c *gin.Context) {
-	//todo(wwb) send code to member
+	var (
+		user *pkg.UserDetail
+		err  error
+	)
+	defer func() { common.Resp(c, nil, err) }()
+
+	uid := common.GetUID(c)
+	if user, err = grpc.GetUserInfoByUID(uid); err != nil {
+		return
+	}
+
+	var smsCode string
+	smsCode, err = utils.GenerateTmpCode(c, user.Phone, 5*time.Minute)
+	if err != nil {
+		return
+	}
+
+	smsBody := sms.SMSBody{
+		TemplateID: pkg.SMSTemplateMap[pkg.VerificationCode],
+		Phone:      user.Phone,
+		Params:     []string{smsCode},
+	}
+
+	_, err = sms.SendSMS(smsBody)
+	return
 }

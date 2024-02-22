@@ -31,6 +31,10 @@ type UserDetailResp struct {
 	Applications []Application `json:"applications"`
 }
 
+type MembersDetail struct {
+	Statistics map[string]int `json:"statistics"`
+}
+
 type Recruitment struct {
 	Common
 	Name            string    `gorm:"not null;unique" json:"name"`

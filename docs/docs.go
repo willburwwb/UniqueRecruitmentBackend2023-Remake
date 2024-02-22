@@ -1082,7 +1082,7 @@ const docTemplate = `{
         },
         "/sms": {
             "post": {
-                "description": "Send code to member(todo)",
+                "description": "Send code to admin",
                 "consumes": [
                     "application/json"
                 ],
@@ -1112,7 +1112,7 @@ const docTemplate = `{
         },
         "/user/me": {
             "get": {
-                "description": "Get user detail include applications and interview selections (without comments)",
+                "description": "Get members detail",
                 "consumes": [
                     "application/json"
                 ],
@@ -1122,8 +1122,8 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "Get user detail",
-                "operationId": "get_user_detail",
+                "summary": "Get members detail",
+                "operationId": "get_members_detail",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1136,7 +1136,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pkg.UserDetailResp"
+                                            "$ref": "#/definitions/pkg.MembersDetail"
                                         }
                                     }
                                 }
@@ -1514,6 +1514,17 @@ const docTemplate = `{
                 }
             }
         },
+        "pkg.MembersDetail": {
+            "type": "object",
+            "properties": {
+                "statistics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "pkg.Period": {
             "type": "string",
             "enum": [
@@ -1885,6 +1896,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "This is API doc of UniqueStudio Recruitment. For more API information, please see https://app.apifox.com/project/2985744",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

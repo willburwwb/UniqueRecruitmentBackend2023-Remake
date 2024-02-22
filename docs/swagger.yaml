@@ -247,6 +247,13 @@ definitions:
       updated_at:
         type: string
     type: object
+  pkg.MembersDetail:
+    properties:
+      statistics:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
   pkg.Period:
     enum:
     - morning
@@ -1209,7 +1216,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Send code to member(todo)
+      description: Send code to admin
       operationId: send_code
       produces:
       - application/json
@@ -1229,9 +1236,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get user detail include applications and interview selections (without
-        comments)
-      operationId: get_user_detail
+      description: Get members detail
+      operationId: get_members_detail
       produces:
       - application/json
       responses:
@@ -1242,13 +1248,13 @@ paths:
             - $ref: '#/definitions/common.JSONResult'
             - properties:
                 data:
-                  $ref: '#/definitions/pkg.UserDetailResp'
+                  $ref: '#/definitions/pkg.MembersDetail'
               type: object
         "400":
           description: code is not 0 and msg not empty
           schema:
             $ref: '#/definitions/common.JSONResult'
-      summary: Get user detail
+      summary: Get members detail
       tags:
       - User
 swagger: "2.0"

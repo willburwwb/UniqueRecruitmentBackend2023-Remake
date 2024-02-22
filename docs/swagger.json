@@ -1075,7 +1075,7 @@
         },
         "/sms": {
             "post": {
-                "description": "Send code to member(todo)",
+                "description": "Send code to admin",
                 "consumes": [
                     "application/json"
                 ],
@@ -1105,7 +1105,7 @@
         },
         "/user/me": {
             "get": {
-                "description": "Get user detail include applications and interview selections (without comments)",
+                "description": "Get members detail",
                 "consumes": [
                     "application/json"
                 ],
@@ -1115,8 +1115,8 @@
                 "tags": [
                     "User"
                 ],
-                "summary": "Get user detail",
-                "operationId": "get_user_detail",
+                "summary": "Get members detail",
+                "operationId": "get_members_detail",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1129,7 +1129,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pkg.UserDetailResp"
+                                            "$ref": "#/definitions/pkg.MembersDetail"
                                         }
                                     }
                                 }
@@ -1504,6 +1504,17 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "pkg.MembersDetail": {
+            "type": "object",
+            "properties": {
+                "statistics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
                 }
             }
         },

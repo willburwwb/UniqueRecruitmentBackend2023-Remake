@@ -162,7 +162,7 @@ const (
 
 var SMSTemplateMap = map[SMSTemplateType]uint{
 	StateChange:             1092770,
-	VerificationCode:        1092824,
+	VerificationCode:        963866,
 	Interviews:              1113517,
 	PassSMS:                 1092767,
 	Delay:                   1092765,
