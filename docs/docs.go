@@ -1896,8 +1896,6 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "This is API doc of UniqueStudio Recruitment. For more API information, please see https://app.apifox.com/project/2985744",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {
