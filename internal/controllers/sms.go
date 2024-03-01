@@ -280,7 +280,7 @@ func ApplySMSTemplate(smsRequest *pkg.SendSMSOpts, userInfo *pkg.UserDetail,
 // @Produce json
 // @Success 200 {object} common.JSONResult{} ""
 // @Failure 400 {object} common.JSONResult{} "code is not 0 and msg not empty"
-// @Router /sms [Post]
+// @Router /sms/code [post]
 func SendCode(c *gin.Context) {
 	var (
 		user *pkg.UserDetail

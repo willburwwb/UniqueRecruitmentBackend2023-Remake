@@ -45,6 +45,7 @@ type Recruitment struct {
 	StressTestEnd   time.Time `gorm:"column:stressTestEnd" json:"stress_test_end"`
 
 	Statistics   map[string]int `gorm:"-" json:"statistics"`
+	GroupDetails map[string]int `gorm:"-" json:"group_details"`
 	Applications []Application  `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"applications"` //一个hr->简历 ;级联删除
 	Interviews   []Interview    `gorm:"foreignKey:RecruitmentID;references:Uid;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;" json:"interviews"`   //一个hr->面试 ;级联删除
 }

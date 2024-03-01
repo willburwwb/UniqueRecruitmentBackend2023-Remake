@@ -21,3 +21,26 @@ func TestGetRolesByUID(t *testing.T) {
 	t.Logf("Get UserRoles Success")
 	t.Logf("%#v", userRoles)
 }
+
+func TestGetUsers(t *testing.T) {
+	users, err := GetUsers([]string{
+		"036e59aa-3fb7-4ae3-91a3-6c439f2576cc",
+		"fb00b144-f67c-490a-81ab-01201bfb6974",
+	})
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	t.Logf("Get Users Success")
+	t.Logf("%#v", users)
+}
+
+func TestGetGroupsDetail(t *testing.T) {
+	groupsDetail, err := GetGroupsDetail()
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	t.Logf("Get GroupsDetail Success")
+	t.Logf("%#v", groupsDetail)
+}

@@ -126,6 +126,13 @@ func GetRecruitmentById(c *gin.Context) {
 		} else {
 			r, err = models.GetFullRecruitmentById(opts.Rid)
 			r.Statistics, err = models.GetRecruitmentStatistics(opts.Rid)
+			if err != nil {
+				return
+			}
+			r.GroupDetails, err = grpc.GetGroupsDetail()
+			if err != nil {
+				return
+			}
 		}
 	} else {
 		r, err = models.GetRecruitmentById(opts.Rid)
@@ -185,6 +192,13 @@ func GetPendingRecruitment(c *gin.Context) {
 	if common.IsMember(c) {
 		r, err = models.GetFullRecruitmentById(r.Uid)
 		r.Statistics, err = models.GetRecruitmentStatistics(r.Uid)
+		if err != nil {
+			return
+		}
+		r.GroupDetails, err = grpc.GetGroupsDetail()
+		if err != nil {
+			return
+		}
 	} else {
 		r, err = models.GetRecruitmentById(r.Uid)
 	}
